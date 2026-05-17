@@ -1,5 +1,5 @@
 // SVG 아이콘 컴포넌트 — lucide 스타일, 1.5px stroke
-import type { CSSProperties } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 
 interface IconProps {
   name: string
@@ -8,7 +8,7 @@ interface IconProps {
   style?: CSSProperties
 }
 
-const PATHS: Record<string, React.ReactNode> = {
+const PATHS: Record<string, ReactNode> = {
   logo:         <><path d="M3 12h2"/><path d="M7 8v8"/><path d="M11 5v14"/><path d="M15 8v8"/><path d="M19 11v2"/></>,
   upload:       <><path d="M12 16V4"/><path d="M6 10l6-6 6 6"/><path d="M4 20h16"/></>,
   cloud:        <><path d="M16 16h2a4 4 0 0 0 .8-7.92A6 6 0 0 0 7 6.05 5 5 0 0 0 6 16h2"/><path d="M12 12v9"/><path d="M9 15l3-3 3 3"/></>,
