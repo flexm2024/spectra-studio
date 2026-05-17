@@ -19,9 +19,9 @@
 .btn:hover { background: var(--bg-sunken); border-color: var(--line-strong); }
 .btn--ghost { border-color: transparent; background: transparent; }
 .btn--ghost:hover { background: var(--bg-sunken); border-color: transparent; }
-.btn--primary { background: var(--c-strong); border-color: var(--c-strong); color: white; box-shadow: 0 1px 2px rgba(13,30,60,0.1); }
-.btn--primary:hover { background: oklch(0.5 0.18 235); border-color: oklch(0.5 0.18 235); }
+.btn--primary { background: var(--c-strong); border-color: var(--c-strong); color: var(--bg-elev); box-shadow: 0 1px 2px rgba(13,30,60,0.1); }
+.btn--primary:hover { background: color-mix(in oklch, var(--c-strong) 85%, black); border-color: color-mix(in oklch, var(--c-strong) 85%, black); }
 .btn--danger-ghost { color: var(--danger); border-color: transparent; background: transparent; }
-.btn--danger-ghost:hover { background: oklch(0.97 0.03 25); }
+.btn--danger-ghost:hover { background: color-mix(in oklch, var(--danger) 10%, white); }
 .btn--lg { height: 40px; padding: 0 18px; font-size: 14px; }
 .btn--icon { width: 32px; padding: 0; justify-content: center; }

@@ -18,6 +18,7 @@ export default function SegmentedControl<T extends string | number>({ options, v
     <div className={`seg seg--${options.length}`}>
       {options.map(opt => (
         <button
+          type="button"
           key={String(opt.value)}
           className={`seg__opt${value === opt.value ? ' seg__opt--active' : ''}`}
           onClick={() => onChange(opt.value)}

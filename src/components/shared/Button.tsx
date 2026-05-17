@@ -17,5 +17,5 @@ export default function Button({ variant = 'default', size = 'default', classNam
     size !== 'default' ? `btn--${size}` : '',
     className,
   ].filter(Boolean).join(' ')
-  return <button className={cls} {...rest}>{children}</button>
+  return <button type="button" className={cls} {...rest}>{children}</button>
 }
