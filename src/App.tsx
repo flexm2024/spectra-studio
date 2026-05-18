@@ -5,6 +5,7 @@ import { sampleTracks } from './data/sampleTracks'
 import Sidebar from './components/Sidebar/Sidebar'
 import Header from './components/Header/Header'
 import StatusBar from './components/StatusBar/StatusBar'
+import Step1 from './components/steps/Step1/Step1'
 
 export default function App() {
   const [step, setStep] = useState<1 | 2 | 3>(1)
@@ -15,9 +16,9 @@ export default function App() {
       <Sidebar step={step} setStep={setStep} tracks={tracks} />
       <Header step={step} setStep={setStep} />
       <main className="main">
-        <p style={{ padding: 20, color: 'var(--ink-3)', fontFamily: 'var(--f-mono)' }}>
-          Step {step} — 구현 예정
-        </p>
+        {step === 1 && <Step1 tracks={tracks} setTracks={setTracks} onNext={() => setStep(2)} />}
+        {step === 2 && <p style={{ padding: 20, color: 'var(--ink-3)' }}>Step 2 — 구현 예정</p>}
+        {step === 3 && <p style={{ padding: 20, color: 'var(--ink-3)' }}>Step 3 — 구현 예정</p>}
       </main>
       <StatusBar tracks={tracks} />
     </div>
