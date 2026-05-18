@@ -1,0 +1,162 @@
+/* Step 2 — 비주얼 편집 3컬럼 레이아웃 */
+.step2 {
+  display: grid;
+  grid-template-columns: 240px 1fr 260px;
+  height: 100%;
+  overflow: hidden;
+}
+
+.s2-panel {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--line);
+  overflow-y: auto;
+}
+.s2-panel:last-child { border-right: none; border-left: 1px solid var(--line); }
+.s2-panel__head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px; border-bottom: 1px solid var(--line);
+  font-size: 13px; font-weight: 600; color: var(--ink);
+  white-space: nowrap; flex-shrink: 0;
+}
+.s2-panel__body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+
+.s2-section-label {
+  font-size: 11.5px; font-weight: 600; color: var(--ink-3);
+  letter-spacing: 0.04em; text-transform: uppercase;
+}
+
+/* 테마 그리드 */
+.theme-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.theme-card {
+  height: 52px; border-radius: var(--r-m);
+  border: 2px solid transparent;
+  cursor: pointer; display: flex; align-items: flex-end;
+  padding: 6px 8px; transition: all 120ms ease;
+}
+.theme-card:hover { border-color: var(--c-soft); }
+.theme-card--active { border-color: var(--c); box-shadow: 0 0 0 1px var(--c); }
+.theme-card__label {
+  font-size: 11px; font-weight: 600;
+  color: oklch(1 0 0);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5); letter-spacing: 0.02em;
+}
+
+/* 슬라이더 */
+.slider-row { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+.slider-row__label { color: var(--ink-3); min-width: 60px; white-space: nowrap; }
+.slider { flex: 1; height: 4px; accent-color: var(--c); cursor: pointer; }
+.slider-row__value { font-family: var(--f-mono); font-size: 11.5px; color: var(--ink-2); min-width: 28px; text-align: right; }
+
+.divider { border: none; border-top: 1px solid var(--line-faint); margin: 4px 0; }
+
+/* 스테이지 */
+.s2-stage { display: flex; flex-direction: column; overflow: hidden; }
+.s2-stage__top {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; border-bottom: 1px solid var(--line); flex-shrink: 0;
+}
+.s2-timecode { flex: 1; padding-left: 4px; font-family: var(--f-mono); font-size: 12px; color: var(--ink-3); }
+.legend { display: flex; gap: 6px; }
+.legend__item {
+  font-size: 11px; font-family: var(--f-mono); color: var(--ink-3);
+  background: var(--bg-sunken); border: 1px solid var(--line);
+  border-radius: 4px; padding: 2px 6px;
+}
+.s2-play-btn {
+  width: 28px; height: 28px; border-radius: 7px;
+  background: var(--c); border: none; color: var(--bg-elev);
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+
+.s2-stage__viewport {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  padding: 20px; background: var(--bg-sunken); overflow: hidden;
+}
+.s2-stage__frame {
+  width: 100%; max-width: 640px; aspect-ratio: 16 / 9;
+  border-radius: var(--r-m); position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.s2-frame__content {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 10px; color: oklch(1 0 0); text-align: center; padding: 0 20px; width: 100%;
+}
+.s2-frame__logo {
+  width: 52px; height: 52px; border-radius: 14px;
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--c); backdrop-filter: blur(8px);
+}
+.s2-frame__title {
+  font-size: 24px; font-weight: 700; margin: 0;
+  letter-spacing: -0.02em; white-space: nowrap;
+  max-width: 90%; overflow: hidden; text-overflow: ellipsis;
+}
+.s2-frame__sub { font-size: 13px; font-family: var(--f-mono); color: rgba(255,255,255,0.7); }
+.s2-frame__wave {
+  position: absolute; bottom: 28px; left: 60px; right: 60px;
+  display: flex; gap: 3px; align-items: flex-end; height: 40px;
+}
+.s2-frame__wave-bar {
+  flex: 1; background: linear-gradient(180deg, var(--c) 0%, oklch(0.5 0.18 240) 100%);
+  border-radius: 2px; max-width: 5px;
+}
+.s2-frame__badge-l {
+  position: absolute; top: 18px; left: 18px;
+  font-size: 11px; font-family: var(--f-mono); color: rgba(255,255,255,0.6); letter-spacing: 0.1em;
+}
+.s2-frame__badge-r {
+  position: absolute; top: 18px; right: 18px;
+  font-size: 11px; font-family: var(--f-mono); color: rgba(255,255,255,0.6);
+}
+
+/* 타임라인 */
+.s2-timeline { border-top: 1px solid var(--line); flex-shrink: 0; }
+.s2-timeline__head {
+  display: flex; justify-content: space-between;
+  padding: 8px 14px; font-size: 11.5px; color: var(--ink-3);
+  border-bottom: 1px solid var(--line-faint);
+}
+.s2-timeline__row { display: flex; gap: 4px; padding: 8px 14px; overflow-x: auto; }
+.s2-clip {
+  flex-shrink: 0; height: 28px;
+  background: var(--bg-sunken); border: 1px solid var(--line);
+  border-radius: 5px; padding: 0 8px;
+  display: flex; align-items: center;
+  font-size: 11px; font-family: var(--f-mono); color: var(--ink-3);
+  cursor: pointer; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  transition: all 100ms ease;
+}
+.s2-clip:hover { border-color: var(--line-strong); color: var(--ink-2); }
+.s2-clip--active {
+  background: linear-gradient(90deg, var(--c), oklch(0.55 0.18 235));
+  border-color: var(--c); color: oklch(1 0 0);
+}
+
+/* 효과 칩 */
+.effect-list { display: flex; flex-direction: column; gap: 6px; }
+.effect-chip {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px; border-radius: var(--r-m);
+  border: 1px solid var(--line-faint); background: var(--bg-sunken);
+  cursor: pointer; transition: all 100ms ease;
+}
+.effect-chip:hover { border-color: var(--line); }
+.effect-chip--on { border-color: var(--c-soft); background: var(--c-softer); }
+.effect-chip__icon {
+  width: 30px; height: 30px; border-radius: 8px;
+  background: var(--bg-elev); border: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ink-2); flex-shrink: 0;
+}
+.effect-chip--on .effect-chip__icon { color: var(--c-strong); border-color: var(--c-soft); }
+.effect-chip__meta { flex: 1; min-width: 0; }
+.effect-chip__title { font-size: 12.5px; font-weight: 500; color: var(--ink); }
+.effect-chip__sub { font-size: 11px; color: var(--ink-4); margin-top: 1px; }
+.effect-chip__toggle { flex-shrink: 0; }
+
+.s2-nav { display: flex; gap: 8px; }
+.s2-nav > * { flex: 1; justify-content: center; }
