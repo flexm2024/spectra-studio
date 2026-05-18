@@ -171,7 +171,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                   <div className="effect-chip__title">{title}</div>
                   <div className="effect-chip__sub">{sub}</div>
                 </div>
-                <div className="effect-chip__toggle">
+                <div className="effect-chip__toggle" onClick={e => e.stopPropagation()}>
                   <Switch on={effects[key]} onChange={() => setEffects({ ...effects, [key]: !effects[key] })} />
                 </div>
               </div>
