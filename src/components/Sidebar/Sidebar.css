@@ -1,0 +1,131 @@
+/* 좌측 사이드바 레일 */
+.rail {
+  grid-area: rail;
+  background: var(--bg-rail);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.rail__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--line-faint);
+  flex-shrink: 0;
+}
+.rail__logo {
+  width: 40px; height: 40px;
+  border-radius: 11px;
+  background: linear-gradient(140deg, var(--c) 0%, var(--c-strong) 100%);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--bg-elev);
+  box-shadow: 0 4px 12px -3px oklch(0.66 0.16 230 / 0.4);
+  flex-shrink: 0;
+}
+.rail__brand-text { display: flex; flex-direction: column; gap: 2px; line-height: 1.1; min-width: 0; }
+.rail__wordmark { font-size: 17px; font-weight: 700; letter-spacing: -0.018em; color: var(--ink); }
+.rail__wordmark-sub { font-size: 10px; letter-spacing: 0.16em; font-weight: 600; color: var(--ink-3); font-family: var(--f-mono); }
+.rail__pro-badge {
+  margin-left: auto;
+  font-family: var(--f-mono); font-size: 9.5px; font-weight: 700;
+  color: var(--c-ink); background: var(--c-softer); border: 1px solid var(--c-soft);
+  padding: 2px 6px; border-radius: 4px; letter-spacing: 0.04em;
+}
+
+.rail__project {
+  display: flex; flex-direction: column; gap: 5px;
+  padding: 14px 16px; margin: 14px;
+  border: 1px solid var(--line); background: var(--bg-elev);
+  border-radius: 12px; box-shadow: var(--shadow-2); flex-shrink: 0;
+}
+.rail__project-label {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--ink-4);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.rail__project-name {
+  font-size: 14px; font-weight: 600; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.012em;
+}
+.rail__project-meta { display: flex; align-items: center; gap: 6px; font-size: 11px; font-family: var(--f-mono); color: var(--ink-3); margin-top: 2px; }
+.rail__project-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--ok); flex-shrink: 0; }
+
+.rail__section { font-size: 10.5px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-4); padding: 10px 18px 8px; flex-shrink: 0; }
+
+.rail__steps { display: flex; flex-direction: column; gap: 4px; padding: 0 14px; flex-shrink: 0; }
+.rail-step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  grid-template-rows: auto auto auto;
+  align-items: center;
+  column-gap: 12px;
+  padding: 12px 14px;
+  border-radius: 11px;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid transparent;
+  transition: background 120ms ease, border-color 120ms ease;
+  text-align: left;
+  width: 100%;
+  font-family: var(--f-sans);
+}
+.rail-step:hover { background: var(--bg-elev); }
+.rail-step__num {
+  grid-column: 1; grid-row: 1 / 3;
+  width: 32px; height: 32px; border-radius: 9px;
+  background: var(--bg-elev); border: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--f-mono); font-size: 12.5px; font-weight: 700; color: var(--ink-2);
+  transition: all 120ms ease;
+}
+.rail-step__label { grid-column: 2; grid-row: 1; font-size: 13.5px; font-weight: 600; color: var(--ink); letter-spacing: -0.012em; white-space: nowrap; }
+.rail-step__sub { grid-column: 2; grid-row: 2; font-size: 11.5px; color: var(--ink-3); font-family: var(--f-mono); white-space: nowrap; margin-top: 1px; }
+.rail-step__caret { grid-column: 3; grid-row: 1 / 3; color: var(--ink-4); opacity: 0; transition: opacity 120ms ease; }
+.rail-step:hover .rail-step__caret { opacity: 1; }
+
+.rail-step--active { background: var(--bg-elev); border-color: var(--line); box-shadow: var(--shadow-2); }
+.rail-step--active .rail-step__num { background: var(--c); border-color: var(--c); color: var(--bg-elev); box-shadow: 0 2px 6px -1px oklch(0.66 0.16 230 / 0.45); }
+.rail-step--active .rail-step__caret { opacity: 1; color: var(--c-ink); }
+
+.rail-step--done .rail-step__num { background: var(--c-softer); border-color: var(--c-soft); color: var(--c-ink); font-size: 0; position: relative; }
+.rail-step--done .rail-step__num::before {
+  content: ""; display: block; width: 10px; height: 5px;
+  border-left: 1.8px solid var(--c-ink); border-bottom: 1.8px solid var(--c-ink);
+  transform: rotate(-45deg) translate(1px, -1px);
+}
+.rail-step--done .rail-step__label { color: var(--ink-2); }
+
+.rail-step__bar { grid-column: 2 / 4; grid-row: 3; height: 4px; background: var(--bg-sunken); border-radius: 999px; overflow: hidden; margin-top: 8px; }
+.rail-step__bar-fill { height: 100%; background: var(--c); border-radius: 999px; transition: width 200ms ease; }
+
+.rail__spacer { flex: 1; }
+
+.rail__util { padding: 10px 14px 14px; border-top: 1px solid var(--line-faint); display: flex; flex-direction: column; gap: 2px; flex-shrink: 0; }
+.rail__util-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 12px; border-radius: 9px;
+  cursor: pointer; background: transparent; border: none;
+  color: var(--ink-2); font-size: 13px; font-weight: 500; text-align: left; width: 100%;
+  font-family: var(--f-sans);
+}
+.rail__util-row:hover { background: var(--bg-elev); }
+.rail__util-row .util-label { flex: 1; white-space: nowrap; }
+
+.rail__user {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; margin: 6px 14px 14px;
+  border-radius: 11px; border: 1px solid var(--line); background: var(--bg-elev); flex-shrink: 0;
+}
+.rail__avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: linear-gradient(135deg, oklch(0.7 0.16 200), oklch(0.6 0.18 260));
+  color: var(--bg-elev); display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; flex-shrink: 0;
+}
+.rail__user-info { min-width: 0; line-height: 1.25; flex: 1; }
+.rail__user-name { font-size: 13px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rail__user-plan { font-size: 11px; font-family: var(--f-mono); color: var(--ink-3); margin-top: 1px; }
+.rail__user-menu { color: var(--ink-4); flex-shrink: 0; }
