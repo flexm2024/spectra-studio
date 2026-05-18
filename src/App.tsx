@@ -7,6 +7,7 @@ import Header from './components/Header/Header'
 import StatusBar from './components/StatusBar/StatusBar'
 import Step1 from './components/steps/Step1/Step1'
 import Step2 from './components/steps/Step2/Step2'
+import Step3 from './components/steps/Step3/Step3'
 
 export default function App() {
   const [step, setStep] = useState<1 | 2 | 3>(1)
@@ -47,7 +48,15 @@ export default function App() {
           />
         )}
         {step === 3 && (
-          <p style={{ padding: 20, color: 'var(--ink-3)' }}>Step 3 — 구현 예정</p>
+          <Step3
+            tracks={tracks}
+            theme={theme}
+            effects={effects}
+            visualizer={visualizer}
+            exportSettings={exportSettings}
+            setExportSettings={setExportSettings}
+            onBack={() => setStep(2)}
+          />
         )}
       </main>
       <StatusBar tracks={tracks} />
