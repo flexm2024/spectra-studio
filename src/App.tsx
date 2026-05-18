@@ -8,7 +8,7 @@ import StatusBar from './components/StatusBar/StatusBar'
 
 export default function App() {
   const [step, setStep] = useState<1 | 2 | 3>(1)
-  const [tracks] = useState<Track[]>(sampleTracks)
+  const [tracks, setTracks] = useState<Track[]>(sampleTracks)
 
   return (
     <div className="app">
