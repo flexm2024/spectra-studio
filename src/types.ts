@@ -44,3 +44,29 @@ export type ProjectState = {
   generateThumbnail: boolean
   includeChapterMarkers: boolean
 }
+
+export interface Effects {
+  vis: boolean
+  crossfade: boolean
+  ducking: boolean
+  blur: boolean
+}
+
+export interface Visualizer {
+  type: 'bars' | 'wave' | 'orb'
+  intensity: number
+  opacity: number
+}
+
+export interface Typography {
+  titleSize: number
+  letterSpacing: number
+}
+
+export interface ExportSettings {
+  filename: string
+  format: 'mp4' | 'webm' | 'mov'
+  resolution: '720p' | '1080p' | '4k'
+  thumbnail: boolean
+  chapters: boolean
+}
