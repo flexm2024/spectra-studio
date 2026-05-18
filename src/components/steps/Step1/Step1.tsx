@@ -140,12 +140,13 @@ export default function Step1({ tracks, setTracks, onNext }: Step1Props) {
                   <span className="track__num">{String(i + 1).padStart(2, '0')}</span>
                   <span className="track__drag"><Icon name="grip" size={14} /></span>
                 </div>
-                <div
+                <button
+                  type="button"
                   className="track__play"
                   onClick={e => { e.stopPropagation(); setPlayingId(playingId === t.id ? (tracks[0]?.id ?? '') : t.id) }}
                 >
                   <Icon name={playingId === t.id ? 'pause' : 'play'} size={12} />
-                </div>
+                </button>
                 <div className="track__meta">
                   <div className="track__title">{t.title}</div>
                   <div className="track__sub">{t.artist} · {t.bpm} BPM</div>
@@ -202,7 +203,7 @@ export default function Step1({ tracks, setTracks, onNext }: Step1Props) {
           </div>
           <div className="preview-controls">
             <Button variant="ghost" size="icon"><Icon name="skipBack" size={14} /></Button>
-            <button type="button" style={{ width: 28, height: 28, borderRadius: 7, background: 'var(--c)', border: 'none', color: 'var(--bg-elev)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <button type="button" className="preview-play">
               <Icon name="pause" size={14} />
             </button>
             <Button variant="ghost" size="icon"><Icon name="skipForward" size={14} /></Button>

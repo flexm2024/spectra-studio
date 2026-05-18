@@ -107,7 +107,7 @@
 .preview-frame {
   aspect-ratio: 16 / 9; background: #0a0d14;
   position: relative; overflow: hidden;
-  display: flex; align-items: center; justify-content: center; color: white;
+  display: flex; align-items: center; justify-content: center; color: oklch(1 0 0);
 }
 .preview-frame__bg {
   position: absolute; inset: 0;
@@ -128,6 +128,7 @@
 .preview-meta__dot { width: 6px; height: 6px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 3px var(--c-soft); animation: pulse 1.6s ease-in-out infinite; }
 @keyframes pulse { 50% { box-shadow: 0 0 0 6px transparent; } }
 .preview-controls { padding: 10px 14px; border-top: 1px solid var(--line-faint); display: flex; align-items: center; gap: 10px; }
+.preview-play { width: 28px; height: 28px; border-radius: 7px; background: var(--c); border: none; color: var(--bg-elev); display: flex; align-items: center; justify-content: center; cursor: pointer; }
 .preview-controls__progress { flex: 1; height: 4px; background: var(--line-faint); border-radius: 999px; position: relative; cursor: pointer; overflow: hidden; }
 .preview-controls__fill { position: absolute; left: 0; top: 0; bottom: 0; width: 22%; background: var(--c); border-radius: 999px; }
 .preview-controls__time { font-family: var(--f-mono); font-size: 11px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
