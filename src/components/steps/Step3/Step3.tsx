@@ -1,5 +1,5 @@
 // Step 3 — 영상 출력: 설정 요약, 내보내기 패널, 렌더링 진행 UI
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './Step3.css'
 import Icon from '../../../icons'
 import Button from '../../shared/Button'
@@ -47,6 +47,10 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
   const startRender = () => {
     setRenderState('rendering')
     setProgress(0)
+  }
+
+  useEffect(() => {
+    if (renderState !== 'rendering') return
     const interval = setInterval(() => {
       setProgress(p => {
         if (p >= 100) {
@@ -57,7 +61,8 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
         return Math.min(100, p + 3)
       })
     }, 100)
-  }
+    return () => clearInterval(interval)
+  }, [renderState])
 
   return (
     <div className="step3">

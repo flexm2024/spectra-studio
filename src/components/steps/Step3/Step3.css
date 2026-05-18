@@ -115,4 +115,4 @@
 .render-done { display: flex; flex-direction: column; gap: 8px; }
 .render-done__msg { font-size: 14px; font-weight: 600; color: var(--c-strong); text-align: center; padding: 8px; }
 
-.s3-btn-full { width: 100%; justify-content: center; }
+.s3-btn-full { width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; }
