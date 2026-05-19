@@ -65,14 +65,17 @@ export default function Step1({
       const audioUrl = URL.createObjectURL(file)
       const durationSec = await new Promise<number>(resolve => {
         const audio = new Audio()
-        audio.addEventListener('loadedmetadata', () => resolve(Math.round(audio.duration)))
+        audio.addEventListener('loadedmetadata', () => {
+          const d = audio.duration
+          resolve(isFinite(d) ? Math.round(d) : 0)
+        })
         audio.addEventListener('error', () => resolve(0))
         audio.src = audioUrl
       })
       const minutes = Math.floor(durationSec / 60)
       const seconds = durationSec % 60
       const duration = `${minutes}:${String(seconds).padStart(2, '0')}`
-      const id = `upload-${Date.now()}-${newTracks.length}`
+      const id = `upload-${crypto.randomUUID()}`
       newTracks.push({
         id,
         title,
@@ -97,6 +100,8 @@ export default function Step1({
   const playingTrack = tracks.find(t => t.id === playingId) ?? tracks[0]
 
   const handleDelete = (id: string) => {
+    const track = tracks.find(t => t.id === id)
+    if (track?.audioUrl) URL.revokeObjectURL(track.audioUrl)
     const idx = tracks.findIndex(t => t.id === id)
     const next = tracks[idx + 1] ?? tracks[idx - 1]
     setTracks(tracks.filter(t => t.id !== id))
@@ -122,7 +127,7 @@ export default function Step1({
         multiple
         accept="audio/*"
         style={{ display: 'none' }}
-        onChange={e => handleFiles(e.target.files)}
+        onChange={e => { handleFiles(e.target.files); e.target.value = '' }}
       />
       {/* 페이지 헤더 */}
       <div className="page-head">
