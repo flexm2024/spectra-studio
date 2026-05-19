@@ -32,21 +32,22 @@ export default function App() {
   const onPlay = (id: string) => {
     const track = tracks.find(t => t.id === id)
     setPlayingId(id)
-    setIsPlaying(true)
     if (track?.audioUrl && audioRef.current) {
       if (audioRef.current.src !== track.audioUrl) {
         audioRef.current.src = track.audioUrl
       }
-      audioRef.current.play()
+      audioRef.current.play().catch(() => setIsPlaying(false))
+    } else {
+      setIsPlaying(true)
     }
   }
 
   const onPause = () => {
-    setIsPlaying(false)
     audioRef.current?.pause()
   }
 
   const onSkipNext = () => {
+    if (playingId === null) return
     const idx = tracks.findIndex(t => t.id === playingId)
     const next = tracks[idx + 1]
     if (next) onPlay(next.id)
@@ -57,6 +58,7 @@ export default function App() {
       audioRef.current.currentTime = 0
       return
     }
+    if (playingId === null) return
     const idx = tracks.findIndex(t => t.id === playingId)
     const prev = tracks[idx - 1]
     if (prev) onPlay(prev.id)
@@ -66,7 +68,12 @@ export default function App() {
 
   return (
     <div className="app">
-      <audio ref={audioRef} onEnded={handleTrackEnded} />
+      <audio
+        ref={audioRef}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
+        onEnded={handleTrackEnded}
+      />
       <Sidebar step={step} setStep={setStep} tracks={tracks} />
       <Header step={step} setStep={setStep} />
       <main className="main">
