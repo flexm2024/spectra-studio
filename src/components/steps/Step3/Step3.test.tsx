@@ -16,6 +16,8 @@ const base = {
     thumbnail: true,
     chapters: false,
   },
+  loops: 1 as const,
+  quality: '192k' as const,
   setExportSettings: vi.fn(),
   onBack: vi.fn(),
 }
@@ -43,5 +45,18 @@ describe('Step3', () => {
     render(<Step3 {...base} onBack={onBack} />)
     fireEvent.click(screen.getByText('편집으로 돌아가기'))
     expect(onBack).toHaveBeenCalledTimes(1)
+  })
+  it('loops prop이 반복 횟수 표시에 반영된다', () => {
+    render(<Step3 {...base} loops={3} />)
+    expect(screen.getByText('반복 3회')).toBeInTheDocument()
+  })
+  it('quality prop이 오디오 설정 요약에 반영된다', () => {
+    render(<Step3 {...base} quality="96k" />)
+    expect(screen.getByText(/96 kbps/)).toBeInTheDocument()
+  })
+  it('"프로젝트로 저장" 버튼이 비활성화되어 있다', () => {
+    render(<Step3 {...base} />)
+    const saveBtn = screen.getByRole('button', { name: /프로젝트로 저장/ })
+    expect(saveBtn).toBeDisabled()
   })
 })

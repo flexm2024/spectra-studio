@@ -30,12 +30,14 @@ interface Step3Props {
   visualizer: Visualizer
   exportSettings: ExportSettings
   setExportSettings: (s: ExportSettings) => void
+  loops: 1 | 2 | 3
+  quality: '96k' | '128k' | '192k'
   onBack: () => void
 }
 
 type RenderState = 'idle' | 'rendering' | 'done'
 
-export default function Step3({ tracks, theme, effects, visualizer, exportSettings, setExportSettings, onBack }: Step3Props) {
+export default function Step3({ tracks, theme, effects, visualizer, exportSettings, setExportSettings, loops, quality, onBack }: Step3Props) {
   const [renderState, setRenderState] = useState<RenderState>('idle')
   const [progress, setProgress] = useState(0)
 
@@ -88,7 +90,7 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
           <div className="s3-stat">
             <div className="s3-stat__label">길이</div>
             <div className="s3-stat__value">{totalDur}</div>
-            <div className="s3-stat__sub">반복 1회</div>
+            <div className="s3-stat__sub">반복 {loops}회</div>
           </div>
           <div className="s3-stat">
             <div className="s3-stat__label">해상도</div>
@@ -132,7 +134,7 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
             </div>
             <div className="s3-form-row">
               <div className="s3-form-row__label">오디오</div>
-              <div className="s3-form-row__value">192 kbps · AAC · 자동 레벨 {effects.ducking ? '−14 LUFS' : '꺼짐'}</div>
+              <div className="s3-form-row__value">{quality.replace('k', ' kbps')} · AAC · 자동 레벨 {effects.ducking ? '−14 LUFS' : '꺼짐'}</div>
             </div>
             <div className="s3-form-row">
               <div className="s3-form-row__label">크로스페이드</div>
@@ -251,7 +253,7 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
               </button>
             </div>
           )}
-          <button type="button" className="s3-btn-full" style={{ marginTop: 8 }}>
+          <button type="button" className="s3-btn-full" style={{ marginTop: 8 }} disabled>
             <Icon name="folder" size={14} /> 프로젝트로 저장
           </button>
         </div>
