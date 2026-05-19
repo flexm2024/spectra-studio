@@ -10,6 +10,7 @@ export type Track = {
   bpm: number
   src: string
   waveform: number[]
+  audioUrl?: string
 }
 
 export type Background = {
