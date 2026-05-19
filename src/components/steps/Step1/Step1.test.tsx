@@ -51,4 +51,20 @@ describe('Step1', () => {
     fireEvent.click(screen.getByText('단풍 길에서').closest('[class*="track"]')!)
     expect(onPlay).toHaveBeenCalledWith(sampleTracks[1].id)
   })
+
+  it('드롭존 클릭 시 파일 선택 input이 트리거된다', () => {
+    const clickSpy = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {})
+    render(<Step1 {...base} />)
+    fireEvent.click(document.querySelector('.upload')!)
+    expect(clickSpy).toHaveBeenCalled()
+    clickSpy.mockRestore()
+  })
+
+  it('"트랙 추가" 버튼 클릭 시 파일 선택 input이 트리거된다', () => {
+    const clickSpy = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {})
+    render(<Step1 {...base} />)
+    fireEvent.click(screen.getByText(/트랙 추가/))
+    expect(clickSpy).toHaveBeenCalled()
+    clickSpy.mockRestore()
+  })
 })

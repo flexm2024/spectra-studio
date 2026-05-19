@@ -1,5 +1,5 @@
 // Step 1 — 미디어 준비: 트랙 리스트, 업로드, 라이브 프리뷰, 브랜딩, 인코딩
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import './Step1.css'
 import Icon from '../../../icons'
 import Button from '../../shared/Button'
@@ -54,6 +54,41 @@ export default function Step1({
   const [dragId, setDragId] = useState<string | null>(null)
   const [overId, setOverId] = useState<string | null>(null)
 
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return
+    const newTracks: Track[] = []
+    for (const file of Array.from(files)) {
+      const title = file.name.replace(/\.[^/.]+$/, '')
+      if (tracks.some(t => t.title === title) || newTracks.some(t => t.title === title)) continue
+      const audioUrl = URL.createObjectURL(file)
+      const durationSec = await new Promise<number>(resolve => {
+        const audio = new Audio()
+        audio.addEventListener('loadedmetadata', () => resolve(Math.round(audio.duration)))
+        audio.addEventListener('error', () => resolve(0))
+        audio.src = audioUrl
+      })
+      const minutes = Math.floor(durationSec / 60)
+      const seconds = durationSec % 60
+      const duration = `${minutes}:${String(seconds).padStart(2, '0')}`
+      const id = `upload-${Date.now()}-${newTracks.length}`
+      newTracks.push({
+        id,
+        title,
+        artist: 'Unknown',
+        duration,
+        durationSec,
+        tag: '기타',
+        bpm: 0,
+        src: '',
+        audioUrl,
+        waveform: waveformFor(tracks.length + newTracks.length + 1),
+      })
+    }
+    if (newTracks.length > 0) setTracks([...tracks, ...newTracks])
+  }
+
   const totalSec = tracks.reduce((acc, t) => acc + t.durationSec, 0)
   const fmt = (sec: number) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`
   const totalDur = fmt(totalSec)
@@ -81,6 +116,14 @@ export default function Step1({
 
   return (
     <div className="step1">
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        accept="audio/*"
+        style={{ display: 'none' }}
+        onChange={e => handleFiles(e.target.files)}
+      />
       {/* 페이지 헤더 */}
       <div className="page-head">
         <div>
@@ -113,7 +156,13 @@ export default function Step1({
           </div>
 
           <div style={{ padding: 14 }}>
-            <div className="upload">
+            <div
+              className="upload"
+              style={{ cursor: 'pointer' }}
+              onDragOver={e => e.preventDefault()}
+              onDrop={e => { e.preventDefault(); handleFiles(e.dataTransfer.files) }}
+              onClick={() => fileInputRef.current?.click()}
+            >
               <div className="upload__icon"><Icon name="cloud" size={28} /></div>
               <div className="upload__copy">
                 <h3>오디오 파일을 여기에 끌어다 놓으세요</h3>
@@ -186,7 +235,9 @@ export default function Step1({
 
           <div className="tracklist__foot">
             <div>{tracks.length}개 트랙 · 약 {totalDur}</div>
-            <Button variant="ghost"><Icon name="plus" size={14} /> 트랙 추가</Button>
+            <Button variant="ghost" onClick={() => fileInputRef.current?.click()}>
+              <Icon name="plus" size={14} /> 트랙 추가
+            </Button>
           </div>
         </div>
       </div>
