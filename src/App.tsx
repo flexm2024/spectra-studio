@@ -44,6 +44,7 @@ export default function App() {
 
   const onPause = () => {
     audioRef.current?.pause()
+    setIsPlaying(false)
   }
 
   const onSkipNext = () => {

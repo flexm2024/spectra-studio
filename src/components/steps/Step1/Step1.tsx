@@ -200,7 +200,10 @@ export default function Step1({
                     </div>
                   )}
                 </div>
-              <Button variant="danger-ghost" onClick={() => setTracks([])}>
+              <Button variant="danger-ghost" onClick={() => {
+                tracks.forEach(t => { if (t.audioUrl) URL.revokeObjectURL(t.audioUrl) })
+                setTracks([])
+              }}>
                 <Icon name="reset" size={14} /> 전체 비우기
               </Button>
             </div>
