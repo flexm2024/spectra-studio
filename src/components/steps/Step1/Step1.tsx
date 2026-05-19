@@ -65,7 +65,7 @@ export default function Step1({
     const idx = tracks.findIndex(t => t.id === id)
     const next = tracks[idx + 1] ?? tracks[idx - 1]
     setTracks(tracks.filter(t => t.id !== id))
-    if (playingId === id && next) onPlay(next.id)
+    if (playingId === id && next && isPlaying) onPlay(next.id)
   }
 
   const moveTrack = (fromId: string, toId: string) => {
@@ -159,7 +159,7 @@ export default function Step1({
                   className="track__play"
                   onClick={e => { e.stopPropagation(); playingId === t.id && isPlaying ? onPause() : onPlay(t.id) }}
                 >
-                  <Icon name={playingId === t.id ? 'pause' : 'play'} size={12} />
+                  <Icon name={playingId === t.id && isPlaying ? 'pause' : 'play'} size={12} />
                 </button>
                 <div className="track__meta">
                   <div className="track__title">{t.title}</div>
