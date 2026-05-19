@@ -45,10 +45,10 @@ describe('Step1', () => {
     fireEvent.click(screen.getByText(/스튜디오 입장/))
     expect(onNext).toHaveBeenCalledTimes(1)
   })
-  it('트랙 행 클릭 시 해당 트랙이 활성화된다', () => {
-    render(<Step1 {...base} />)
+  it('트랙 행 클릭 시 onPlay가 해당 트랙 id로 호출된다', () => {
+    const onPlay = vi.fn()
+    render(<Step1 {...base} onPlay={onPlay} />)
     fireEvent.click(screen.getByText('단풍 길에서').closest('[class*="track"]')!)
-    // 두 번째 트랙이 프리뷰에 표시돼야 함
-    expect(screen.getAllByText('단풍 길에서').length).toBeGreaterThanOrEqual(1)
+    expect(onPlay).toHaveBeenCalledWith(sampleTracks[1].id)
   })
 })
