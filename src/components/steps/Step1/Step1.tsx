@@ -318,11 +318,11 @@ export default function Step1({
             <span style={{ fontFamily: 'var(--f-mono)', fontSize: 11 }}>1920 × 1080 · 30fps</span>
           </div>
           <div className="preview-controls">
-            <Button variant="ghost" size="icon"><Icon name="skipBack" size={14} /></Button>
-            <button type="button" className="preview-play">
-              <Icon name="pause" size={14} />
+            <Button variant="ghost" size="icon" onClick={() => onSkipPrev()}><Icon name="skipBack" size={14} /></Button>
+            <button type="button" className="preview-play" onClick={() => { if (isPlaying) { onPause() } else if (playingTrack) { onPlay(playingTrack.id) } }}>
+              <Icon name={isPlaying ? 'pause' : 'play'} size={14} />
             </button>
-            <Button variant="ghost" size="icon"><Icon name="skipForward" size={14} /></Button>
+            <Button variant="ghost" size="icon" onClick={() => onSkipNext()}><Icon name="skipForward" size={14} /></Button>
             <div className="preview-controls__progress">
               <div className="preview-controls__fill" />
             </div>
@@ -402,7 +402,7 @@ export default function Step1({
             <SegmentedControl options={QUALITY_OPTIONS} value={quality} onChange={setQuality} />
           </div>
           <div className="foot-cta">
-            <Button variant="danger-ghost"><Icon name="reset" size={14} /> 초기화</Button>
+            <Button variant="danger-ghost" onClick={() => { setLoops(1); setQuality('192k') }}><Icon name="reset" size={14} /> 초기화</Button>
             <Button variant="primary" size="lg" onClick={onNext}>
               스튜디오 입장 <Icon name="arrowRight" size={14} />
             </Button>

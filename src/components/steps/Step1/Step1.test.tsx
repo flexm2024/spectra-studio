@@ -84,4 +84,43 @@ describe('Step1', () => {
     const result: Track[] = setTracks.mock.calls[0][0]
     expect(result[0].title.localeCompare(result[1].title, 'ko')).toBeLessThanOrEqual(0)
   })
+
+  it('프리뷰 플레이 버튼 클릭 시 onPlay가 호출된다 (재생 중이 아닐 때)', () => {
+    const onPlay = vi.fn()
+    render(<Step1 {...base} onPlay={onPlay} isPlaying={false} playingId={null} />)
+    fireEvent.click(document.querySelector('.preview-play')!)
+    expect(onPlay).toHaveBeenCalledWith(sampleTracks[0].id)
+  })
+
+  it('프리뷰 플레이 버튼이 재생 중일 때 onPause를 호출한다', () => {
+    const onPause = vi.fn()
+    render(<Step1 {...base} onPause={onPause} isPlaying={true} playingId={sampleTracks[0].id} />)
+    fireEvent.click(document.querySelector('.preview-play')!)
+    expect(onPause).toHaveBeenCalledTimes(1)
+  })
+
+  it('초기화 버튼 클릭 시 setLoops(1)과 setQuality("192k")가 호출된다', () => {
+    const setLoops = vi.fn()
+    const setQuality = vi.fn()
+    render(<Step1 {...base} setLoops={setLoops} setQuality={setQuality} loops={3} quality="96k" />)
+    fireEvent.click(screen.getByText('초기화'))
+    expect(setLoops).toHaveBeenCalledWith(1)
+    expect(setQuality).toHaveBeenCalledWith('192k')
+  })
+
+  it('프리뷰 스킵 이전 버튼 클릭 시 onSkipPrev가 호출된다', () => {
+    const onSkipPrev = vi.fn()
+    render(<Step1 {...base} onSkipPrev={onSkipPrev} />)
+    fireEvent.click(document.querySelector('.preview-controls button:first-child')!)
+    expect(onSkipPrev).toHaveBeenCalledTimes(1)
+  })
+
+  it('프리뷰 스킵 다음 버튼 클릭 시 onSkipNext가 호출된다', () => {
+    const onSkipNext = vi.fn()
+    render(<Step1 {...base} onSkipNext={onSkipNext} />)
+    const buttons = document.querySelectorAll('.preview-controls button')
+    // buttons: [skipBack, preview-play, skipForward] (Button renders as <button>)
+    fireEvent.click(buttons[buttons.length - 1])
+    expect(onSkipNext).toHaveBeenCalledTimes(1)
+  })
 })
