@@ -156,3 +156,34 @@
 .form-section__hint { font-size: 11px; font-weight: 400; color: var(--ink-4); font-family: var(--f-mono); }
 
 .foot-cta { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-top: 1px solid var(--line-faint); gap: 10px; }
+
+.sort-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px;
+  z-index: 20;
+  min-width: 130px;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.3);
+}
+
+.sort-menu__item {
+  display: block;
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 4px;
+  background: none;
+  border: none;
+  color: var(--text-1);
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sort-menu__item:hover {
+  background: var(--surface-3);
+}

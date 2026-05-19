@@ -1,5 +1,5 @@
 // Step 1 — 미디어 준비: 트랙 리스트, 업로드, 라이브 프리뷰, 브랜딩, 인코딩
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import './Step1.css'
 import Icon from '../../../icons'
 import Button from '../../shared/Button'
@@ -55,6 +55,19 @@ export default function Step1({
   const [overId, setOverId] = useState<string | null>(null)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [sortOpen, setSortOpen] = useState(false)
+  const sortRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!sortOpen) return
+    const handler = (e: MouseEvent) => {
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
+        setSortOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [sortOpen])
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return
@@ -90,6 +103,16 @@ export default function Step1({
       })
     }
     if (newTracks.length > 0) setTracks([...tracks, ...newTracks])
+  }
+
+  const applySort = (key: 'titleAsc' | 'titleDesc' | 'bpmAsc' | 'bpmDesc') => {
+    const sorted = [...tracks]
+    if (key === 'titleAsc')  sorted.sort((a, b) => a.title.localeCompare(b.title, 'ko'))
+    if (key === 'titleDesc') sorted.sort((a, b) => b.title.localeCompare(a.title, 'ko'))
+    if (key === 'bpmAsc')    sorted.sort((a, b) => a.bpm - b.bpm)
+    if (key === 'bpmDesc')   sorted.sort((a, b) => b.bpm - a.bpm)
+    setTracks(sorted)
+    setSortOpen(false)
   }
 
   const totalSec = tracks.reduce((acc, t) => acc + t.durationSec, 0)
@@ -153,7 +176,30 @@ export default function Step1({
               <span className="card__sub">· 총 {totalDur}</span>
             </div>
             <div className="card__actions">
-              <Button variant="ghost"><Icon name="sliders" size={14} /> 정렬</Button>
+              <div ref={sortRef} style={{ position: 'relative' }}>
+                  <Button variant="ghost" onClick={() => setSortOpen(o => !o)}>
+                    <Icon name="sliders" size={14} /> 정렬
+                  </Button>
+                  {sortOpen && (
+                    <div className="sort-menu">
+                      {([
+                        { key: 'titleAsc',  label: '제목 A → Z' },
+                        { key: 'titleDesc', label: '제목 Z → A' },
+                        { key: 'bpmAsc',    label: 'BPM 낮은 순' },
+                        { key: 'bpmDesc',   label: 'BPM 높은 순' },
+                      ] as const).map(({ key, label }) => (
+                        <button
+                          key={key}
+                          type="button"
+                          className="sort-menu__item"
+                          onClick={() => applySort(key)}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               <Button variant="danger-ghost" onClick={() => setTracks([])}>
                 <Icon name="reset" size={14} /> 전체 비우기
               </Button>

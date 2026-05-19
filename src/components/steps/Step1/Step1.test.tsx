@@ -3,6 +3,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import Step1 from './Step1'
 import { sampleTracks } from '../../../data/sampleTracks'
+import type { Track } from '../../../types'
 
 const base = {
   tracks: sampleTracks,
@@ -66,5 +67,21 @@ describe('Step1', () => {
     fireEvent.click(screen.getByText(/트랙 추가/))
     expect(clickSpy).toHaveBeenCalled()
     clickSpy.mockRestore()
+  })
+
+  it('"정렬" 버튼 클릭 시 드롭다운이 표시된다', () => {
+    render(<Step1 {...base} />)
+    fireEvent.click(screen.getByText('정렬'))
+    expect(screen.getByText('제목 A → Z')).toBeInTheDocument()
+  })
+
+  it('"제목 A → Z" 선택 시 setTracks가 가나다 오름차순으로 호출된다', () => {
+    const setTracks = vi.fn()
+    render(<Step1 {...base} setTracks={setTracks} />)
+    fireEvent.click(screen.getByText('정렬'))
+    fireEvent.click(screen.getByText('제목 A → Z'))
+    expect(setTracks).toHaveBeenCalledTimes(1)
+    const result: Track[] = setTracks.mock.calls[0][0]
+    expect(result[0].title.localeCompare(result[1].title, 'ko')).toBeLessThanOrEqual(0)
   })
 })
