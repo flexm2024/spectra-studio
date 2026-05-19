@@ -8,9 +8,9 @@ export type Track = {
   durationSec: number
   tag: string
   bpm: number
-  src: string
+  src: string        // 서버 에셋 경로 (현재 미사용)
   waveform: number[]
-  audioUrl?: string
+  audioUrl?: string  // 사용자 업로드 파일의 Object URL (blob:...). 샘플 트랙은 undefined.
 }
 
 export type Background = {
