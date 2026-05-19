@@ -16,6 +16,12 @@ const base = {
   setTypography: vi.fn(),
   onBack: vi.fn(),
   onNext: vi.fn(),
+  playingId: null as string | null,
+  isPlaying: false,
+  onPlay: vi.fn(),
+  onPause: vi.fn(),
+  onSkipNext: vi.fn(),
+  onSkipPrev: vi.fn(),
 }
 
 describe('Step2', () => {
@@ -49,5 +55,41 @@ describe('Step2', () => {
     render(<Step2 {...base} onNext={onNext} />)
     fireEvent.click(screen.getByText('다음'))
     expect(onNext).toHaveBeenCalledTimes(1)
+  })
+
+  it('타임라인 클립 클릭 시 onPlay가 해당 트랙 id로 호출된다', () => {
+    const onPlay = vi.fn()
+    render(<Step2 {...base} onPlay={onPlay} />)
+    const clips = document.querySelectorAll('.s2-clip')
+    fireEvent.click(clips[1])
+    expect(onPlay).toHaveBeenCalledWith(sampleTracks[1].id)
+  })
+
+  it('스테이지 재생 버튼 클릭 시 onPlay가 playingTrack.id로 호출된다 (재생 중 아닐 때)', () => {
+    const onPlay = vi.fn()
+    render(<Step2 {...base} onPlay={onPlay} isPlaying={false} playingId={null} />)
+    fireEvent.click(document.querySelector('.s2-play-btn')!)
+    expect(onPlay).toHaveBeenCalledWith(sampleTracks[0].id)
+  })
+
+  it('스테이지 재생 버튼 클릭 시 onPause가 호출된다 (재생 중일 때)', () => {
+    const onPause = vi.fn()
+    render(<Step2 {...base} onPause={onPause} isPlaying={true} playingId={sampleTracks[0].id} />)
+    fireEvent.click(document.querySelector('.s2-play-btn')!)
+    expect(onPause).toHaveBeenCalledTimes(1)
+  })
+
+  it('스테이지 스킵 이전 버튼 클릭 시 onSkipPrev가 호출된다', () => {
+    const onSkipPrev = vi.fn()
+    render(<Step2 {...base} onSkipPrev={onSkipPrev} />)
+    fireEvent.click(screen.getByTestId('stage-skip-prev'))
+    expect(onSkipPrev).toHaveBeenCalledTimes(1)
+  })
+
+  it('스테이지 스킵 다음 버튼 클릭 시 onSkipNext가 호출된다', () => {
+    const onSkipNext = vi.fn()
+    render(<Step2 {...base} onSkipNext={onSkipNext} />)
+    fireEvent.click(screen.getByTestId('stage-skip-next'))
+    expect(onSkipNext).toHaveBeenCalledTimes(1)
   })
 })

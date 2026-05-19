@@ -1,5 +1,4 @@
 // Step 2 — 비주얼 편집: 테마 선택, 스테이지 미리보기, 효과 설정
-import { useState } from 'react'
 import './Step2.css'
 import Icon from '../../../icons'
 import Button from '../../shared/Button'
@@ -42,10 +41,15 @@ interface Step2Props {
   setTypography: (t: Typography) => void
   onBack: () => void
   onNext: () => void
+  playingId: string | null
+  isPlaying: boolean
+  onPlay: (id: string) => void
+  onPause: () => void
+  onSkipNext: () => void
+  onSkipPrev: () => void
 }
 
-export default function Step2({ tracks, theme, setTheme, effects, setEffects, visualizer, setVisualizer, typography, setTypography, onBack, onNext }: Step2Props) {
-  const [playingId, setPlayingId] = useState<string>(tracks[0]?.id ?? '')
+export default function Step2({ tracks, theme, setTheme, effects, setEffects, visualizer, setVisualizer, typography, setTypography, onBack, onNext, playingId, isPlaying, onPlay, onPause, onSkipNext, onSkipPrev }: Step2Props) {
   const themeObj = THEMES.find(t => t.id === theme) ?? THEMES[0]
   const playingTrack = tracks.find(t => t.id === playingId) ?? tracks[0]
   const trackIdx = tracks.findIndex(t => t.id === playingId)
@@ -104,9 +108,9 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
       {/* 중앙 — 스테이지 */}
       <div className="s2-stage">
         <div className="s2-stage__top">
-          <Button variant="ghost" size="icon"><Icon name="skipBack" size={14} /></Button>
-          <button type="button" className="s2-play-btn"><Icon name="play" size={14} /></button>
-          <Button variant="ghost" size="icon"><Icon name="skipForward" size={14} /></Button>
+          <Button variant="ghost" size="icon" data-testid="stage-skip-prev" onClick={() => onSkipPrev()}><Icon name="skipBack" size={14} /></Button>
+          <button type="button" className="s2-play-btn" onClick={() => { if (isPlaying) { onPause() } else if (playingTrack) { onPlay(playingTrack.id) } }}><Icon name={isPlaying ? 'pause' : 'play'} size={14} /></button>
+          <Button variant="ghost" size="icon" data-testid="stage-skip-next" onClick={() => onSkipNext()}><Icon name="skipForward" size={14} /></Button>
           <div className="s2-timecode">00:48 / 38:11</div>
           <div className="legend">
             <span className="legend__item">1920×1080</span>
@@ -143,7 +147,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                 key={t.id}
                 className={`s2-clip${playingId === t.id ? ' s2-clip--active' : ''}`}
                 style={{ width: Math.max(48, t.durationSec * 1.5) }}
-                onClick={() => setPlayingId(t.id)}
+                onClick={() => onPlay(t.id)}
               >
                 {String(i + 1).padStart(2, '0')} · {t.title}
               </div>
