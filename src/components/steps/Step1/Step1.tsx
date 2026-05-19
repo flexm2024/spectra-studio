@@ -10,6 +10,16 @@ import type { Track } from '../../../types'
 interface Step1Props {
   tracks: Track[]
   setTracks: (tracks: Track[]) => void
+  playingId: string | null
+  isPlaying: boolean
+  loops: 1 | 2 | 3
+  setLoops: (l: 1 | 2 | 3) => void
+  quality: '96k' | '128k' | '192k'
+  setQuality: (q: '96k' | '128k' | '192k') => void
+  onPlay: (id: string) => void
+  onPause: () => void
+  onSkipNext: () => void
+  onSkipPrev: () => void
   onNext: () => void
 }
 
@@ -31,11 +41,15 @@ const BG_OPTIONS = [
   { value: 'video' as const,    label: '비디오' },
 ]
 
-export default function Step1({ tracks, setTracks, onNext }: Step1Props) {
-  const [playingId, setPlayingId] = useState<string>(tracks[2]?.id ?? tracks[0]?.id ?? '')
+export default function Step1({
+  tracks, setTracks,
+  playingId, isPlaying,
+  loops, setLoops,
+  quality, setQuality,
+  onPlay, onPause, onSkipNext, onSkipPrev,
+  onNext,
+}: Step1Props) {
   const [activeTab, setActiveTab] = useState<'background' | 'logo' | 'stickers'>('background')
-  const [loops, setLoops] = useState<1 | 2 | 3>(1)
-  const [quality, setQuality] = useState<'96k' | '128k' | '192k'>('192k')
   const [bgType, setBgType] = useState<'image' | 'gradient' | 'video'>('gradient')
   const [dragId, setDragId] = useState<string | null>(null)
   const [overId, setOverId] = useState<string | null>(null)
@@ -51,7 +65,7 @@ export default function Step1({ tracks, setTracks, onNext }: Step1Props) {
     const idx = tracks.findIndex(t => t.id === id)
     const next = tracks[idx + 1] ?? tracks[idx - 1]
     setTracks(tracks.filter(t => t.id !== id))
-    if (playingId === id && next) setPlayingId(next.id)
+    if (playingId === id && next) onPlay(next.id)
   }
 
   const moveTrack = (fromId: string, toId: string) => {
@@ -134,7 +148,7 @@ export default function Step1({ tracks, setTracks, onNext }: Step1Props) {
                 onDragOver={e => { e.preventDefault(); if (overId !== t.id) setOverId(t.id) }}
                 onDrop={e => { e.preventDefault(); if (dragId) moveTrack(dragId, t.id); setDragId(null); setOverId(null) }}
                 onDragEnd={() => { setDragId(null); setOverId(null) }}
-                onClick={() => setPlayingId(t.id)}
+                onClick={() => onPlay(t.id)}
               >
                 <div className="track__lead">
                   <span className="track__num">{String(i + 1).padStart(2, '0')}</span>
@@ -143,7 +157,7 @@ export default function Step1({ tracks, setTracks, onNext }: Step1Props) {
                 <button
                   type="button"
                   className="track__play"
-                  onClick={e => { e.stopPropagation(); setPlayingId(playingId === t.id ? (tracks[0]?.id ?? '') : t.id) }}
+                  onClick={e => { e.stopPropagation(); playingId === t.id && isPlaying ? onPause() : onPlay(t.id) }}
                 >
                   <Icon name={playingId === t.id ? 'pause' : 'play'} size={12} />
                 </button>

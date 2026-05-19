@@ -4,7 +4,21 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import Step1 from './Step1'
 import { sampleTracks } from '../../../data/sampleTracks'
 
-const base = { tracks: sampleTracks, setTracks: vi.fn(), onNext: vi.fn() }
+const base = {
+  tracks: sampleTracks,
+  setTracks: vi.fn(),
+  playingId: null as string | null,
+  isPlaying: false,
+  loops: 1 as const,
+  setLoops: vi.fn(),
+  quality: '192k' as const,
+  setQuality: vi.fn(),
+  onPlay: vi.fn(),
+  onPause: vi.fn(),
+  onSkipNext: vi.fn(),
+  onSkipPrev: vi.fn(),
+  onNext: vi.fn(),
+}
 
 describe('Step1', () => {
   it('"미디어 준비" 제목을 렌더링한다', () => {
@@ -13,7 +27,7 @@ describe('Step1', () => {
   })
   it('트랙 목록에 첫 번째 트랙을 표시한다', () => {
     render(<Step1 {...base} />)
-    expect(screen.getByText('가을의 시작')).toBeInTheDocument()
+    expect(screen.getAllByText('가을의 시작').length).toBeGreaterThanOrEqual(1)
   })
   it('트랙 삭제 버튼 클릭 시 setTracks가 호출된다', () => {
     const setTracks = vi.fn()
