@@ -24,6 +24,7 @@ export type ProjectState = {
   playingId: string | null
   background: Background
   logo?: string
+  watermark?: string
   stickers: string[]
   loops: 1 | 2 | 3
   audioQuality: '96k' | '128k' | '192k'
