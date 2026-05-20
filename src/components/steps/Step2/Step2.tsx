@@ -29,6 +29,12 @@ const EFFECT_ITEMS = [
   { key: 'blur'      as const, icon: 'sparkles', title: '배경 블러',           sub: '깊이감 부여 · 24px' },
 ]
 
+const fmt = (sec: number) => {
+  const m = Math.floor(sec / 60)
+  const s = Math.floor(sec % 60)
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+}
+
 interface Step2Props {
   tracks: Track[]
   theme: string
@@ -57,11 +63,6 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
   const playingTrack = tracks.find(t => t.id === playingId) ?? tracks[0]
   const trackIdx = tracks.findIndex(t => t.id === playingId)
   const totalSec = tracks.reduce((acc, t) => acc + t.durationSec, 0)
-  const fmt = (sec: number) => {
-    const m = Math.floor(sec / 60)
-    const s = Math.floor(sec % 60)
-    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-  }
 
   return (
     <div className="step2">
@@ -145,7 +146,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                 className="s2-frame__title"
                 style={{
                   fontSize: `${typography.titleSize}px`,
-                  letterSpacing: `${typography.letterSpacing / 1000}em`,
+                  letterSpacing: `${typography.letterSpacing / 1000}em`, // slider value is in thousandths of em
                 }}
               >
                 {playingTrack?.title}
