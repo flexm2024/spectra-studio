@@ -25,6 +25,7 @@ const base = {
   onSkipPrev: vi.fn(),
   background: { type: 'gradient' } as Background,
   logo: undefined as string | undefined,
+  currentTime: 0,
 }
 
 describe('Step2', () => {
@@ -94,5 +95,43 @@ describe('Step2', () => {
     render(<Step2 {...base} onSkipNext={onSkipNext} />)
     fireEvent.click(screen.getByTestId('stage-skip-next'))
     expect(onSkipNext).toHaveBeenCalledTimes(1)
+  })
+
+  it('currentTime이 타임코드에 MM:SS 형식으로 표시된다', () => {
+    render(<Step2 {...base} currentTime={90} />)
+    expect(screen.getByText(/01:30/)).toBeInTheDocument()
+  })
+
+  it('typography.titleSize가 스테이지 제목 font-size에 반영된다', () => {
+    render(<Step2 {...base} typography={{ titleSize: 60, letterSpacing: -15 }} />)
+    const title = document.querySelector('.s2-frame__title') as HTMLElement
+    expect(title.style.fontSize).toBe('60px')
+  })
+
+  it('typography.letterSpacing이 스테이지 제목 letter-spacing에 반영된다', () => {
+    render(<Step2 {...base} typography={{ titleSize: 48, letterSpacing: 20 }} />)
+    const title = document.querySelector('.s2-frame__title') as HTMLElement
+    expect(title.style.letterSpacing).toBe('0.02em')
+  })
+
+  it('visualizer.type이 wave일 때 SVG 파형이 렌더링된다', () => {
+    render(<Step2 {...base} visualizer={{ type: 'wave', intensity: 70, opacity: 85 }} />)
+    expect(document.querySelector('.s2-frame__wave-svg')).toBeInTheDocument()
+  })
+
+  it('visualizer.type이 orb일 때 orb 컨테이너가 렌더링된다', () => {
+    render(<Step2 {...base} visualizer={{ type: 'orb', intensity: 70, opacity: 85 }} />)
+    expect(document.querySelector('.s2-frame__orb')).toBeInTheDocument()
+  })
+
+  it('effects.vis가 false일 때 비주얼라이저가 렌더링되지 않는다', () => {
+    render(<Step2 {...base} effects={{ vis: false, crossfade: false, ducking: true, blur: false }} />)
+    expect(document.querySelector('.s2-frame__wave')).not.toBeInTheDocument()
+    expect(document.querySelector('.s2-frame__orb')).not.toBeInTheDocument()
+  })
+
+  it('effects.blur가 true일 때 blur overlay가 렌더링된다', () => {
+    render(<Step2 {...base} effects={{ vis: true, crossfade: false, ducking: true, blur: true }} />)
+    expect(document.querySelector('.s2-frame__blur-overlay')).toBeInTheDocument()
   })
 })
