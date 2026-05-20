@@ -187,3 +187,88 @@
 .sort-menu__item:hover {
   background: var(--bg-sunken);
 }
+
+/* 업로드 완료 drop-slot */
+.drop-slot--filled {
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+}
+.drop-slot__thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  min-height: 110px;
+}
+.drop-slot__change {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  color: oklch(1 0 0);
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.drop-slot--filled:hover .drop-slot__change { opacity: 1; }
+
+/* 스티커 그리드 */
+.sticker-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.sticker-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--bg-sunken);
+  border: 1px solid var(--line);
+}
+.sticker-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.sticker-item__del {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  color: oklch(1 0 0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.sticker-item:hover .sticker-item__del { opacity: 1; }
+
+/* Step1 프리뷰 배경 이미지 */
+.preview-frame__bg-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Step1 프리뷰 로고 이미지 */
+.preview-frame__logo-img {
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  object-fit: contain;
+  background: rgba(255, 255, 255, 0.1);
+}
