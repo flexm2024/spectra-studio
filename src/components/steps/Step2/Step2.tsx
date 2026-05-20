@@ -120,7 +120,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
           <Button variant="ghost" size="icon" data-testid="stage-skip-prev" onClick={() => onSkipPrev()}><Icon name="skipBack" size={14} /></Button>
           <button type="button" className="s2-play-btn" onClick={() => { if (isPlaying) { onPause() } else if (playingTrack) { onPlay(playingTrack.id) } }}><Icon name={isPlaying ? 'pause' : 'play'} size={14} /></button>
           <Button variant="ghost" size="icon" data-testid="stage-skip-next" onClick={() => onSkipNext()}><Icon name="skipForward" size={14} /></Button>
-          <div className="s2-timecode">{fmt(currentTime)} / {fmt(totalSec)}</div>
+          <div className="s2-timecode">{fmt(Math.min(currentTime, totalSec))} / {fmt(totalSec)}</div>
           <div className="legend">
             <span className="legend__item">1920×1080</span>
             <span className="legend__item">30 fps</span>
