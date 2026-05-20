@@ -5,7 +5,7 @@ import Button from '../../shared/Button'
 import SegmentedControl from '../../shared/SegmentedControl'
 import Switch from '../../shared/Switch'
 import { waveformFor } from '../../../data/sampleTracks'
-import type { Track, Effects, Visualizer, Typography } from '../../../types'
+import type { Track, Effects, Visualizer, Typography, Background } from '../../../types'
 
 const THEMES = [
   { id: 'midnight', label: 'Midnight',  bg: 'linear-gradient(135deg, #0c1a2e, #050813)' },
@@ -47,9 +47,11 @@ interface Step2Props {
   onPause: () => void
   onSkipNext: () => void
   onSkipPrev: () => void
+  background: Background
+  logo: string | undefined
 }
 
-export default function Step2({ tracks, theme, setTheme, effects, setEffects, visualizer, setVisualizer, typography, setTypography, onBack, onNext, playingId, isPlaying, onPlay, onPause, onSkipNext, onSkipPrev }: Step2Props) {
+export default function Step2({ tracks, theme, setTheme, effects, setEffects, visualizer, setVisualizer, typography, setTypography, onBack, onNext, playingId, isPlaying, onPlay, onPause, onSkipNext, onSkipPrev, background, logo }: Step2Props) {
   const themeObj = THEMES.find(t => t.id === theme) ?? THEMES[0]
   const playingTrack = tracks.find(t => t.id === playingId) ?? tracks[0]
   const trackIdx = tracks.findIndex(t => t.id === playingId)
@@ -119,9 +121,18 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
           </div>
         </div>
         <div className="s2-stage__viewport">
-          <div className="s2-stage__frame" style={{ background: themeObj.bg }}>
+          <div
+            className="s2-stage__frame"
+            style={{ background: background.src ? undefined : themeObj.bg }}
+          >
+            {background.src && (
+              <img className="s2-frame__bg-img" src={background.src} alt="" />
+            )}
             <div className="s2-frame__content">
-              <div className="s2-frame__logo"><Icon name="logo" size={26} /></div>
+              {logo
+                ? <img className="s2-frame__logo-img" src={logo} alt="" />
+                : <div className="s2-frame__logo"><Icon name="logo" size={26} /></div>
+              }
               <h2 className="s2-frame__title">{playingTrack?.title}</h2>
               <div className="s2-frame__sub">
                 {playingTrack?.artist} · Track {String(trackIdx + 1).padStart(2, '0')} / {tracks.length}

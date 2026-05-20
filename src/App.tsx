@@ -129,6 +129,8 @@ export default function App() {
             onSkipPrev={onSkipPrev}
             onBack={() => setStep(1)}
             onNext={() => setStep(3)}
+            background={background}
+            logo={logo}
           />
         )}
         {step === 3 && (
