@@ -49,12 +49,19 @@ interface Step2Props {
   onSkipPrev: () => void
   background: Background
   logo: string | undefined
+  currentTime: number
 }
 
-export default function Step2({ tracks, theme, setTheme, effects, setEffects, visualizer, setVisualizer, typography, setTypography, onBack, onNext, playingId, isPlaying, onPlay, onPause, onSkipNext, onSkipPrev, background, logo }: Step2Props) {
+export default function Step2({ tracks, theme, setTheme, effects, setEffects, visualizer, setVisualizer, typography, setTypography, onBack, onNext, playingId, isPlaying, onPlay, onPause, onSkipNext, onSkipPrev, background, logo, currentTime }: Step2Props) {
   const themeObj = THEMES.find(t => t.id === theme) ?? THEMES[0]
   const playingTrack = tracks.find(t => t.id === playingId) ?? tracks[0]
   const trackIdx = tracks.findIndex(t => t.id === playingId)
+  const totalSec = tracks.reduce((acc, t) => acc + t.durationSec, 0)
+  const fmt = (sec: number) => {
+    const m = Math.floor(sec / 60)
+    const s = Math.floor(sec % 60)
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+  }
 
   return (
     <div className="step2">
@@ -113,7 +120,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
           <Button variant="ghost" size="icon" data-testid="stage-skip-prev" onClick={() => onSkipPrev()}><Icon name="skipBack" size={14} /></Button>
           <button type="button" className="s2-play-btn" onClick={() => { if (isPlaying) { onPause() } else if (playingTrack) { onPlay(playingTrack.id) } }}><Icon name={isPlaying ? 'pause' : 'play'} size={14} /></button>
           <Button variant="ghost" size="icon" data-testid="stage-skip-next" onClick={() => onSkipNext()}><Icon name="skipForward" size={14} /></Button>
-          <div className="s2-timecode">00:48 / 38:11</div>
+          <div className="s2-timecode">{fmt(currentTime)} / {fmt(totalSec)}</div>
           <div className="legend">
             <span className="legend__item">1920×1080</span>
             <span className="legend__item">30 fps</span>
@@ -128,21 +135,70 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
             {background.src && (
               <img className="s2-frame__bg-img" src={background.src} alt="" />
             )}
+            {effects.blur && <div className="s2-frame__blur-overlay" />}
             <div className="s2-frame__content">
               {logo
                 ? <img className="s2-frame__logo-img" src={logo} alt="" />
                 : <div className="s2-frame__logo"><Icon name="logo" size={26} /></div>
               }
-              <h2 className="s2-frame__title">{playingTrack?.title}</h2>
+              <h2
+                className="s2-frame__title"
+                style={{
+                  fontSize: `${typography.titleSize}px`,
+                  letterSpacing: `${typography.letterSpacing / 1000}em`,
+                }}
+              >
+                {playingTrack?.title}
+              </h2>
               <div className="s2-frame__sub">
                 {playingTrack?.artist} · Track {String(trackIdx + 1).padStart(2, '0')} / {tracks.length}
               </div>
             </div>
-            <div className="s2-frame__wave">
-              {waveformFor(trackIdx + 1, 80).map((h, i) => (
-                <div key={i} className="s2-frame__wave-bar" style={{ height: `${h * 100}%` }} />
-              ))}
-            </div>
+            {effects.vis && (
+              <>
+                {visualizer.type !== 'orb' && (
+                  <div
+                    className="s2-frame__wave"
+                    style={{ opacity: visualizer.opacity / 100 }}
+                  >
+                    {visualizer.type === 'bars' && waveformFor(trackIdx + 1, 80).map((h, i) => (
+                      <div
+                        key={i}
+                        className="s2-frame__wave-bar"
+                        style={{ height: `${h * (visualizer.intensity / 100) * 100}%` }}
+                      />
+                    ))}
+                    {visualizer.type === 'wave' && (
+                      <svg className="s2-frame__wave-svg" viewBox="0 0 80 40" preserveAspectRatio="none">
+                        <polyline
+                          className="s2-frame__wave-line"
+                          points={waveformFor(trackIdx + 1, 80)
+                            .map((h, i) => `${i},${40 - h * (visualizer.intensity / 100) * 38}`)
+                            .join(' ')}
+                        />
+                      </svg>
+                    )}
+                  </div>
+                )}
+                {visualizer.type === 'orb' && (
+                  <div
+                    className="s2-frame__orb"
+                    style={{ opacity: visualizer.opacity / 100 }}
+                  >
+                    {[1, 0.65, 0.35].map((scale, i) => (
+                      <div
+                        key={i}
+                        className="s2-frame__orb-ring"
+                        style={{
+                          width:  `${scale * visualizer.intensity * 0.8}px`,
+                          height: `${scale * visualizer.intensity * 0.8}px`,
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
             <div className="s2-frame__badge-l">SPECTRA · LIVE</div>
             <div className="s2-frame__badge-r">{String(trackIdx + 1).padStart(2, '0')} / {tracks.length}</div>
           </div>
