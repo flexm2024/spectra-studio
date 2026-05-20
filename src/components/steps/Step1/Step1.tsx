@@ -5,7 +5,7 @@ import Icon from '../../../icons'
 import Button from '../../shared/Button'
 import SegmentedControl from '../../shared/SegmentedControl'
 import { waveformFor } from '../../../data/sampleTracks'
-import type { Track } from '../../../types'
+import type { Track, Background } from '../../../types'
 
 interface Step1Props {
   tracks: Track[]
@@ -21,6 +21,15 @@ interface Step1Props {
   onSkipNext: () => void
   onSkipPrev: () => void
   onNext: () => void
+  background: Background
+  setBackground: (bg: Background) => void
+  logo: string | undefined
+  setLogo: (url: string | undefined) => void
+  watermark: string | undefined
+  setWatermark: (url: string | undefined) => void
+  stickers: string[]
+  setStickers: (s: string[]) => void
+  currentTime: number
 }
 
 const LOOP_OPTIONS = [
@@ -48,13 +57,21 @@ export default function Step1({
   quality, setQuality,
   onPlay, onPause, onSkipNext, onSkipPrev,
   onNext,
+  background, setBackground,
+  logo, setLogo,
+  watermark, setWatermark,
+  stickers, setStickers,
+  currentTime,
 }: Step1Props) {
   const [activeTab, setActiveTab] = useState<'background' | 'logo' | 'stickers'>('background')
-  const [bgType, setBgType] = useState<'image' | 'gradient' | 'video'>('gradient')
   const [dragId, setDragId] = useState<string | null>(null)
   const [overId, setOverId] = useState<string | null>(null)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const bgFileRef = useRef<HTMLInputElement>(null)
+  const logoFileRef = useRef<HTMLInputElement>(null)
+  const watermarkFileRef = useRef<HTMLInputElement>(null)
+  const stickerFileRef = useRef<HTMLInputElement>(null)
   const [sortOpen, setSortOpen] = useState(false)
   const sortRef = useRef<HTMLDivElement>(null)
 
@@ -71,18 +88,22 @@ export default function Step1({
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return
+    const fileList = Array.from(files)
     const newTracks: Track[] = []
-    for (const file of Array.from(files)) {
+    for (const file of fileList) {
       const title = file.name.replace(/\.[^/.]+$/, '')
-      if (tracks.some(t => t.title === title) || newTracks.some(t => t.title === title)) continue
+      if (newTracks.some(t => t.title === title)) continue
       const audioUrl = URL.createObjectURL(file)
       const durationSec = await new Promise<number>(resolve => {
         const audio = new Audio()
+        audio.preload = 'metadata'
+        const timer = setTimeout(() => resolve(0), 8000)
         audio.addEventListener('loadedmetadata', () => {
+          clearTimeout(timer)
           const d = audio.duration
           resolve(isFinite(d) ? Math.round(d) : 0)
         })
-        audio.addEventListener('error', () => resolve(0))
+        audio.addEventListener('error', () => { clearTimeout(timer); resolve(0) })
         audio.src = audioUrl
       })
       const minutes = Math.floor(durationSec / 60)
@@ -99,10 +120,45 @@ export default function Step1({
         bpm: 0,
         src: '',
         audioUrl,
-        waveform: waveformFor(tracks.length + newTracks.length + 1),
+        waveform: waveformFor(newTracks.length + 1),
       })
     }
-    if (newTracks.length > 0) setTracks([...tracks, ...newTracks])
+    if (newTracks.length === 0) return
+    setTracks(prev => {
+      const deduped = newTracks.filter(nt => !prev.some(t => t.title === nt.title))
+      return deduped.length > 0 ? [...prev, ...deduped] : prev
+    })
+  }
+
+  const handleBgFile = (files: FileList | null) => {
+    if (!files || files.length === 0) return
+    if (background.src) URL.revokeObjectURL(background.src)
+    setBackground({ type: 'image', src: URL.createObjectURL(files[0]) })
+  }
+
+  const handleLogoFile = (files: FileList | null) => {
+    if (!files || files.length === 0) return
+    if (logo) URL.revokeObjectURL(logo)
+    setLogo(URL.createObjectURL(files[0]))
+  }
+
+  const handleWatermarkFile = (files: FileList | null) => {
+    if (!files || files.length === 0) return
+    if (watermark) URL.revokeObjectURL(watermark)
+    setWatermark(URL.createObjectURL(files[0]))
+  }
+
+  const handleStickerFiles = (files: FileList | null) => {
+    if (!files || files.length === 0) return
+    const remaining = 5 - stickers.length
+    if (remaining <= 0) return
+    const urls = Array.from(files).slice(0, remaining).map(f => URL.createObjectURL(f))
+    setStickers([...stickers, ...urls])
+  }
+
+  const handleDeleteSticker = (url: string) => {
+    URL.revokeObjectURL(url)
+    setStickers(stickers.filter(s => s !== url))
   }
 
   const applySort = (key: 'titleAsc' | 'titleDesc' | 'bpmAsc' | 'bpmDesc') => {
@@ -301,9 +357,15 @@ export default function Step1({
         {/* 라이브 프리뷰 */}
         <div className="card preview-card">
           <div className="preview-frame">
-            <div className="preview-frame__bg" />
+            {background.src
+              ? <img className="preview-frame__bg-img" src={background.src} alt="" />
+              : <div className="preview-frame__bg" />
+            }
             <div className="preview-frame__content">
-              <div className="preview-frame__logo"><Icon name="logo" size={22} /></div>
+              {logo
+                ? <img className="preview-frame__logo-img" src={logo} alt="" />
+                : <div className="preview-frame__logo"><Icon name="logo" size={22} /></div>
+              }
               <h2 className="preview-frame__title">{playingTrack?.title}</h2>
               <div className="preview-frame__sub">{playingTrack?.artist} · {playingTrack?.tag}</div>
             </div>
@@ -327,7 +389,10 @@ export default function Step1({
             </button>
             <Button variant="ghost" size="icon" onClick={() => onSkipNext()}><Icon name="skipForward" size={14} /></Button>
             <div className="preview-controls__progress">
-              <div className="preview-controls__fill" />
+              <div
+                className="preview-controls__fill"
+                style={{ width: `${playingTrack ? (currentTime / Math.max(1, playingTrack.durationSec)) * 100 : 0}%` }}
+              />
             </div>
             <span className="preview-controls__time">0:48 / {playingTrack?.duration}</span>
           </div>
@@ -344,44 +409,146 @@ export default function Step1({
                 onClick={() => setActiveTab(tab)}
               >
                 <Icon name={tab === 'background' ? 'image' : tab === 'logo' ? 'layers' : 'sticker'} size={14} />
-                {tab === 'background' ? '배경' : tab === 'logo' ? '로고' : <>스티커 <span className="tab__badge">0 / 5</span></>}
+                {tab === 'background' ? '배경' : tab === 'logo' ? '로고' : <>스티커 <span className="tab__badge">{stickers.length} / 5</span></>}
               </button>
             ))}
           </div>
           {activeTab === 'background' && (
             <div style={{ padding: 14 }}>
-              <div className="drop-slot">
-                <Icon name="image" size={22} />
-                <div>배경 이미지를 끌어다 놓거나 클릭</div>
-                <div className="drop-slot__hint">JPG · PNG · 최소 1920×1080</div>
+              <div
+                className={`drop-slot${background.src ? ' drop-slot--filled' : ''}`}
+                onClick={() => bgFileRef.current?.click()}
+                onDragOver={e => e.preventDefault()}
+                onDrop={e => { e.preventDefault(); handleBgFile(e.dataTransfer.files) }}
+              >
+                {background.src ? (
+                  <>
+                    <img className="drop-slot__thumb" src={background.src} alt="" />
+                    <div className="drop-slot__change">변경</div>
+                  </>
+                ) : (
+                  <>
+                    <Icon name="image" size={22} />
+                    <div>배경 이미지를 끌어다 놓거나 클릭</div>
+                    <div className="drop-slot__hint">JPG · PNG · 최소 1920×1080</div>
+                  </>
+                )}
               </div>
+              <input
+                data-testid="bg-file-input"
+                ref={bgFileRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={e => { handleBgFile(e.target.files); e.target.value = '' }}
+              />
               <div className="form-section" style={{ paddingLeft: 0, paddingRight: 0 }}>
                 <div className="form-section__label">배경 타입</div>
-                <SegmentedControl options={BG_OPTIONS} value={bgType} onChange={setBgType} />
+                <SegmentedControl
+                  options={BG_OPTIONS}
+                  value={background.type}
+                  onChange={type => setBackground({ ...background, type })}
+                />
               </div>
             </div>
           )}
           {activeTab === 'logo' && (
             <div style={{ padding: 14, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <div className="drop-slot">
-                <Icon name="layers" size={20} />
-                <div style={{ fontSize: 11.5, fontWeight: 600 }}>로고</div>
-                <div className="drop-slot__hint">PNG · SVG</div>
+              <div
+                className={`drop-slot${logo ? ' drop-slot--filled' : ''}`}
+                onClick={() => logoFileRef.current?.click()}
+                onDragOver={e => e.preventDefault()}
+                onDrop={e => { e.preventDefault(); handleLogoFile(e.dataTransfer.files) }}
+              >
+                {logo ? (
+                  <>
+                    <img className="drop-slot__thumb" src={logo} alt="" />
+                    <div className="drop-slot__change">변경</div>
+                  </>
+                ) : (
+                  <>
+                    <Icon name="layers" size={20} />
+                    <div style={{ fontSize: 11.5, fontWeight: 600 }}>로고</div>
+                    <div className="drop-slot__hint">PNG · SVG</div>
+                  </>
+                )}
               </div>
-              <div className="drop-slot">
-                <Icon name="sticker" size={20} />
-                <div style={{ fontSize: 11.5, fontWeight: 600 }}>워터마크</div>
-                <div className="drop-slot__hint">선택 · PNG</div>
+              <input
+                data-testid="logo-file-input"
+                ref={logoFileRef}
+                type="file"
+                accept="image/*,.svg"
+                style={{ display: 'none' }}
+                onChange={e => { handleLogoFile(e.target.files); e.target.value = '' }}
+              />
+              <div
+                className={`drop-slot${watermark ? ' drop-slot--filled' : ''}`}
+                onClick={() => watermarkFileRef.current?.click()}
+                onDragOver={e => e.preventDefault()}
+                onDrop={e => { e.preventDefault(); handleWatermarkFile(e.dataTransfer.files) }}
+              >
+                {watermark ? (
+                  <>
+                    <img className="drop-slot__thumb" src={watermark} alt="" />
+                    <div className="drop-slot__change">변경</div>
+                  </>
+                ) : (
+                  <>
+                    <Icon name="sticker" size={20} />
+                    <div style={{ fontSize: 11.5, fontWeight: 600 }}>워터마크</div>
+                    <div className="drop-slot__hint">선택 · PNG</div>
+                  </>
+                )}
               </div>
+              <input
+                data-testid="watermark-file-input"
+                ref={watermarkFileRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={e => { handleWatermarkFile(e.target.files); e.target.value = '' }}
+              />
             </div>
           )}
           {activeTab === 'stickers' && (
             <div style={{ padding: 14 }}>
-              <div className="drop-slot">
-                <Icon name="sticker" size={22} />
-                <div>스티커/GIF를 끌어다 놓으세요</div>
-                <div className="drop-slot__hint">GIF · PNG · 최대 5개</div>
-              </div>
+              {stickers.length > 0 && (
+                <div className="sticker-grid">
+                  {stickers.map(url => (
+                    <div key={url} className="sticker-item">
+                      <img src={url} alt="" />
+                      <button
+                        type="button"
+                        className="sticker-item__del"
+                        onClick={() => handleDeleteSticker(url)}
+                      >
+                        <Icon name="x" size={10} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {stickers.length < 5 && (
+                <div
+                  className="drop-slot"
+                  onClick={() => stickerFileRef.current?.click()}
+                  onDragOver={e => e.preventDefault()}
+                  onDrop={e => { e.preventDefault(); handleStickerFiles(e.dataTransfer.files) }}
+                >
+                  <Icon name="sticker" size={22} />
+                  <div>스티커/GIF를 끌어다 놓으세요</div>
+                  <div className="drop-slot__hint">GIF · PNG · 최대 5개</div>
+                </div>
+              )}
+              <input
+                data-testid="sticker-file-input"
+                ref={stickerFileRef}
+                type="file"
+                accept="image/*,.gif"
+                multiple
+                style={{ display: 'none' }}
+                onChange={e => { handleStickerFiles(e.target.files); e.target.value = '' }}
+              />
             </div>
           )}
         </div>
