@@ -124,11 +124,11 @@ export default function Step1({
       })
     }
     if (newTracks.length === 0) return
+    newTracks
+      .filter(nt => tracks.some(t => t.title === nt.title))
+      .forEach(nt => { if (nt.audioUrl) URL.revokeObjectURL(nt.audioUrl) })
     setTracks(prev => {
       const deduped = newTracks.filter(nt => !prev.some(t => t.title === nt.title))
-      newTracks
-        .filter(nt => prev.some(t => t.title === nt.title))
-        .forEach(nt => { if (nt.audioUrl) URL.revokeObjectURL(nt.audioUrl) })
       return deduped.length > 0 ? [...prev, ...deduped] : prev
     })
   }
@@ -156,12 +156,12 @@ export default function Step1({
     const remaining = 5 - stickers.length
     if (remaining <= 0) return
     const urls = Array.from(files).slice(0, remaining).map(f => URL.createObjectURL(f))
-    setStickers([...stickers, ...urls])
+    setStickers(prev => [...prev, ...urls])
   }
 
   const handleDeleteSticker = (url: string) => {
     URL.revokeObjectURL(url)
-    setStickers(stickers.filter(s => s !== url))
+    setStickers(prev => prev.filter(s => s !== url))
   }
 
   const applySort = (key: 'titleAsc' | 'titleDesc' | 'bpmAsc' | 'bpmDesc') => {
