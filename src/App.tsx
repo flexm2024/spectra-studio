@@ -131,6 +131,7 @@ export default function App() {
             onNext={() => setStep(3)}
             background={background}
             logo={logo}
+            currentTime={audioCurrentTime}
           />
         )}
         {step === 3 && (
