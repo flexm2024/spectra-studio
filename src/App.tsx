@@ -1,6 +1,6 @@
 // 앱 루트 — 전체 상태 관리 및 레이아웃 조합
 import { useState, useRef } from 'react'
-import type { Track, Effects, Visualizer, Typography, ExportSettings } from './types'
+import type { Track, Background, Effects, Visualizer, Typography, ExportSettings } from './types'
 import { sampleTracks } from './data/sampleTracks'
 import Sidebar from './components/Sidebar/Sidebar'
 import Header from './components/Header/Header'
@@ -28,6 +28,11 @@ export default function App() {
     thumbnail: true,
     chapters: false,
   })
+  const [background, setBackground] = useState<Background>({ type: 'gradient' })
+  const [logo, setLogo] = useState<string | undefined>(undefined)
+  const [watermark, setWatermark] = useState<string | undefined>(undefined)
+  const [stickers, setStickers] = useState<string[]>([])
+  const [audioCurrentTime, setAudioCurrentTime] = useState(0)
 
   const onPlay = (id: string) => {
     const track = tracks.find(t => t.id === id)
@@ -74,6 +79,7 @@ export default function App() {
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
         onEnded={handleTrackEnded}
+        onTimeUpdate={e => setAudioCurrentTime(e.currentTarget.currentTime)}
       />
       <Sidebar step={step} setStep={setStep} tracks={tracks} />
       <Header step={step} setStep={setStep} />
@@ -93,6 +99,15 @@ export default function App() {
             onSkipNext={onSkipNext}
             onSkipPrev={onSkipPrev}
             onNext={() => setStep(2)}
+            background={background}
+            setBackground={setBackground}
+            logo={logo}
+            setLogo={setLogo}
+            watermark={watermark}
+            setWatermark={setWatermark}
+            stickers={stickers}
+            setStickers={setStickers}
+            currentTime={audioCurrentTime}
           />
         )}
         {step === 2 && (
