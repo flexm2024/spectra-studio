@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import Step1 from './Step1'
 import { sampleTracks } from '../../../data/sampleTracks'
-import type { Track } from '../../../types'
+import type { Track, Background } from '../../../types'
 
 const base = {
   tracks: sampleTracks,
@@ -19,6 +19,15 @@ const base = {
   onSkipNext: vi.fn(),
   onSkipPrev: vi.fn(),
   onNext: vi.fn(),
+  background: { type: 'gradient' } as Background,
+  setBackground: vi.fn(),
+  logo: undefined as string | undefined,
+  setLogo: vi.fn(),
+  watermark: undefined as string | undefined,
+  setWatermark: vi.fn(),
+  stickers: [] as string[],
+  setStickers: vi.fn(),
+  currentTime: 0,
 }
 
 describe('Step1', () => {
@@ -122,5 +131,42 @@ describe('Step1', () => {
     // buttons: [skipBack, preview-play, skipForward] (Button renders as <button>)
     fireEvent.click(buttons[buttons.length - 1])
     expect(onSkipNext).toHaveBeenCalledTimes(1)
+  })
+
+  it('배경 파일 선택 시 setBackground가 type: image로 호출된다', () => {
+    const setBackground = vi.fn()
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:fake-bg')
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+    render(<Step1 {...base} setBackground={setBackground} />)
+    const bgInput = document.querySelector('[data-testid="bg-file-input"]') as HTMLInputElement
+    const file = new File([''], 'bg.jpg', { type: 'image/jpeg' })
+    fireEvent.change(bgInput, { target: { files: [file] } })
+    expect(setBackground).toHaveBeenCalledWith({ type: 'image', src: 'blob:fake-bg' })
+    vi.restoreAllMocks()
+  })
+
+  it('로고 파일 선택 시 setLogo가 호출된다', () => {
+    const setLogo = vi.fn()
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:fake-logo')
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+    render(<Step1 {...base} setLogo={setLogo} />)
+    fireEvent.click(screen.getByText('로고'))
+    const logoInput = document.querySelector('[data-testid="logo-file-input"]') as HTMLInputElement
+    const file = new File([''], 'logo.png', { type: 'image/png' })
+    fireEvent.change(logoInput, { target: { files: [file] } })
+    expect(setLogo).toHaveBeenCalledWith('blob:fake-logo')
+    vi.restoreAllMocks()
+  })
+
+  it('스티커가 있을 때 뱃지가 "N / 5"로 표시된다', () => {
+    render(<Step1 {...base} stickers={['blob:1', 'blob:2', 'blob:3']} />)
+    expect(screen.getByText('3 / 5')).toBeInTheDocument()
+  })
+
+  it('currentTime이 주어질 때 진행바 너비가 비율로 계산된다', () => {
+    const track = sampleTracks[0]  // durationSec = 131
+    render(<Step1 {...base} playingId={track.id} currentTime={track.durationSec / 2} />)
+    const fill = document.querySelector('.preview-controls__fill') as HTMLElement
+    expect(fill.style.width).toBe('50%')
   })
 })
