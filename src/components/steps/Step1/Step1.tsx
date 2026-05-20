@@ -9,7 +9,7 @@ import type { Track, Background } from '../../../types'
 
 interface Step1Props {
   tracks: Track[]
-  setTracks: (tracks: Track[]) => void
+  setTracks: (tracks: Track[] | ((prev: Track[]) => Track[])) => void
   playingId: string | null
   isPlaying: boolean
   loops: 1 | 2 | 3
@@ -126,6 +126,9 @@ export default function Step1({
     if (newTracks.length === 0) return
     setTracks(prev => {
       const deduped = newTracks.filter(nt => !prev.some(t => t.title === nt.title))
+      newTracks
+        .filter(nt => prev.some(t => t.title === nt.title))
+        .forEach(nt => { if (nt.audioUrl) URL.revokeObjectURL(nt.audioUrl) })
       return deduped.length > 0 ? [...prev, ...deduped] : prev
     })
   }
