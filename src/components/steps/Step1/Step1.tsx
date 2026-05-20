@@ -28,7 +28,7 @@ interface Step1Props {
   watermark: string | undefined
   setWatermark: (url: string | undefined) => void
   stickers: string[]
-  setStickers: (s: string[]) => void
+  setStickers: (s: string[] | ((prev: string[]) => string[])) => void
   currentTime: number
 }
 
