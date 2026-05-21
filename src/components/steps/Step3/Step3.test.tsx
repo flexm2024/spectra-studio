@@ -21,6 +21,9 @@ const base = {
   quality: '192k' as const,
   setExportSettings: vi.fn(),
   onBack: vi.fn(),
+  background: { type: 'gradient' } as Background,
+  stickers: [] as string[],
+  typography: { titleSize: 48, letterSpacing: -15 } as Typography,
 }
 
 describe('Step3', () => {
