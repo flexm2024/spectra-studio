@@ -56,6 +56,7 @@ export function drawFrame(input: DrawFrameInput): void {
   // 3. 비주얼라이저
   if (effects.vis) {
     drawVisualizer(ctx, width, height, frequencyData, visualizer)
+    ctx.globalAlpha = 1
   }
 
   // 4. 타이포그래피
