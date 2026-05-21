@@ -4,6 +4,11 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import Step3 from './Step3'
 import { sampleTracks } from '../../../data/sampleTracks'
 import type { Background, Typography } from '../../../types'
+import { renderVideo } from '../../../lib/renderer'
+
+vi.mock('../../../lib/renderer', () => ({
+  renderVideo: vi.fn().mockResolvedValue(new Blob(['fake'], { type: 'video/mp4' })),
+}))
 
 const base = {
   tracks: sampleTracks,
@@ -80,6 +85,25 @@ describe('Step3', () => {
     it('logo prop을 받아도 정상 렌더링된다', () => {
       render(<Step3 {...baseV2} logo="blob:fake" />)
       expect(screen.getByText('영상 출력')).toBeInTheDocument()
+    })
+  })
+
+  describe('Step3 렌더링 연결', () => {
+    it('"렌더링 시작" 클릭 시 renderVideo가 올바른 인자로 호출된다', async () => {
+      render(<Step3 {...base} />)
+      fireEvent.click(screen.getByText(/렌더링 시작/))
+      await vi.waitFor(() => {
+        expect(renderVideo).toHaveBeenCalledWith(
+          expect.objectContaining({ tracks: base.tracks }),
+          expect.any(Function),
+        )
+      })
+    })
+
+    it('렌더링 완료 시 "렌더링 완료" 메시지가 표시된다', async () => {
+      render(<Step3 {...base} />)
+      fireEvent.click(screen.getByText(/렌더링 시작/))
+      await screen.findByText(/렌더링 완료/)
     })
   })
 })

@@ -1,5 +1,5 @@
 // Step 3 — 영상 출력: 설정 요약, 내보내기 패널, 렌더링 진행 UI
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import './Step3.css'
 import Icon from '../../../icons'
 import Button from '../../shared/Button'
@@ -7,6 +7,7 @@ import SegmentedControl from '../../shared/SegmentedControl'
 import Switch from '../../shared/Switch'
 import { waveformFor } from '../../../data/sampleTracks'
 import type { Track, Effects, Visualizer, ExportSettings, Background, Typography } from '../../../types'
+import { renderVideo } from '../../../lib/renderer'
 
 const THEMES = [
   { id: 'midnight', label: 'Midnight',  bg: 'linear-gradient(135deg, #0c1a2e, #050813)' },
@@ -51,25 +52,26 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
   const sizeMb = Math.round(totalSec * (exportSettings.resolution === '4k' ? 1.5 : exportSettings.resolution === '1080p' ? 0.42 : 0.22))
   const themeObj = THEMES.find(t => t.id === theme) ?? THEMES[0]
 
-  const startRender = () => {
+  const startRender = async () => {
     setRenderState('rendering')
     setProgress(0)
+    try {
+      const blob = await renderVideo(
+        { tracks, theme, effects, visualizer, typography, background, logo, watermark, stickers, exportSettings, loops },
+        pct => setProgress(Math.round(pct)),
+      )
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${exportSettings.filename}.${exportSettings.format}`
+      a.click()
+      URL.revokeObjectURL(url)
+      setRenderState('done')
+    } catch (err) {
+      console.error('렌더링 실패:', err)
+      setRenderState('idle')
+    }
   }
-
-  useEffect(() => {
-    if (renderState !== 'rendering') return
-    const interval = setInterval(() => {
-      setProgress(p => {
-        if (p >= 100) {
-          clearInterval(interval)
-          setRenderState('done')
-          return 100
-        }
-        return Math.min(100, p + 3)
-      })
-    }, 100)
-    return () => clearInterval(interval)
-  }, [renderState])
 
   return (
     <div className="step3">
