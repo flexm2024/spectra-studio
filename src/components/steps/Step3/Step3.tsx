@@ -6,7 +6,7 @@ import Button from '../../shared/Button'
 import SegmentedControl from '../../shared/SegmentedControl'
 import Switch from '../../shared/Switch'
 import { waveformFor } from '../../../data/sampleTracks'
-import type { Track, Effects, Visualizer, ExportSettings } from '../../../types'
+import type { Track, Effects, Visualizer, ExportSettings, Background, Typography } from '../../../types'
 
 const THEMES = [
   { id: 'midnight', label: 'Midnight',  bg: 'linear-gradient(135deg, #0c1a2e, #050813)' },
@@ -33,11 +33,16 @@ interface Step3Props {
   loops: 1 | 2 | 3
   quality: '96k' | '128k' | '192k'
   onBack: () => void
+  background: Background
+  logo?: string
+  watermark?: string
+  stickers: string[]
+  typography: Typography
 }
 
 type RenderState = 'idle' | 'rendering' | 'done'
 
-export default function Step3({ tracks, theme, effects, visualizer, exportSettings, setExportSettings, loops, quality, onBack }: Step3Props) {
+export default function Step3({ tracks, theme, effects, visualizer, exportSettings, setExportSettings, loops, quality, onBack, background, logo, watermark, stickers, typography }: Step3Props) {
   const [renderState, setRenderState] = useState<RenderState>('idle')
   const [progress, setProgress] = useState(0)
 

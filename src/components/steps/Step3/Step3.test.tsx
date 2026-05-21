@@ -3,6 +3,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import Step3 from './Step3'
 import { sampleTracks } from '../../../data/sampleTracks'
+import type { Background, Typography } from '../../../types'
 
 const base = {
   tracks: sampleTracks,
@@ -58,5 +59,24 @@ describe('Step3', () => {
     render(<Step3 {...base} />)
     const saveBtn = screen.getByRole('button', { name: /프로젝트로 저장/ })
     expect(saveBtn).toBeDisabled()
+  })
+
+  describe('Step3 새 props 수용', () => {
+    const baseV2 = {
+      ...base,
+      background: { type: 'gradient' } as Background,
+      stickers: [] as string[],
+      typography: { titleSize: 48, letterSpacing: -15 } as Typography,
+    }
+
+    it('background prop을 받아도 정상 렌더링된다', () => {
+      render(<Step3 {...baseV2} />)
+      expect(screen.getByText('영상 출력')).toBeInTheDocument()
+    })
+
+    it('logo prop을 받아도 정상 렌더링된다', () => {
+      render(<Step3 {...baseV2} logo="blob:fake" />)
+      expect(screen.getByText('영상 출력')).toBeInTheDocument()
+    })
   })
 })

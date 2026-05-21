@@ -145,6 +145,11 @@ export default function App() {
             loops={loops}
             quality={quality}
             onBack={() => setStep(2)}
+            background={background}
+            logo={logo}
+            watermark={watermark}
+            stickers={stickers}
+            typography={typography}
           />
         )}
       </main>
