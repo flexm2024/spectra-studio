@@ -63,9 +63,9 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `${exportSettings.filename}.${exportSettings.format}`
+      a.download = `${exportSettings.filename}.mp4`
       a.click()
-      URL.revokeObjectURL(url)
+      setTimeout(() => URL.revokeObjectURL(url), 60_000)
       setRenderState('done')
     } catch (err) {
       console.error('렌더링 실패:', err)
@@ -107,7 +107,7 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
           <div className="s3-stat">
             <div className="s3-stat__label">예상 크기</div>
             <div className="s3-stat__value">{sizeMb} <span className="s3-stat__unit">MB</span></div>
-            <div className="s3-stat__sub">≈ {Math.round(sizeMb / (totalSec / 60))} MB/min</div>
+            <div className="s3-stat__sub">≈ {totalSec > 0 ? Math.round(sizeMb / (totalSec / 60)) : 0} MB/min</div>
           </div>
         </div>
 

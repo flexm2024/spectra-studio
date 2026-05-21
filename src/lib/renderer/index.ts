@@ -45,10 +45,10 @@ export async function renderVideo(input: RenderInput, onProgress: (pct: number) 
   onProgress(40)
 
   const [backgroundImage, logoImage, watermarkImage, ...stickerImages] = await Promise.all([
-    input.background.src ? loadImageBitmap(input.background.src) : Promise.resolve(undefined),
-    input.logo ? loadImageBitmap(input.logo) : Promise.resolve(undefined),
-    input.watermark ? loadImageBitmap(input.watermark) : Promise.resolve(undefined),
-    ...input.stickers.map(loadImageBitmap),
+    input.background.src ? loadImageBitmap(input.background.src).catch(() => undefined) : Promise.resolve(undefined),
+    input.logo ? loadImageBitmap(input.logo).catch(() => undefined) : Promise.resolve(undefined),
+    input.watermark ? loadImageBitmap(input.watermark).catch(() => undefined) : Promise.resolve(undefined),
+    ...input.stickers.map(url => loadImageBitmap(url).catch(() => undefined)),
   ])
 
   const [width, height] = RESOLUTION[input.exportSettings.resolution]

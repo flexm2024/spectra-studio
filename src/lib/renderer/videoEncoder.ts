@@ -47,6 +47,8 @@ export async function encodeVideo(input: EncodeVideoInput): Promise<Blob> {
     fastStart: 'in-memory',
   })
 
+  let encoderError: Error | null = null
+
   const videoEncoder = new VideoEncoder({
     output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
     error: e => { encoderError = e },
@@ -72,60 +74,64 @@ export async function encodeVideo(input: EncodeVideoInput): Promise<Blob> {
 
   const canvas = new OffscreenCanvas(width, height)
 
-  let encoderError: Error | null = null
+  try {
+    // 비디오 프레임 인코딩
+    for (let fi = 0; fi < frameCount; fi++) {
+      const timeSec = fi / FPS
+      const sampleOffset = Math.floor(timeSec * audioBuffer.sampleRate)
+      const frequencyData = computeFrequencyBands(pcmData, sampleOffset, 2048, 80)
 
-  // 비디오 프레임 인코딩
-  for (let fi = 0; fi < frameCount; fi++) {
-    const timeSec = fi / FPS
-    const sampleOffset = Math.floor(timeSec * audioBuffer.sampleRate)
-    const frequencyData = computeFrequencyBands(pcmData, sampleOffset, 2048, 80)
+      const trackIdx = findCurrentTrackIndex(trackBoundaries, timeSec)
+      const currentTrack = tracks[trackIdx % tracks.length]
 
-    const trackIdx = findCurrentTrackIndex(trackBoundaries, timeSec)
-    const currentTrack = tracks[trackIdx % tracks.length]
+      drawFrame({ ...frameInputBase, canvas, frequencyData, currentTrack, currentTrackIndex: trackIdx % tracks.length })
 
-    drawFrame({ ...frameInputBase, canvas, frequencyData, currentTrack, currentTrackIndex: trackIdx % tracks.length })
+      const videoFrame = new VideoFrame(canvas, {
+        timestamp: Math.round(timeSec * 1_000_000),
+        duration: Math.round((1 / FPS) * 1_000_000),
+      })
+      videoEncoder.encode(videoFrame, { keyFrame: fi % 60 === 0 })
+      videoFrame.close()
 
-    const videoFrame = new VideoFrame(canvas, {
-      timestamp: Math.round(timeSec * 1_000_000),
-      duration: Math.round((1 / FPS) * 1_000_000),
-    })
-    videoEncoder.encode(videoFrame, { keyFrame: fi % 60 === 0 })
-    videoFrame.close()
+      input.onProgress((fi / frameCount) * 80)
+    }
+    await videoEncoder.flush()
+    if (encoderError) throw encoderError
 
-    input.onProgress((fi / frameCount) * 80)
+    // 오디오 인코딩 (f32-planar: ch0 먼저, ch1 뒤)
+    const ch0 = audioBuffer.getChannelData(0)
+    const ch1 = audioBuffer.numberOfChannels >= 2
+      ? audioBuffer.getChannelData(1)
+      : audioBuffer.getChannelData(0)  // 모노 폴백
+    const CHUNK = 4096
+    const sr = audioBuffer.sampleRate
+    for (let offset = 0; offset < audioBuffer.length; offset += CHUNK) {
+      const end = Math.min(offset + CHUNK, audioBuffer.length)
+      const size = end - offset
+      const planar = new Float32Array(size * 2)
+      planar.set(ch0.subarray(offset, end), 0)
+      planar.set(ch1.subarray(offset, end), size)
+      const audioData = new AudioData({
+        format: 'f32-planar',
+        sampleRate: sr,
+        numberOfFrames: size,
+        numberOfChannels: 2,
+        timestamp: Math.round((offset / sr) * 1_000_000),
+        data: planar,
+      })
+      audioEncoder.encode(audioData)
+      audioData.close()
+    }
+    await audioEncoder.flush()
+    if (encoderError) throw encoderError
+
+    input.onProgress(95)
+    muxer.finalize()
+    return new Blob([target.buffer], { type: 'video/mp4' })
+  } finally {
+    videoEncoder.close()
+    audioEncoder.close()
   }
-  await videoEncoder.flush()
-  if (encoderError) throw encoderError
-
-  // 오디오 인코딩 (f32-planar: ch0 먼저, ch1 뒤)
-  const ch0 = audioBuffer.getChannelData(0)
-  const ch1 = audioBuffer.numberOfChannels >= 2
-    ? audioBuffer.getChannelData(1)
-    : audioBuffer.getChannelData(0)  // 모노 폴백
-  const CHUNK = 4096
-  const sr = audioBuffer.sampleRate
-  for (let offset = 0; offset < audioBuffer.length; offset += CHUNK) {
-    const end = Math.min(offset + CHUNK, audioBuffer.length)
-    const size = end - offset
-    const planar = new Float32Array(size * 2)
-    planar.set(ch0.subarray(offset, end), 0)
-    planar.set(ch1.subarray(offset, end), size)
-    const audioData = new AudioData({
-      format: 'f32-planar',
-      sampleRate: sr,
-      numberOfFrames: size,
-      numberOfChannels: 2,
-      timestamp: Math.round((offset / sr) * 1_000_000),
-      data: planar,
-    })
-    audioEncoder.encode(audioData)
-    audioData.close()
-  }
-  await audioEncoder.flush()
-
-  input.onProgress(95)
-  muxer.finalize()
-  return new Blob([target.buffer], { type: 'video/mp4' })
 }
 
 function findCurrentTrackIndex(boundaries: number[], timeSec: number): number {
