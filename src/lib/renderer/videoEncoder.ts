@@ -49,7 +49,7 @@ export async function encodeVideo(input: EncodeVideoInput): Promise<Blob> {
 
   const videoEncoder = new VideoEncoder({
     output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
-    error: e => { throw e },
+    error: e => { encoderError = e },
   })
   videoEncoder.configure({
     codec: 'avc1.640028',
@@ -61,7 +61,7 @@ export async function encodeVideo(input: EncodeVideoInput): Promise<Blob> {
 
   const audioEncoder = new AudioEncoder({
     output: (chunk, meta) => muxer.addAudioChunk(chunk, meta),
-    error: e => { throw e },
+    error: e => { encoderError = e },
   })
   audioEncoder.configure({
     codec: 'mp4a.40.2',
@@ -71,6 +71,8 @@ export async function encodeVideo(input: EncodeVideoInput): Promise<Blob> {
   })
 
   const canvas = new OffscreenCanvas(width, height)
+
+  let encoderError: Error | null = null
 
   // 비디오 프레임 인코딩
   for (let fi = 0; fi < frameCount; fi++) {
@@ -93,10 +95,13 @@ export async function encodeVideo(input: EncodeVideoInput): Promise<Blob> {
     input.onProgress((fi / frameCount) * 80)
   }
   await videoEncoder.flush()
+  if (encoderError) throw encoderError
 
   // 오디오 인코딩 (f32-planar: ch0 먼저, ch1 뒤)
   const ch0 = audioBuffer.getChannelData(0)
-  const ch1 = audioBuffer.getChannelData(1)
+  const ch1 = audioBuffer.numberOfChannels >= 2
+    ? audioBuffer.getChannelData(1)
+    : audioBuffer.getChannelData(0)  // 모노 폴백
   const CHUNK = 4096
   const sr = audioBuffer.sampleRate
   for (let offset = 0; offset < audioBuffer.length; offset += CHUNK) {
