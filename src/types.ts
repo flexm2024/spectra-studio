@@ -72,3 +72,8 @@ export interface ExportSettings {
   thumbnail: boolean
   chapters: boolean
 }
+
+export interface LogoPosition {
+  x: number  // 스테이지 너비 대비 %, 0–100
+  y: number  // 스테이지 높이 대비 %, 0–100
+}
