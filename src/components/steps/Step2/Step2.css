@@ -220,3 +220,23 @@
   z-index: 1;
   pointer-events: none;
 }
+
+/* 드래그 가능한 로고 (업로드된 경우) */
+.s2-frame__logo-drag {
+  position: absolute;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  object-fit: contain;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transform: translate(-50%, -50%);
+  cursor: grab;
+  z-index: 4;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.s2-frame__logo-drag:active,
+.s2-frame__logo-drag--dragging {
+  cursor: grabbing;
+}
