@@ -1,7 +1,6 @@
 // 앱 루트 — 전체 상태 관리 및 레이아웃 조합
 import { useState, useRef } from 'react'
-import type { Track, Background, Effects, Visualizer, Typography, ExportSettings } from './types'
-import { sampleTracks } from './data/sampleTracks'
+import type { Track, Background, Effects, Visualizer, Typography, ExportSettings, LogoPosition } from './types'
 import Sidebar from './components/Sidebar/Sidebar'
 import Header from './components/Header/Header'
 import StatusBar from './components/StatusBar/StatusBar'
@@ -12,7 +11,7 @@ import Step3 from './components/steps/Step3/Step3'
 export default function App() {
   const audioRef = useRef<HTMLAudioElement>(null)
   const [step, setStep] = useState<1 | 2 | 3>(1)
-  const [tracks, setTracks] = useState<Track[]>(sampleTracks)
+  const [tracks, setTracks] = useState<Track[]>([])
   const [playingId, setPlayingId] = useState<string | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [loops, setLoops] = useState<1 | 2 | 3>(1)
@@ -30,6 +29,7 @@ export default function App() {
   })
   const [background, setBackground] = useState<Background>({ type: 'gradient' })
   const [logo, setLogo] = useState<string | undefined>(undefined)
+  const [logoPosition, setLogoPosition] = useState<LogoPosition>({ x: 85, y: 8 })
   const [watermark, setWatermark] = useState<string | undefined>(undefined)
   const [stickers, setStickers] = useState<string[]>([])
   const [audioCurrentTime, setAudioCurrentTime] = useState(0)
@@ -131,6 +131,8 @@ export default function App() {
             onNext={() => setStep(3)}
             background={background}
             logo={logo}
+            logoPosition={logoPosition}
+            setLogoPosition={setLogoPosition}
             currentTime={audioCurrentTime}
           />
         )}
@@ -147,6 +149,7 @@ export default function App() {
             onBack={() => setStep(2)}
             background={background}
             logo={logo}
+            logoPosition={logoPosition}
             watermark={watermark}
             stickers={stickers}
             typography={typography}
