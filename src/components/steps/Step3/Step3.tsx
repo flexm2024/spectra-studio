@@ -27,7 +27,7 @@ const RESOLUTION_MAP: Record<string, string> = {
 function logoPositionLabel(pos: LogoPosition): string {
   const x = pos.x < 40 ? '좌' : pos.x > 60 ? '우' : '중'
   const y = pos.y < 40 ? '상' : pos.y > 60 ? '하' : '중'
-  return `${y}${x}단`
+  return `${x}${y}단`
 }
 
 interface Step3Props {
