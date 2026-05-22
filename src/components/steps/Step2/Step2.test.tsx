@@ -11,7 +11,7 @@ const base = {
   setTheme: vi.fn(),
   effects: { vis: true, crossfade: false, ducking: true, blur: true },
   setEffects: vi.fn(),
-  visualizer: { type: 'bars' as const, intensity: 70, opacity: 85 },
+  visualizer: { type: 'bars' as const, intensity: 70, opacity: 85, position: 'bottom' as const, size: 50 },
   setVisualizer: vi.fn(),
   typography: { titleSize: 48, letterSpacing: -15 },
   setTypography: vi.fn(),
@@ -27,6 +27,8 @@ const base = {
   logo: undefined as string | undefined,
   logoPosition: { x: 85, y: 8 } as LogoPosition,
   setLogoPosition: vi.fn(),
+  logoSize: 52,
+  setLogoSize: vi.fn(),
   currentTime: 0,
   analyserRef: { current: null },
 }

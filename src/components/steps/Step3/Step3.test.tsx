@@ -14,7 +14,7 @@ const base = {
   tracks: sampleTracks,
   theme: 'midnight',
   effects: { vis: true, crossfade: false, ducking: true, blur: true },
-  visualizer: { type: 'bars' as const, intensity: 70, opacity: 85 },
+  visualizer: { type: 'bars' as const, intensity: 70, opacity: 85, position: 'bottom' as const, size: 50 },
   exportSettings: {
     filename: 'my-playlist',
     format: 'mp4' as const,
@@ -28,6 +28,7 @@ const base = {
   onBack: vi.fn(),
   background: { type: 'gradient' } as Background,
   logoPosition: { x: 85, y: 8 } as LogoPosition,
+  logoSize: 52,
   stickers: [] as string[],
   typography: { titleSize: 48, letterSpacing: -15 } as Typography,
 }

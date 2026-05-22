@@ -26,6 +26,7 @@ export interface RenderInput {
   background: Background
   logo?: string
   logoPosition: LogoPosition
+  logoSize: number
   watermark?: string
   stickers: string[]
   effects: Effects
@@ -65,6 +66,7 @@ export async function renderVideo(input: RenderInput, onProgress: (pct: number) 
       backgroundImage,
       logoImage,
       logoPosition: input.logoPosition,
+      logoSize: input.logoSize,
       watermarkImage,
       stickerImages: stickerImages.filter((x): x is ImageBitmap => x !== undefined),
       effects: input.effects,

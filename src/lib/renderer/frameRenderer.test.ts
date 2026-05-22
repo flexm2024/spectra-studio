@@ -43,9 +43,10 @@ const base: DrawFrameInput = {
   themeGradient: ['#0c1a2e', '#050813'],
   background: { type: 'gradient' },
   logoPosition: { x: 85, y: 8 },
+  logoSize: 52,
   stickerImages: [],
   effects: { vis: true, crossfade: false, ducking: false, blur: false },
-  visualizer: { type: 'bars', intensity: 70, opacity: 85 },
+  visualizer: { type: 'bars', intensity: 70, opacity: 85, position: 'bottom', size: 50 },
   typography: { titleSize: 48, letterSpacing: -15 },
   currentTrack: track,
   currentTrackIndex: 0,
@@ -88,13 +89,13 @@ describe('drawFrame', () => {
   it('logoPosition x=50, y=50이면 drawImage가 캔버스 중앙에서 호출된다', () => {
     mockCtx.drawImage.mockClear()
     const img = {} as ImageBitmap
-    const logoSize = Math.round(64 * (1920 / 1920))  // 64
+    // canvasLogoSize = Math.round(52 * (1920 / 640)) = 156
+    // x: (50/100)*1920 - 156/2 = 960 - 78 = 882
+    // y: (50/100)*1080 - 156/2 = 540 - 78 = 462
     drawFrame({ ...base, logoImage: img, logoPosition: { x: 50, y: 50 } })
     const call = mockCtx.drawImage.mock.calls.find(c => c[0] === img)
     expect(call).toBeDefined()
-    // x: (50/100)*1920 - 64/2 = 960 - 32 = 928
-    // y: (50/100)*1080 - 64/2 = 540 - 32 = 508
-    expect(call![1]).toBe(928)
-    expect(call![2]).toBe(508)
+    expect(call![1]).toBe(882)
+    expect(call![2]).toBe(462)
   })
 })

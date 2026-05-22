@@ -12,6 +12,7 @@ export interface DrawFrameInput {
   backgroundImage?: ImageBitmap
   logoImage?: ImageBitmap
   logoPosition: LogoPosition
+  logoSize: number
   watermarkImage?: ImageBitmap
   stickerImages: ImageBitmap[]
   effects: Effects
@@ -80,11 +81,11 @@ export function drawFrame(input: DrawFrameInput): void {
 
   // 5. 로고
   if (input.logoImage) {
-    const logoSize = Math.round(64 * (width / 1920))
-    const lx = Math.round((input.logoPosition.x / 100) * width) - logoSize / 2
-    const ly = Math.round((input.logoPosition.y / 100) * height) - logoSize / 2
+    const canvasLogoSize = Math.round(input.logoSize * (width / 640))
+    const lx = Math.round((input.logoPosition.x / 100) * width) - canvasLogoSize / 2
+    const ly = Math.round((input.logoPosition.y / 100) * height) - canvasLogoSize / 2
     ctx.globalAlpha = 1
-    ctx.drawImage(input.logoImage, lx, ly, logoSize, logoSize)
+    ctx.drawImage(input.logoImage, lx, ly, canvasLogoSize, canvasLogoSize)
   }
 
   // 6. 워터마크
@@ -112,6 +113,13 @@ function drawVisualizer(
 ): void {
   const opacity = visualizer.opacity / 100
   const intensity = visualizer.intensity / 100
+  const sizeScale = visualizer.size / 50  // 1.0 at default size=50
+
+  const yBase = visualizer.position === 'top'
+    ? height * 0.28
+    : visualizer.position === 'middle'
+    ? height * 0.58
+    : height * 0.88
 
   if (visualizer.type === 'bars') {
     const numBars = frequencyData.length
@@ -119,8 +127,8 @@ function drawVisualizer(
     ctx.globalAlpha = opacity
     ctx.fillStyle = 'rgba(255,255,255,0.7)'
     for (let i = 0; i < numBars; i++) {
-      const barH = frequencyData[i] * intensity * height * 0.45
-      ctx.fillRect(i * barW, height - barH, barW - 1, barH)
+      const barH = frequencyData[i] * intensity * sizeScale * height * 0.45
+      ctx.fillRect(i * barW, yBase - barH, barW - 1, barH)
     }
     ctx.globalAlpha = 1
   } else if (visualizer.type === 'wave') {
@@ -130,16 +138,19 @@ function drawVisualizer(
     ctx.lineWidth = 2 * (width / 1920)
     const step = width / frequencyData.length
     for (let i = 0; i < frequencyData.length; i++) {
-      const y = height / 2 - frequencyData[i] * intensity * height * 0.4
+      const y = yBase - frequencyData[i] * intensity * sizeScale * height * 0.4
       if (i === 0) ctx.moveTo(0, y)
       else ctx.lineTo(i * step, y)
     }
     ctx.stroke()
     ctx.globalAlpha = 1
   } else if (visualizer.type === 'orb') {
-    const cx = width / 2, cy = height / 2
+    const cx = width / 2
+    const cy = visualizer.position === 'top' ? height * 0.3
+      : visualizer.position === 'bottom' ? height * 0.7
+      : height * 0.5
     const energy = frequencyData.reduce((a, v) => a + v, 0) / frequencyData.length
-    const baseR = Math.min(width, height) * 0.15 * intensity
+    const baseR = Math.min(width, height) * 0.15 * intensity * sizeScale
     ;[1, 0.65, 0.35].forEach((scale, i) => {
       const r = baseR * scale * (1 + energy * 0.5)
       ctx.globalAlpha = opacity * (1 - i * 0.25)

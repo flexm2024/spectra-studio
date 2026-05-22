@@ -1,6 +1,6 @@
 // Step 2 — 비주얼 편집: 테마 선택, 스테이지 미리보기, 효과 설정
 import './Step2.css'
-import { useRef, useEffect, useState } from 'react'
+import React, { useRef, useEffect, useState } from 'react'
 import Icon from '../../../icons'
 import Button from '../../shared/Button'
 import SegmentedControl from '../../shared/SegmentedControl'
@@ -22,6 +22,25 @@ const VIS_OPTIONS = [
   { value: 'wave' as const, label: 'Wave' },
   { value: 'orb'  as const, label: 'Orb'  },
 ]
+
+const VIS_POSITION_OPTIONS = [
+  { value: 'top'    as const, label: '상' },
+  { value: 'middle' as const, label: '중' },
+  { value: 'bottom' as const, label: '하' },
+]
+
+function waveContainerStyle(position: 'top' | 'middle' | 'bottom', size: number): React.CSSProperties {
+  const h = `${Math.max(10, Math.round(size * 0.8))}px`
+  if (position === 'top')    return { top: '28px', height: h }
+  if (position === 'middle') return { top: '50%', transform: 'translateY(-50%)', height: h }
+  return { bottom: '28px', height: h }
+}
+
+function orbContainerStyle(position: 'top' | 'middle' | 'bottom'): React.CSSProperties {
+  if (position === 'top')    return { alignItems: 'flex-start', paddingTop: '12%' }
+  if (position === 'bottom') return { alignItems: 'flex-end', paddingBottom: '12%' }
+  return {}
+}
 
 const EFFECT_ITEMS = [
   { key: 'vis'       as const, icon: 'waveform', title: '오디오 비주얼라이저', sub: '파형이 음원에 반응' },
@@ -58,11 +77,13 @@ interface Step2Props {
   logo: string | undefined
   logoPosition: LogoPosition
   setLogoPosition: (p: LogoPosition) => void
+  logoSize: number
+  setLogoSize: (s: number) => void
   currentTime: number
   analyserRef: React.RefObject<AnalyserNode | null>
 }
 
-export default function Step2({ tracks, theme, setTheme, effects, setEffects, visualizer, setVisualizer, typography, setTypography, onBack, onNext, playingId, isPlaying, onPlay, onPause, onSkipNext, onSkipPrev, background, logo, logoPosition, setLogoPosition, currentTime, analyserRef }: Step2Props) {
+export default function Step2({ tracks, theme, setTheme, effects, setEffects, visualizer, setVisualizer, typography, setTypography, onBack, onNext, playingId, isPlaying, onPlay, onPause, onSkipNext, onSkipPrev, background, logo, logoPosition, setLogoPosition, logoSize, setLogoSize, currentTime, analyserRef }: Step2Props) {
   const themeObj = THEMES.find(t => t.id === theme) ?? THEMES[0]
   const playingTrack = tracks.find(t => t.id === playingId) ?? tracks[0]
   const trackIdx = tracks.findIndex(t => t.id === playingId)
@@ -155,6 +176,20 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
             value={visualizer.type}
             onChange={type => setVisualizer({ ...visualizer, type })}
           />
+          <SegmentedControl
+            options={VIS_POSITION_OPTIONS}
+            value={visualizer.position}
+            onChange={position => setVisualizer({ ...visualizer, position })}
+          />
+          <div className="slider-row">
+            <div className="slider-row__label">크기</div>
+            <input
+              className="slider" type="range" min={0} max={100}
+              value={visualizer.size}
+              onChange={e => setVisualizer({ ...visualizer, size: Number(e.target.value) })}
+            />
+            <div className="slider-row__value">{visualizer.size}</div>
+          </div>
           <div className="slider-row">
             <div className="slider-row__label">강도</div>
             <input
@@ -218,7 +253,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                 {visualizer.type !== 'orb' && (
                   <div
                     className="s2-frame__wave"
-                    style={{ opacity: visualizer.opacity / 100 }}
+                    style={{ opacity: visualizer.opacity / 100, ...waveContainerStyle(visualizer.position, visualizer.size) }}
                   >
                     {visualizer.type === 'bars' && (freqData.length ? freqData : waveformFor(trackIdx + 1, 80)).map((h, i) => (
                       <div
@@ -242,17 +277,18 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                 {visualizer.type === 'orb' && (
                   <div
                     className="s2-frame__orb"
-                    style={{ opacity: visualizer.opacity / 100 }}
+                    style={{ opacity: visualizer.opacity / 100, ...orbContainerStyle(visualizer.position) }}
                   >
                     {(() => {
                       const energy = freqData.length ? freqData.reduce((a, v) => a + v, 0) / freqData.length : 0
+                      const sizeScale = visualizer.size / 50
                       return [1, 0.65, 0.35].map((scale, i) => (
                         <div
                           key={i}
                           className="s2-frame__orb-ring"
                           style={{
-                            width:  `${scale * (1 + energy * 0.5) * visualizer.intensity * 0.8}px`,
-                            height: `${scale * (1 + energy * 0.5) * visualizer.intensity * 0.8}px`,
+                            width:  `${scale * (1 + energy * 0.5) * visualizer.intensity * 0.8 * sizeScale}px`,
+                            height: `${scale * (1 + energy * 0.5) * visualizer.intensity * 0.8 * sizeScale}px`,
                           }}
                         />
                       ))
@@ -268,7 +304,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                 className="s2-frame__logo-drag"
                 src={logo}
                 alt=""
-                style={{ left: `${logoPosition.x}%`, top: `${logoPosition.y}%` }}
+                style={{ left: `${logoPosition.x}%`, top: `${logoPosition.y}%`, width: `${logoSize}px`, height: `${logoSize}px` }}
                 onMouseDown={handleLogoMouseDown}
                 draggable={false}
               />
@@ -279,6 +315,18 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
           <Button variant="ghost" size="icon" data-testid="stage-skip-prev" onClick={() => onSkipPrev()}><Icon name="skipBack" size={14} /></Button>
           <button type="button" className="s2-play-btn" onClick={() => { if (isPlaying) { onPause() } else if (playingTrack) { onPlay(playingTrack.id) } }}><Icon name={isPlaying ? 'pause' : 'play'} size={14} /></button>
           <Button variant="ghost" size="icon" data-testid="stage-skip-next" onClick={() => onSkipNext()}><Icon name="skipForward" size={14} /></Button>
+          {logo && (
+            <>
+              <div className="s2-ctrl-divider" />
+              <span className="s2-ctrl-label">로고</span>
+              <input
+                type="range" min={24} max={120} value={logoSize}
+                onChange={e => setLogoSize(Number(e.target.value))}
+                className="slider s2-ctrl-slider"
+              />
+              <span className="s2-ctrl-value">{logoSize}px</span>
+            </>
+          )}
         </div>
         <div className="s2-timeline">
           <div className="s2-timeline__head">

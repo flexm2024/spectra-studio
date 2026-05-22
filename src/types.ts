@@ -58,6 +58,8 @@ export interface Visualizer {
   type: 'bars' | 'wave' | 'orb'
   intensity: number
   opacity: number
+  position: 'top' | 'middle' | 'bottom'
+  size: number  // 0–100, UI 미리보기 기준 크기
 }
 
 export interface Typography {

@@ -97,8 +97,8 @@
 }
 .s2-frame__sub { font-size: 13px; font-family: var(--f-mono); color: rgba(255,255,255,0.7); }
 .s2-frame__wave {
-  position: absolute; bottom: 28px; left: 60px; right: 60px;
-  display: flex; gap: 3px; align-items: flex-end; height: 40px; z-index: 2;
+  position: absolute; left: 60px; right: 60px;
+  display: flex; gap: 3px; align-items: flex-end; z-index: 2;
 }
 .s2-frame__wave-bar {
   flex: 1; background: linear-gradient(180deg, var(--c) 0%, oklch(0.5 0.18 240) 100%);
@@ -168,6 +168,12 @@
 .s2-nav { display: flex; gap: 8px; }
 .s2-nav > * { flex: 1; justify-content: center; }
 
+/* 컨트롤 바 — 로고 크기 인라인 컨트롤 */
+.s2-ctrl-divider { width: 1px; height: 18px; background: var(--line); margin: 0 2px; flex-shrink: 0; }
+.s2-ctrl-label { font-size: 11px; color: var(--ink-3); white-space: nowrap; }
+.s2-ctrl-slider { width: 72px; flex: none; }
+.s2-ctrl-value { font-size: 11px; font-family: var(--f-mono); color: var(--ink-2); min-width: 30px; }
+
 /* 커스텀 배경 이미지 (스테이지 프레임) */
 .s2-frame__bg-img {
   position: absolute;
@@ -221,8 +227,6 @@
 /* 드래그 가능한 로고 (업로드된 경우) */
 .s2-frame__logo-drag {
   position: absolute;
-  width: 52px;
-  height: 52px;
   border-radius: 14px;
   object-fit: contain;
   background: rgba(255, 255, 255, 0.1);

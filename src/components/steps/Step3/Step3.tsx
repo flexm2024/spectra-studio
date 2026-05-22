@@ -43,6 +43,7 @@ interface Step3Props {
   background: Background
   logo?: string
   logoPosition: LogoPosition
+  logoSize: number
   watermark?: string
   stickers: string[]
   typography: Typography
@@ -50,7 +51,7 @@ interface Step3Props {
 
 type RenderState = 'idle' | 'rendering' | 'done'
 
-export default function Step3({ tracks, theme, effects, visualizer, exportSettings, setExportSettings, loops, quality, onBack, background, logo, logoPosition, watermark, stickers, typography }: Step3Props) {
+export default function Step3({ tracks, theme, effects, visualizer, exportSettings, setExportSettings, loops, quality, onBack, background, logo, logoPosition, logoSize, watermark, stickers, typography }: Step3Props) {
   const [renderState, setRenderState] = useState<RenderState>('idle')
   const [progress, setProgress] = useState(0)
 
@@ -64,7 +65,7 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
     setProgress(0)
     try {
       const blob = await renderVideo(
-        { tracks, theme, effects, visualizer, typography, background, logo, logoPosition, watermark, stickers, exportSettings, loops },
+        { tracks, theme, effects, visualizer, typography, background, logo, logoPosition, logoSize, watermark, stickers, exportSettings, loops },
         pct => setProgress(Math.round(pct)),
       )
       const url = URL.createObjectURL(blob)
