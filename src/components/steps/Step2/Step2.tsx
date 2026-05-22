@@ -1,11 +1,12 @@
 // Step 2 — 비주얼 편집: 테마 선택, 스테이지 미리보기, 효과 설정
 import './Step2.css'
+import { useRef, useEffect } from 'react'
 import Icon from '../../../icons'
 import Button from '../../shared/Button'
 import SegmentedControl from '../../shared/SegmentedControl'
 import Switch from '../../shared/Switch'
 import { waveformFor } from '../../../data/sampleTracks'
-import type { Track, Effects, Visualizer, Typography, Background } from '../../../types'
+import type { Track, Effects, Visualizer, Typography, Background, LogoPosition } from '../../../types'
 
 const THEMES = [
   { id: 'midnight', label: 'Midnight',  bg: 'linear-gradient(135deg, #0c1a2e, #050813)' },
@@ -55,14 +56,51 @@ interface Step2Props {
   onSkipPrev: () => void
   background: Background
   logo: string | undefined
+  logoPosition: LogoPosition
+  setLogoPosition: (p: LogoPosition) => void
   currentTime: number
 }
 
-export default function Step2({ tracks, theme, setTheme, effects, setEffects, visualizer, setVisualizer, typography, setTypography, onBack, onNext, playingId, isPlaying, onPlay, onPause, onSkipNext, onSkipPrev, background, logo, currentTime }: Step2Props) {
+export default function Step2({ tracks, theme, setTheme, effects, setEffects, visualizer, setVisualizer, typography, setTypography, onBack, onNext, playingId, isPlaying, onPlay, onPause, onSkipNext, onSkipPrev, background, logo, logoPosition, setLogoPosition, currentTime }: Step2Props) {
   const themeObj = THEMES.find(t => t.id === theme) ?? THEMES[0]
   const playingTrack = tracks.find(t => t.id === playingId) ?? tracks[0]
   const trackIdx = tracks.findIndex(t => t.id === playingId)
   const totalSec = tracks.reduce((acc, t) => acc + t.durationSec, 0)
+
+  const frameRef = useRef<HTMLDivElement>(null)
+  const isDragging = useRef(false)
+  const dragOffset = useRef({ x: 0, y: 0 })
+
+  function handleLogoMouseDown(e: React.MouseEvent) {
+    e.preventDefault()
+    const frame = frameRef.current
+    if (!frame) return
+    const rect = frame.getBoundingClientRect()
+    dragOffset.current = {
+      x: e.clientX - rect.left - (logoPosition.x / 100) * rect.width,
+      y: e.clientY - rect.top - (logoPosition.y / 100) * rect.height,
+    }
+    isDragging.current = true
+  }
+
+  useEffect(() => {
+    function onMouseMove(e: MouseEvent) {
+      if (!isDragging.current || !frameRef.current) return
+      const rect = frameRef.current.getBoundingClientRect()
+      const x = Math.max(5, Math.min(95, ((e.clientX - rect.left - dragOffset.current.x) / rect.width) * 100))
+      const y = Math.max(5, Math.min(90, ((e.clientY - rect.top - dragOffset.current.y) / rect.height) * 100))
+      setLogoPosition({ x, y })
+    }
+    function onMouseUp() {
+      isDragging.current = false
+    }
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
+    return () => {
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+    }
+  }, [setLogoPosition])
 
   return (
     <div className="step2">
@@ -131,6 +169,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
         <div className="s2-stage__viewport">
           <div
             className="s2-stage__frame"
+            ref={frameRef}
             style={{ background: background.src ? undefined : themeObj.bg }}
           >
             {background.src && (
@@ -138,10 +177,9 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
             )}
             {effects.blur && <div className="s2-frame__blur-overlay" />}
             <div className="s2-frame__content">
-              {logo
-                ? <img className="s2-frame__logo-img" src={logo} alt="" />
-                : <div className="s2-frame__logo"><Icon name="logo" size={26} /></div>
-              }
+              {!logo && (
+                <div className="s2-frame__logo"><Icon name="logo" size={26} /></div>
+              )}
               <h2
                 className="s2-frame__title"
                 style={{
@@ -202,6 +240,16 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
             )}
             <div className="s2-frame__badge-l">SPECTRA · LIVE</div>
             <div className="s2-frame__badge-r">{String(trackIdx + 1).padStart(2, '0')} / {tracks.length}</div>
+            {logo && (
+              <img
+                className="s2-frame__logo-drag"
+                src={logo}
+                alt=""
+                style={{ left: `${logoPosition.x}%`, top: `${logoPosition.y}%` }}
+                onMouseDown={handleLogoMouseDown}
+                draggable={false}
+              />
+            )}
           </div>
         </div>
         <div className="s2-timeline">

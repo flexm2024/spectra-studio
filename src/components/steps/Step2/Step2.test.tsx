@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import Step2 from './Step2'
 import { sampleTracks } from '../../../data/sampleTracks'
-import type { Background } from '../../../types'
+import type { Background, LogoPosition } from '../../../types'
 
 const base = {
   tracks: sampleTracks,
@@ -25,6 +25,8 @@ const base = {
   onSkipPrev: vi.fn(),
   background: { type: 'gradient' } as Background,
   logo: undefined as string | undefined,
+  logoPosition: { x: 85, y: 8 } as LogoPosition,
+  setLogoPosition: vi.fn(),
   currentTime: 0,
 }
 
