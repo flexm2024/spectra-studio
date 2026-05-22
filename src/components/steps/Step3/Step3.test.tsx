@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import Step3 from './Step3'
 import { sampleTracks } from '../../../data/sampleTracks'
-import type { Background, Typography } from '../../../types'
+import type { Background, LogoPosition, Typography } from '../../../types'
 import { renderVideo } from '../../../lib/renderer'
 
 vi.mock('../../../lib/renderer', () => ({
@@ -27,6 +27,7 @@ const base = {
   setExportSettings: vi.fn(),
   onBack: vi.fn(),
   background: { type: 'gradient' } as Background,
+  logoPosition: { x: 85, y: 8 } as LogoPosition,
   stickers: [] as string[],
   typography: { titleSize: 48, letterSpacing: -15 } as Typography,
 }

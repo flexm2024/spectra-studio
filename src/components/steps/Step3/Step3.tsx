@@ -6,7 +6,7 @@ import Button from '../../shared/Button'
 import SegmentedControl from '../../shared/SegmentedControl'
 import Switch from '../../shared/Switch'
 import { waveformFor } from '../../../data/sampleTracks'
-import type { Track, Effects, Visualizer, ExportSettings, Background, Typography } from '../../../types'
+import type { Track, Effects, Visualizer, ExportSettings, Background, LogoPosition, Typography } from '../../../types'
 import { renderVideo } from '../../../lib/renderer'
 
 const THEMES = [
@@ -24,6 +24,12 @@ const RESOLUTION_MAP: Record<string, string> = {
   '4k': '3840 × 2160',
 }
 
+function logoPositionLabel(pos: LogoPosition): string {
+  const x = pos.x < 40 ? '좌' : pos.x > 60 ? '우' : '중'
+  const y = pos.y < 40 ? '상' : pos.y > 60 ? '하' : '중'
+  return `${y}${x}단`
+}
+
 interface Step3Props {
   tracks: Track[]
   theme: string
@@ -36,6 +42,7 @@ interface Step3Props {
   onBack: () => void
   background: Background
   logo?: string
+  logoPosition: LogoPosition
   watermark?: string
   stickers: string[]
   typography: Typography
@@ -43,7 +50,7 @@ interface Step3Props {
 
 type RenderState = 'idle' | 'rendering' | 'done'
 
-export default function Step3({ tracks, theme, effects, visualizer, exportSettings, setExportSettings, loops, quality, onBack, background, logo, watermark, stickers, typography }: Step3Props) {
+export default function Step3({ tracks, theme, effects, visualizer, exportSettings, setExportSettings, loops, quality, onBack, background, logo, logoPosition, watermark, stickers, typography }: Step3Props) {
   const [renderState, setRenderState] = useState<RenderState>('idle')
   const [progress, setProgress] = useState(0)
 
@@ -57,7 +64,7 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
     setProgress(0)
     try {
       const blob = await renderVideo(
-        { tracks, theme, effects, visualizer, typography, background, logo, watermark, stickers, exportSettings, loops },
+        { tracks, theme, effects, visualizer, typography, background, logo, logoPosition, watermark, stickers, exportSettings, loops },
         pct => setProgress(Math.round(pct)),
       )
       const url = URL.createObjectURL(blob)
@@ -149,7 +156,9 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
             </div>
             <div className="s3-form-row">
               <div className="s3-form-row__label">로고 / 워터마크</div>
-              <div className="s3-form-row__value">Spectra 로고 · 우상단 · 60% 불투명도</div>
+              <div className="s3-form-row__value">
+                {logo ? `로고 · ${logoPositionLabel(logoPosition)}` : '로고 없음'} · 워터마크 {watermark ? '있음' : '없음'}
+              </div>
             </div>
           </div>
         </div>
