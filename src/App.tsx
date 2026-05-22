@@ -20,7 +20,7 @@ export default function App() {
   const [quality, setQuality] = useState<'96k' | '128k' | '192k'>('192k')
   const [theme, setTheme] = useState('midnight')
   const [effects, setEffects] = useState<Effects>({ vis: true, crossfade: false, ducking: true, blur: true })
-  const [visualizer, setVisualizer] = useState<Visualizer>({ type: 'bars', intensity: 70, opacity: 85, position: 'bottom', size: 50 })
+  const [visualizer, setVisualizer] = useState<Visualizer>({ type: 'bars', intensity: 70, opacity: 85, y: 75, size: 50 })
   const [typography, setTypography] = useState<Typography>({ titleSize: 48, letterSpacing: -15 })
   const [exportSettings, setExportSettings] = useState<ExportSettings>({
     filename: 'my-playlist',

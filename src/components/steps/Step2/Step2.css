@@ -168,6 +168,20 @@
 .s2-nav { display: flex; gap: 8px; }
 .s2-nav > * { flex: 1; justify-content: center; }
 
+/* 비주얼라이저 모양 선택 그리드 */
+.vis-shape-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+.vis-shape-card {
+  padding: 6px 4px;
+  border-radius: var(--r-m);
+  border: 1.5px solid var(--line-faint);
+  background: var(--bg-sunken);
+  cursor: pointer; text-align: center;
+  font-size: 11px; color: var(--ink-3);
+  transition: all 100ms ease;
+}
+.vis-shape-card:hover { border-color: var(--line); color: var(--ink); }
+.vis-shape-card--active { border-color: var(--c-soft); background: var(--c-softer); color: var(--c-strong); font-weight: 600; }
+
 /* 컨트롤 바 — 로고 크기 인라인 컨트롤 */
 .s2-ctrl-divider { width: 1px; height: 18px; background: var(--line); margin: 0 2px; flex-shrink: 0; }
 .s2-ctrl-label { font-size: 11px; color: var(--ink-3); white-space: nowrap; }
@@ -197,22 +211,36 @@
   stroke-linejoin: round;
 }
 
-/* Orb 비주얼라이저 */
+/* Orb / Ring 비주얼라이저 — 0-size 앵커 포지셔닝 */
 .s2-frame__orb {
   position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   z-index: 2;
   pointer-events: none;
 }
 .s2-frame__orb-ring {
   position: absolute;
+  left: 0; top: 0;
   border-radius: 50%;
   border: 1.5px solid var(--c);
   opacity: 0.6;
+  transform: translate(-50%, -50%);
 }
+
+/* 비주얼라이저 수직 드래그 핸들 (컴팩트 타입) */
+.s2-frame__vis-handle {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 1px dashed rgba(255,255,255,0.35);
+  background: rgba(255,255,255,0.07);
+  cursor: ns-resize;
+  z-index: 5;
+  pointer-events: auto;
+  transition: opacity 150ms;
+}
+.s2-stage__frame:not(:hover) .s2-frame__vis-handle { opacity: 0.2; }
 
 /* 배경 블러 오버레이 */
 .s2-frame__blur-overlay {

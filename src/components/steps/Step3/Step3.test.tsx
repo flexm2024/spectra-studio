@@ -14,7 +14,7 @@ const base = {
   tracks: sampleTracks,
   theme: 'midnight',
   effects: { vis: true, crossfade: false, ducking: true, blur: true },
-  visualizer: { type: 'bars' as const, intensity: 70, opacity: 85, position: 'bottom' as const, size: 50 },
+  visualizer: { type: 'bars' as const, intensity: 70, opacity: 85, y: 75, size: 50 },
   exportSettings: {
     filename: 'my-playlist',
     format: 'mp4' as const,

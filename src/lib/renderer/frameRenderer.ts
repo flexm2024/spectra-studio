@@ -114,54 +114,77 @@ function drawVisualizer(
   const opacity = visualizer.opacity / 100
   const intensity = visualizer.intensity / 100
   const sizeScale = visualizer.size / 50  // 1.0 at default size=50
+  const yCenter = height * (visualizer.y / 100)
 
-  const yBase = visualizer.position === 'top'
-    ? height * 0.28
-    : visualizer.position === 'middle'
-    ? height * 0.58
-    : height * 0.88
+  ctx.globalAlpha = opacity
 
   if (visualizer.type === 'bars') {
     const numBars = frequencyData.length
     const barW = width / numBars
-    ctx.globalAlpha = opacity
     ctx.fillStyle = 'rgba(255,255,255,0.7)'
     for (let i = 0; i < numBars; i++) {
       const barH = frequencyData[i] * intensity * sizeScale * height * 0.45
-      ctx.fillRect(i * barW, yBase - barH, barW - 1, barH)
+      ctx.fillRect(i * barW, yCenter - barH, barW - 1, barH)
     }
-    ctx.globalAlpha = 1
   } else if (visualizer.type === 'wave') {
-    ctx.globalAlpha = opacity
     ctx.beginPath()
     ctx.strokeStyle = 'rgba(255,255,255,0.8)'
     ctx.lineWidth = 2 * (width / 1920)
     const step = width / frequencyData.length
     for (let i = 0; i < frequencyData.length; i++) {
-      const y = yBase - frequencyData[i] * intensity * sizeScale * height * 0.4
+      const y = yCenter - frequencyData[i] * intensity * sizeScale * height * 0.4
       if (i === 0) ctx.moveTo(0, y)
       else ctx.lineTo(i * step, y)
     }
     ctx.stroke()
-    ctx.globalAlpha = 1
+  } else if (visualizer.type === 'mirror') {
+    const numBars = frequencyData.length
+    const barW = width / numBars
+    ctx.fillStyle = 'rgba(255,255,255,0.7)'
+    for (let i = 0; i < numBars; i++) {
+      const barH = frequencyData[i] * intensity * sizeScale * height * 0.22
+      ctx.fillRect(i * barW, yCenter - barH, barW - 1, barH)
+      ctx.fillRect(i * barW, yCenter,         barW - 1, barH)
+    }
+  } else if (visualizer.type === 'dots') {
+    const numDots = 40
+    const step = width / numDots
+    const dataStep = frequencyData.length / numDots
+    ctx.fillStyle = 'rgba(255,255,255,0.7)'
+    for (let i = 0; i < numDots; i++) {
+      const v = frequencyData[Math.floor(i * dataStep)]
+      const r = v * intensity * sizeScale * height * 0.05 + 2 * (width / 1920)
+      ctx.beginPath()
+      ctx.arc(i * step + step / 2, yCenter, r, 0, 2 * Math.PI)
+      ctx.fill()
+    }
   } else if (visualizer.type === 'orb') {
-    const cx = width / 2
-    const cy = visualizer.position === 'top' ? height * 0.3
-      : visualizer.position === 'bottom' ? height * 0.7
-      : height * 0.5
     const energy = frequencyData.reduce((a, v) => a + v, 0) / frequencyData.length
     const baseR = Math.min(width, height) * 0.15 * intensity * sizeScale
     ;[1, 0.65, 0.35].forEach((scale, i) => {
       const r = baseR * scale * (1 + energy * 0.5)
       ctx.globalAlpha = opacity * (1 - i * 0.25)
       ctx.beginPath()
-      ctx.arc(cx, cy, r, 0, 2 * Math.PI)
+      ctx.arc(width / 2, yCenter, r, 0, 2 * Math.PI)
       ctx.strokeStyle = 'rgba(255,255,255,0.6)'
       ctx.lineWidth = 2
       ctx.stroke()
     })
-    ctx.globalAlpha = 1
+  } else if (visualizer.type === 'ring') {
+    const energy = frequencyData.reduce((a, v) => a + v, 0) / frequencyData.length
+    const r = Math.min(width, height) * 0.18 * intensity * sizeScale * (1 + energy * 0.8)
+    ctx.strokeStyle = 'rgba(255,255,255,0.7)'
+    ctx.lineWidth = 2.5 * (width / 1920)
+    ctx.beginPath()
+    ctx.arc(width / 2, yCenter, r, 0, 2 * Math.PI)
+    ctx.stroke()
+    ctx.globalAlpha = opacity * 0.35
+    ctx.beginPath()
+    ctx.arc(width / 2, yCenter, r * 0.6, 0, 2 * Math.PI)
+    ctx.stroke()
   }
+
+  ctx.globalAlpha = 1
 }
 
 export async function loadImageBitmap(url: string): Promise<ImageBitmap> {

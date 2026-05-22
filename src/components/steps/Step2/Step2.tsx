@@ -3,7 +3,6 @@ import './Step2.css'
 import React, { useRef, useEffect, useState } from 'react'
 import Icon from '../../../icons'
 import Button from '../../shared/Button'
-import SegmentedControl from '../../shared/SegmentedControl'
 import Switch from '../../shared/Switch'
 import { waveformFor } from '../../../data/sampleTracks'
 import type { Track, Effects, Visualizer, Typography, Background, LogoPosition } from '../../../types'
@@ -17,30 +16,17 @@ const THEMES = [
   { id: 'mono',     label: 'Mono',      bg: 'linear-gradient(135deg, #0a0a0a, #2a2a2a)' },
 ]
 
-const VIS_OPTIONS = [
-  { value: 'bars' as const, label: 'Bars' },
-  { value: 'wave' as const, label: 'Wave' },
-  { value: 'orb'  as const, label: 'Orb'  },
+const VIS_SHAPES: { id: Visualizer['type'], label: string }[] = [
+  { id: 'bars',   label: 'Bars'   },
+  { id: 'wave',   label: 'Wave'   },
+  { id: 'mirror', label: 'Mirror' },
+  { id: 'dots',   label: 'Dots'   },
+  { id: 'orb',    label: 'Orb'    },
+  { id: 'ring',   label: 'Ring'   },
 ]
 
-const VIS_POSITION_OPTIONS = [
-  { value: 'top'    as const, label: '상' },
-  { value: 'middle' as const, label: '중' },
-  { value: 'bottom' as const, label: '하' },
-]
-
-function waveContainerStyle(position: 'top' | 'middle' | 'bottom', size: number): React.CSSProperties {
-  const h = `${Math.max(10, Math.round(size * 0.8))}px`
-  if (position === 'top')    return { top: '28px', height: h }
-  if (position === 'middle') return { top: '50%', transform: 'translateY(-50%)', height: h }
-  return { bottom: '28px', height: h }
-}
-
-function orbContainerStyle(position: 'top' | 'middle' | 'bottom'): React.CSSProperties {
-  if (position === 'top')    return { alignItems: 'flex-start', paddingTop: '12%' }
-  if (position === 'bottom') return { alignItems: 'flex-end', paddingBottom: '12%' }
-  return {}
-}
+// orb, ring은 컴팩트(원형 중심) 타입 — 수직 드래그 핸들 별도 표시
+const COMPACT_VIS: Visualizer['type'][] = ['orb', 'ring']
 
 const EFFECT_ITEMS = [
   { key: 'vis'       as const, icon: 'waveform', title: '오디오 비주얼라이저', sub: '파형이 음원에 반응' },
@@ -55,6 +41,11 @@ const fmt = (sec: number) => {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
+function waveContainerStyle(y: number, size: number): React.CSSProperties {
+  const h = `${Math.max(10, Math.round(size * 0.8))}px`
+  return { top: `${y}%`, transform: 'translateY(-50%)', height: h, cursor: 'ns-resize' }
+}
+
 interface Step2Props {
   tracks: Track[]
   theme: string
@@ -62,7 +53,7 @@ interface Step2Props {
   effects: Effects
   setEffects: (e: Effects) => void
   visualizer: Visualizer
-  setVisualizer: (v: Visualizer) => void
+  setVisualizer: React.Dispatch<React.SetStateAction<Visualizer>>
   typography: Typography
   setTypography: (t: Typography) => void
   onBack: () => void
@@ -92,6 +83,8 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
   const frameRef = useRef<HTMLDivElement>(null)
   const isDragging = useRef(false)
   const dragOffset = useRef({ x: 0, y: 0 })
+  const visIsDragging = useRef(false)
+  const visDragOffset = useRef(0)
 
   const [freqData, setFreqData] = useState<number[]>([])
 
@@ -105,6 +98,15 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
       y: e.clientY - rect.top - (logoPosition.y / 100) * rect.height,
     }
     isDragging.current = true
+  }
+
+  function handleVisMouseDown(e: React.MouseEvent) {
+    e.preventDefault()
+    const frame = frameRef.current
+    if (!frame) return
+    const rect = frame.getBoundingClientRect()
+    visDragOffset.current = e.clientY - rect.top - (visualizer.y / 100) * rect.height
+    visIsDragging.current = true
   }
 
   useEffect(() => {
@@ -129,14 +131,22 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
 
   useEffect(() => {
     function onMouseMove(e: MouseEvent) {
-      if (!isDragging.current || !frameRef.current) return
-      const rect = frameRef.current.getBoundingClientRect()
-      const x = Math.max(5, Math.min(95, ((e.clientX - rect.left - dragOffset.current.x) / rect.width) * 100))
-      const y = Math.max(5, Math.min(90, ((e.clientY - rect.top - dragOffset.current.y) / rect.height) * 100))
-      setLogoPosition({ x, y })
+      const frame = frameRef.current
+      if (!frame) return
+      const rect = frame.getBoundingClientRect()
+      if (isDragging.current) {
+        const x = Math.max(5, Math.min(95, ((e.clientX - rect.left - dragOffset.current.x) / rect.width) * 100))
+        const y = Math.max(5, Math.min(90, ((e.clientY - rect.top - dragOffset.current.y) / rect.height) * 100))
+        setLogoPosition({ x, y })
+      }
+      if (visIsDragging.current) {
+        const y = Math.max(5, Math.min(95, ((e.clientY - rect.top - visDragOffset.current) / rect.height) * 100))
+        setVisualizer(prev => ({ ...prev, y }))
+      }
     }
     function onMouseUp() {
       isDragging.current = false
+      visIsDragging.current = false
     }
     document.addEventListener('mousemove', onMouseMove)
     document.addEventListener('mouseup', onMouseUp)
@@ -144,7 +154,9 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
       document.removeEventListener('mousemove', onMouseMove)
       document.removeEventListener('mouseup', onMouseUp)
     }
-  }, [setLogoPosition])
+  }, [setLogoPosition, setVisualizer])
+
+  const data = freqData.length ? freqData : waveformFor(trackIdx + 1, 80)
 
   return (
     <div className="step2">
@@ -171,22 +183,23 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
 
           <hr className="divider" />
           <div className="s2-section-label">비주얼라이저</div>
-          <SegmentedControl
-            options={VIS_OPTIONS}
-            value={visualizer.type}
-            onChange={type => setVisualizer({ ...visualizer, type })}
-          />
-          <SegmentedControl
-            options={VIS_POSITION_OPTIONS}
-            value={visualizer.position}
-            onChange={position => setVisualizer({ ...visualizer, position })}
-          />
+          <div className="vis-shape-grid">
+            {VIS_SHAPES.map(s => (
+              <div
+                key={s.id}
+                className={`vis-shape-card${visualizer.type === s.id ? ' vis-shape-card--active' : ''}`}
+                onClick={() => setVisualizer(prev => ({ ...prev, type: s.id }))}
+              >
+                {s.label}
+              </div>
+            ))}
+          </div>
           <div className="slider-row">
             <div className="slider-row__label">크기</div>
             <input
               className="slider" type="range" min={0} max={100}
               value={visualizer.size}
-              onChange={e => setVisualizer({ ...visualizer, size: Number(e.target.value) })}
+              onChange={e => setVisualizer(prev => ({ ...prev, size: Number(e.target.value) }))}
             />
             <div className="slider-row__value">{visualizer.size}</div>
           </div>
@@ -195,7 +208,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
             <input
               className="slider" type="range" min={0} max={100}
               value={visualizer.intensity}
-              onChange={e => setVisualizer({ ...visualizer, intensity: Number(e.target.value) })}
+              onChange={e => setVisualizer(prev => ({ ...prev, intensity: Number(e.target.value) }))}
             />
             <div className="slider-row__value">{visualizer.intensity}</div>
           </div>
@@ -204,7 +217,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
             <input
               className="slider" type="range" min={0} max={100}
               value={visualizer.opacity}
-              onChange={e => setVisualizer({ ...visualizer, opacity: Number(e.target.value) })}
+              onChange={e => setVisualizer(prev => ({ ...prev, opacity: Number(e.target.value) }))}
             />
             <div className="slider-row__value">{visualizer.opacity}</div>
           </div>
@@ -239,7 +252,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                 className="s2-frame__title"
                 style={{
                   fontSize: `${typography.titleSize}px`,
-                  letterSpacing: `${typography.letterSpacing / 1000}em`, // slider value is in thousandths of em
+                  letterSpacing: `${typography.letterSpacing / 1000}em`,
                 }}
               >
                 {playingTrack?.title}
@@ -250,12 +263,14 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
             </div>
             {effects.vis && (
               <>
-                {visualizer.type !== 'orb' && (
+                {/* 와이드 타입: bars / wave / mirror / dots */}
+                {!COMPACT_VIS.includes(visualizer.type) && (
                   <div
                     className="s2-frame__wave"
-                    style={{ opacity: visualizer.opacity / 100, ...waveContainerStyle(visualizer.position, visualizer.size) }}
+                    style={{ opacity: visualizer.opacity / 100, ...waveContainerStyle(visualizer.y, visualizer.size) }}
+                    onMouseDown={handleVisMouseDown}
                   >
-                    {visualizer.type === 'bars' && (freqData.length ? freqData : waveformFor(trackIdx + 1, 80)).map((h, i) => (
+                    {visualizer.type === 'bars' && data.map((h, i) => (
                       <div
                         key={i}
                         className="s2-frame__wave-bar"
@@ -266,34 +281,74 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                       <svg className="s2-frame__wave-svg" viewBox="0 0 80 40" preserveAspectRatio="none">
                         <polyline
                           className="s2-frame__wave-line"
-                          points={(freqData.length ? freqData : waveformFor(trackIdx + 1, 80))
-                            .map((h, i) => `${i},${40 - h * (visualizer.intensity / 100) * 38}`)
-                            .join(' ')}
+                          points={data.map((h, i) => `${i},${40 - h * (visualizer.intensity / 100) * 38}`).join(' ')}
                         />
                       </svg>
                     )}
+                    {visualizer.type === 'mirror' && (
+                      <svg className="s2-frame__wave-svg" viewBox="0 0 80 40" preserveAspectRatio="none">
+                        {data.map((h, i) => {
+                          const bh = h * (visualizer.intensity / 100) * 17
+                          return (
+                            <React.Fragment key={i}>
+                              <rect x={i} y={20 - bh} width={0.7} height={bh} fill="var(--c)" opacity="0.85" />
+                              <rect x={i} y={20}      width={0.7} height={bh} fill="var(--c)" opacity="0.85" />
+                            </React.Fragment>
+                          )
+                        })}
+                      </svg>
+                    )}
+                    {visualizer.type === 'dots' && (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around', width: '100%', height: '100%', gap: '2px' }}>
+                        {data.filter((_, i) => i % 2 === 0).map((h, i) => {
+                          const r = Math.max(2, h * (visualizer.intensity / 100) * 10)
+                          return (
+                            <div
+                              key={i}
+                              style={{ width: `${r * 2}px`, height: `${r * 2}px`, borderRadius: '50%', background: 'var(--c)', flexShrink: 0 }}
+                            />
+                          )
+                        })}
+                      </div>
+                    )}
                   </div>
                 )}
-                {visualizer.type === 'orb' && (
+                {/* 컴팩트 타입: orb / ring */}
+                {COMPACT_VIS.includes(visualizer.type) && (
                   <div
                     className="s2-frame__orb"
-                    style={{ opacity: visualizer.opacity / 100, ...orbContainerStyle(visualizer.position) }}
+                    style={{ opacity: visualizer.opacity / 100, top: `${visualizer.y}%`, left: '50%' }}
                   >
-                    {(() => {
+                    {visualizer.type === 'orb' && (() => {
                       const energy = freqData.length ? freqData.reduce((a, v) => a + v, 0) / freqData.length : 0
                       const sizeScale = visualizer.size / 50
-                      return [1, 0.65, 0.35].map((scale, i) => (
-                        <div
-                          key={i}
-                          className="s2-frame__orb-ring"
-                          style={{
-                            width:  `${scale * (1 + energy * 0.5) * visualizer.intensity * 0.8 * sizeScale}px`,
-                            height: `${scale * (1 + energy * 0.5) * visualizer.intensity * 0.8 * sizeScale}px`,
-                          }}
-                        />
-                      ))
+                      return [1, 0.65, 0.35].map((scale, i) => {
+                        const w = scale * (1 + energy * 0.5) * visualizer.intensity * 0.8 * sizeScale
+                        return (
+                          <div key={i} className="s2-frame__orb-ring" style={{ width: `${w}px`, height: `${w}px` }} />
+                        )
+                      })
+                    })()}
+                    {visualizer.type === 'ring' && (() => {
+                      const energy = freqData.length ? freqData.reduce((a, v) => a + v, 0) / freqData.length : 0
+                      const sizeScale = visualizer.size / 50
+                      const r = (50 + energy * 35) * sizeScale * (visualizer.intensity / 100)
+                      return (
+                        <>
+                          <div className="s2-frame__orb-ring" style={{ width: `${r * 2}px`, height: `${r * 2}px` }} />
+                          <div className="s2-frame__orb-ring" style={{ width: `${r * 1.4}px`, height: `${r * 1.4}px`, opacity: 0.35 }} />
+                        </>
+                      )
                     })()}
                   </div>
+                )}
+                {/* 컴팩트 타입 드래그 핸들 */}
+                {COMPACT_VIS.includes(visualizer.type) && (
+                  <div
+                    className="s2-frame__vis-handle"
+                    style={{ top: `${visualizer.y}%` }}
+                    onMouseDown={handleVisMouseDown}
+                  />
                 )}
               </>
             )}

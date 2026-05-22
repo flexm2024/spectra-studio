@@ -46,7 +46,7 @@ const base: DrawFrameInput = {
   logoSize: 52,
   stickerImages: [],
   effects: { vis: true, crossfade: false, ducking: false, blur: false },
-  visualizer: { type: 'bars', intensity: 70, opacity: 85, position: 'bottom', size: 50 },
+  visualizer: { type: 'bars', intensity: 70, opacity: 85, y: 75, size: 50 },
   typography: { titleSize: 48, letterSpacing: -15 },
   currentTrack: track,
   currentTrackIndex: 0,

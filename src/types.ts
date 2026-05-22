@@ -55,10 +55,10 @@ export interface Effects {
 }
 
 export interface Visualizer {
-  type: 'bars' | 'wave' | 'orb'
+  type: 'bars' | 'wave' | 'orb' | 'mirror' | 'dots' | 'ring'
   intensity: number
   opacity: number
-  position: 'top' | 'middle' | 'bottom'
+  y: number     // 0–100, 스테이지 높이 대비 수직 중심 위치 (%)
   size: number  // 0–100, UI 미리보기 기준 크기
 }
 

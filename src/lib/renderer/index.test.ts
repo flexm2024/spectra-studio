@@ -40,7 +40,7 @@ const base: RenderInput = {
   logoSize: 52,
   stickers: [],
   effects: { vis: true, crossfade: false, ducking: false, blur: false },
-  visualizer: { type: 'bars', intensity: 70, opacity: 85, position: 'bottom', size: 50 },
+  visualizer: { type: 'bars', intensity: 70, opacity: 85, y: 75, size: 50 },
   typography: { titleSize: 48, letterSpacing: -15 },
   exportSettings: {
     filename: 'test', format: 'mp4', resolution: '1080p', thumbnail: false, chapters: false,
