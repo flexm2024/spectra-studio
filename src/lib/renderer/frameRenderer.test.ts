@@ -42,6 +42,7 @@ const base: DrawFrameInput = {
   frequencyData: new Float32Array(80),
   themeGradient: ['#0c1a2e', '#050813'],
   background: { type: 'gradient' },
+  logoPosition: { x: 85, y: 8 },
   stickerImages: [],
   effects: { vis: true, crossfade: false, ducking: false, blur: false },
   visualizer: { type: 'bars', intensity: 70, opacity: 85 },
@@ -82,5 +83,18 @@ describe('drawFrame', () => {
       expect.any(Number), expect.any(Number),
       expect.any(Number), expect.any(Number),
     )
+  })
+
+  it('logoPosition x=50, y=50이면 drawImage가 캔버스 중앙에서 호출된다', () => {
+    mockCtx.drawImage.mockClear()
+    const img = {} as ImageBitmap
+    const logoSize = Math.round(64 * (1920 / 1920))  // 64
+    drawFrame({ ...base, logoImage: img, logoPosition: { x: 50, y: 50 } })
+    const call = mockCtx.drawImage.mock.calls.find(c => c[0] === img)
+    expect(call).toBeDefined()
+    // x: (50/100)*1920 - 64/2 = 960 - 32 = 928
+    // y: (50/100)*1080 - 64/2 = 540 - 32 = 508
+    expect(call![1]).toBe(928)
+    expect(call![2]).toBe(508)
   })
 })

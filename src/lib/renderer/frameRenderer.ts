@@ -1,6 +1,6 @@
 // OffscreenCanvas에 영상 한 프레임을 그리는 렌더러
 
-import type { Background, Effects, Visualizer, Typography, Track } from '../../types'
+import type { Background, Effects, Visualizer, Typography, Track, LogoPosition } from '../../types'
 
 export interface DrawFrameInput {
   canvas: OffscreenCanvas
@@ -11,6 +11,7 @@ export interface DrawFrameInput {
   background: Background
   backgroundImage?: ImageBitmap
   logoImage?: ImageBitmap
+  logoPosition: LogoPosition
   watermarkImage?: ImageBitmap
   stickerImages: ImageBitmap[]
   effects: Effects
@@ -80,8 +81,10 @@ export function drawFrame(input: DrawFrameInput): void {
   // 5. 로고
   if (input.logoImage) {
     const logoSize = Math.round(64 * (width / 1920))
+    const lx = Math.round((input.logoPosition.x / 100) * width) - logoSize / 2
+    const ly = Math.round((input.logoPosition.y / 100) * height) - logoSize / 2
     ctx.globalAlpha = 1
-    ctx.drawImage(input.logoImage, 40, 40, logoSize, logoSize)
+    ctx.drawImage(input.logoImage, lx, ly, logoSize, logoSize)
   }
 
   // 6. 워터마크
