@@ -171,16 +171,6 @@
   z-index: 0;
 }
 
-/* 커스텀 로고 이미지 */
-.s2-frame__logo-img {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
-  object-fit: contain;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
 /* Wave 비주얼라이저 */
 .s2-frame__wave-svg {
   width: 100%;
