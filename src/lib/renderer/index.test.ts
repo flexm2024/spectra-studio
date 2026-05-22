@@ -36,6 +36,7 @@ const base: RenderInput = {
   tracks: [],
   theme: 'midnight',
   background: { type: 'gradient' },
+  logoPosition: { x: 85, y: 8 },
   stickers: [],
   effects: { vis: true, crossfade: false, ducking: false, blur: false },
   visualizer: { type: 'bars', intensity: 70, opacity: 85 },
