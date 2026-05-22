@@ -1,6 +1,6 @@
 // Step 2 — 비주얼 편집: 테마 선택, 스테이지 미리보기, 효과 설정
 import './Step2.css'
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import Icon from '../../../icons'
 import Button from '../../shared/Button'
 import SegmentedControl from '../../shared/SegmentedControl'
@@ -59,9 +59,10 @@ interface Step2Props {
   logoPosition: LogoPosition
   setLogoPosition: (p: LogoPosition) => void
   currentTime: number
+  analyserRef: React.RefObject<AnalyserNode | null>
 }
 
-export default function Step2({ tracks, theme, setTheme, effects, setEffects, visualizer, setVisualizer, typography, setTypography, onBack, onNext, playingId, isPlaying, onPlay, onPause, onSkipNext, onSkipPrev, background, logo, logoPosition, setLogoPosition, currentTime }: Step2Props) {
+export default function Step2({ tracks, theme, setTheme, effects, setEffects, visualizer, setVisualizer, typography, setTypography, onBack, onNext, playingId, isPlaying, onPlay, onPause, onSkipNext, onSkipPrev, background, logo, logoPosition, setLogoPosition, currentTime, analyserRef }: Step2Props) {
   const themeObj = THEMES.find(t => t.id === theme) ?? THEMES[0]
   const playingTrack = tracks.find(t => t.id === playingId) ?? tracks[0]
   const trackIdx = tracks.findIndex(t => t.id === playingId)
@@ -70,6 +71,8 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
   const frameRef = useRef<HTMLDivElement>(null)
   const isDragging = useRef(false)
   const dragOffset = useRef({ x: 0, y: 0 })
+
+  const [freqData, setFreqData] = useState<number[]>([])
 
   function handleLogoMouseDown(e: React.MouseEvent) {
     e.preventDefault()
@@ -82,6 +85,26 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
     }
     isDragging.current = true
   }
+
+  useEffect(() => {
+    if (!isPlaying) {
+      setFreqData([])
+      return
+    }
+    let rafId: number
+    const buf = new Uint8Array(128)
+    function tick() {
+      const analyser = analyserRef.current
+      if (analyser) {
+        analyser.getByteFrequencyData(buf)
+        const step = buf.length / 80
+        setFreqData(Array.from({ length: 80 }, (_, i) => buf[Math.floor(i * step)] / 255))
+      }
+      rafId = requestAnimationFrame(tick)
+    }
+    rafId = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(rafId)
+  }, [isPlaying, analyserRef])
 
   useEffect(() => {
     function onMouseMove(e: MouseEvent) {
@@ -156,9 +179,6 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
       {/* 중앙 — 스테이지 */}
       <div className="s2-stage">
         <div className="s2-stage__top">
-          <Button variant="ghost" size="icon" data-testid="stage-skip-prev" onClick={() => onSkipPrev()}><Icon name="skipBack" size={14} /></Button>
-          <button type="button" className="s2-play-btn" onClick={() => { if (isPlaying) { onPause() } else if (playingTrack) { onPlay(playingTrack.id) } }}><Icon name={isPlaying ? 'pause' : 'play'} size={14} /></button>
-          <Button variant="ghost" size="icon" data-testid="stage-skip-next" onClick={() => onSkipNext()}><Icon name="skipForward" size={14} /></Button>
           <div className="s2-timecode">{fmt(Math.min(currentTime, totalSec))} / {fmt(totalSec)}</div>
           <div className="legend">
             <span className="legend__item">1920×1080</span>
@@ -200,7 +220,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                     className="s2-frame__wave"
                     style={{ opacity: visualizer.opacity / 100 }}
                   >
-                    {visualizer.type === 'bars' && waveformFor(trackIdx + 1, 80).map((h, i) => (
+                    {visualizer.type === 'bars' && (freqData.length ? freqData : waveformFor(trackIdx + 1, 80)).map((h, i) => (
                       <div
                         key={i}
                         className="s2-frame__wave-bar"
@@ -211,7 +231,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                       <svg className="s2-frame__wave-svg" viewBox="0 0 80 40" preserveAspectRatio="none">
                         <polyline
                           className="s2-frame__wave-line"
-                          points={waveformFor(trackIdx + 1, 80)
+                          points={(freqData.length ? freqData : waveformFor(trackIdx + 1, 80))
                             .map((h, i) => `${i},${40 - h * (visualizer.intensity / 100) * 38}`)
                             .join(' ')}
                         />
@@ -224,16 +244,19 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                     className="s2-frame__orb"
                     style={{ opacity: visualizer.opacity / 100 }}
                   >
-                    {[1, 0.65, 0.35].map((scale, i) => (
-                      <div
-                        key={i}
-                        className="s2-frame__orb-ring"
-                        style={{
-                          width:  `${scale * visualizer.intensity * 0.8}px`,
-                          height: `${scale * visualizer.intensity * 0.8}px`,
-                        }}
-                      />
-                    ))}
+                    {(() => {
+                      const energy = freqData.length ? freqData.reduce((a, v) => a + v, 0) / freqData.length : 0
+                      return [1, 0.65, 0.35].map((scale, i) => (
+                        <div
+                          key={i}
+                          className="s2-frame__orb-ring"
+                          style={{
+                            width:  `${scale * (1 + energy * 0.5) * visualizer.intensity * 0.8}px`,
+                            height: `${scale * (1 + energy * 0.5) * visualizer.intensity * 0.8}px`,
+                          }}
+                        />
+                      ))
+                    })()}
                   </div>
                 )}
               </>
@@ -251,6 +274,11 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
               />
             )}
           </div>
+        </div>
+        <div className="s2-stage__controls">
+          <Button variant="ghost" size="icon" data-testid="stage-skip-prev" onClick={() => onSkipPrev()}><Icon name="skipBack" size={14} /></Button>
+          <button type="button" className="s2-play-btn" onClick={() => { if (isPlaying) { onPause() } else if (playingTrack) { onPlay(playingTrack.id) } }}><Icon name={isPlaying ? 'pause' : 'play'} size={14} /></button>
+          <Button variant="ghost" size="icon" data-testid="stage-skip-next" onClick={() => onSkipNext()}><Icon name="skipForward" size={14} /></Button>
         </div>
         <div className="s2-timeline">
           <div className="s2-timeline__head">

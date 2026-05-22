@@ -10,6 +10,8 @@ import Step3 from './components/steps/Step3/Step3'
 
 export default function App() {
   const audioRef = useRef<HTMLAudioElement>(null)
+  const audioCtxRef = useRef<AudioContext | null>(null)
+  const analyserRef = useRef<AnalyserNode | null>(null)
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [tracks, setTracks] = useState<Track[]>([])
   const [playingId, setPlayingId] = useState<string | null>(null)
@@ -34,7 +36,24 @@ export default function App() {
   const [stickers, setStickers] = useState<string[]>([])
   const [audioCurrentTime, setAudioCurrentTime] = useState(0)
 
+  function ensureAudioContext() {
+    if (analyserRef.current || !audioRef.current) return
+    try {
+      const ctx = new AudioContext()
+      const analyser = ctx.createAnalyser()
+      analyser.fftSize = 256
+      const source = ctx.createMediaElementSource(audioRef.current)
+      source.connect(analyser)
+      analyser.connect(ctx.destination)
+      audioCtxRef.current = ctx
+      analyserRef.current = analyser
+    } catch {
+      // AudioContext 미지원 환경 (테스트 등) 무시
+    }
+  }
+
   const onPlay = (id: string) => {
+    ensureAudioContext()
     const track = tracks.find(t => t.id === id)
     setPlayingId(id)
     if (track?.audioUrl && audioRef.current) {
@@ -134,6 +153,7 @@ export default function App() {
             logoPosition={logoPosition}
             setLogoPosition={setLogoPosition}
             currentTime={audioCurrentTime}
+            analyserRef={analyserRef}
           />
         )}
         {step === 3 && (

@@ -28,6 +28,7 @@ const base = {
   logoPosition: { x: 85, y: 8 } as LogoPosition,
   setLogoPosition: vi.fn(),
   currentTime: 0,
+  analyserRef: { current: null },
 }
 
 describe('Step2', () => {

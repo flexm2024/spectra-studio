@@ -113,6 +113,13 @@
   font-size: 11px; font-family: var(--f-mono); color: rgba(255,255,255,0.6);
 }
 
+/* 하단 컨트롤 바 */
+.s2-stage__controls {
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px; padding: 10px 14px;
+  border-top: 1px solid var(--line); flex-shrink: 0;
+}
+
 /* 타임라인 */
 .s2-timeline { border-top: 1px solid var(--line); flex-shrink: 0; }
 .s2-timeline__head {
