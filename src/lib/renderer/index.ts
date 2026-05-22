@@ -1,6 +1,6 @@
 // renderVideo() — 오디오 처리 → 이미지 로딩 → MP4 인코딩 진입점
 
-import type { Track, Background, Effects, Visualizer, Typography, ExportSettings } from '../../types'
+import type { Track, Background, Effects, Visualizer, Typography, ExportSettings, LogoPosition } from '../../types'
 import { processAudio } from './audioProcessor'
 import { encodeVideo } from './videoEncoder'
 import { loadImageBitmap } from './frameRenderer'
@@ -25,6 +25,7 @@ export interface RenderInput {
   theme: string
   background: Background
   logo?: string
+  logoPosition: LogoPosition
   watermark?: string
   stickers: string[]
   effects: Effects
@@ -63,6 +64,7 @@ export async function renderVideo(input: RenderInput, onProgress: (pct: number) 
       background: input.background,
       backgroundImage,
       logoImage,
+      logoPosition: input.logoPosition,
       watermarkImage,
       stickerImages: stickerImages.filter((x): x is ImageBitmap => x !== undefined),
       effects: input.effects,
