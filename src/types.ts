@@ -55,16 +55,20 @@ export interface Effects {
 }
 
 export interface Visualizer {
-  type: 'bars' | 'wave' | 'orb' | 'mirror' | 'dots' | 'ring'
+  type: 'bars' | 'mirror' | 'waveform' | 'scope' | 'led' | 'rain'
+      | 'circular' | 'burst' | 'tunnel' | 'galaxy' | 'prism' | 'pulse'
   intensity: number
   opacity: number
   y: number     // 0–100, 스테이지 높이 대비 수직 중심 위치 (%)
   size: number  // 0–100, UI 미리보기 기준 크기
+  color: string // 비주얼라이저 색상 hex
 }
 
 export interface Typography {
   titleSize: number
   letterSpacing: number
+  titlePosition: { x: number; y: number }  // 0–100%, 프레임 기준
+  subPosition: { x: number; y: number }    // 0–100%, 프레임 기준
 }
 
 export interface ExportSettings {

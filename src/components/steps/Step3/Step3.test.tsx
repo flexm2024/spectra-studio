@@ -14,7 +14,7 @@ const base = {
   tracks: sampleTracks,
   theme: 'midnight',
   effects: { vis: true, crossfade: false, ducking: true, blur: true },
-  visualizer: { type: 'bars' as const, intensity: 70, opacity: 85, y: 75, size: 50 },
+  visualizer: { type: 'bars' as const, intensity: 70, opacity: 85, y: 75, size: 50, color: '#00d4ff' },
   exportSettings: {
     filename: 'my-playlist',
     format: 'mp4' as const,
@@ -23,14 +23,16 @@ const base = {
     chapters: false,
   },
   loops: 1 as const,
+  setLoops: vi.fn(),
   quality: '192k' as const,
+  setQuality: vi.fn(),
   setExportSettings: vi.fn(),
   onBack: vi.fn(),
   background: { type: 'gradient' } as Background,
   logoPosition: { x: 85, y: 8 } as LogoPosition,
   logoSize: 52,
   stickers: [] as string[],
-  typography: { titleSize: 48, letterSpacing: -15 } as Typography,
+  typography: { titleSize: 48, letterSpacing: -15, titlePosition: { x: 50, y: 48 }, subPosition: { x: 50, y: 55 } } as Typography,
 }
 
 describe('Step3', () => {
@@ -76,7 +78,7 @@ describe('Step3', () => {
       ...base,
       background: { type: 'gradient' } as Background,
       stickers: [] as string[],
-      typography: { titleSize: 48, letterSpacing: -15 } as Typography,
+      typography: { titleSize: 48, letterSpacing: -15, titlePosition: { x: 50, y: 48 }, subPosition: { x: 50, y: 55 } } as Typography,
     }
 
     it('background prop을 받아도 정상 렌더링된다', () => {

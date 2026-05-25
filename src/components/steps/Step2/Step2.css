@@ -91,14 +91,26 @@
   color: var(--c); backdrop-filter: blur(8px);
 }
 .s2-frame__title {
+  position: absolute;
+  transform: translate(-50%, -50%);
   font-size: 24px; font-weight: 700; margin: 0;
   letter-spacing: -0.02em; white-space: nowrap;
   max-width: 90%; overflow: hidden; text-overflow: ellipsis;
   -webkit-text-stroke: 2px rgba(0, 0, 0, 0.5);
   paint-order: stroke fill;
   text-shadow: 0 4px 12px rgba(0, 0, 0, 0.6), 0 2px 4px rgba(0, 0, 0, 0.4);
+  color: oklch(1 0 0); z-index: 3;
+  cursor: grab; user-select: none;
 }
-.s2-frame__sub { font-size: 13px; font-family: var(--f-mono); color: rgba(255,255,255,0.7); }
+.s2-frame__title:active { cursor: grabbing; }
+.s2-frame__sub {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-size: 13px; font-family: var(--f-mono); color: rgba(255,255,255,0.7);
+  white-space: nowrap; z-index: 3;
+  cursor: grab; user-select: none;
+}
+.s2-frame__sub:active { cursor: grabbing; }
 .s2-frame__wave {
   position: absolute; left: 60px; right: 60px;
   display: flex; gap: 3px; align-items: flex-end; z-index: 2;

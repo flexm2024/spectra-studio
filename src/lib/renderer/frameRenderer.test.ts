@@ -52,7 +52,7 @@ const base: DrawFrameInput = {
   stickerImages: [],
   effects: { vis: true, crossfade: false, ducking: false, blur: false },
   visualizer: { type: 'bars', intensity: 70, opacity: 85, y: 75, size: 50, color: '#00d4ff' },
-  typography: { titleSize: 48, letterSpacing: -15 },
+  typography: { titleSize: 48, letterSpacing: -15, titlePosition: { x: 50, y: 48 }, subPosition: { x: 50, y: 55 } },
   currentTrack: track,
   currentTrackIndex: 0,
   totalTracks: 5,

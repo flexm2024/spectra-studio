@@ -20,8 +20,8 @@ export default function App() {
   const [quality, setQuality] = useState<'96k' | '128k' | '192k'>('192k')
   const [theme, setTheme] = useState('midnight')
   const [effects, setEffects] = useState<Effects>({ vis: true, crossfade: false, ducking: true, blur: true })
-  const [visualizer, setVisualizer] = useState<Visualizer>({ type: 'bars', intensity: 70, opacity: 85, y: 75, size: 50 })
-  const [typography, setTypography] = useState<Typography>({ titleSize: 48, letterSpacing: -15 })
+  const [visualizer, setVisualizer] = useState<Visualizer>({ type: 'bars', intensity: 70, opacity: 85, y: 75, size: 50, color: '#00d4ff' })
+  const [typography, setTypography] = useState<Typography>({ titleSize: 48, letterSpacing: -15, titlePosition: { x: 50, y: 48 }, subPosition: { x: 50, y: 55 } })
   const [exportSettings, setExportSettings] = useState<ExportSettings>({
     filename: 'my-playlist',
     format: 'mp4',
@@ -42,7 +42,7 @@ export default function App() {
     try {
       const ctx = new AudioContext()
       const analyser = ctx.createAnalyser()
-      analyser.fftSize = 256
+      analyser.fftSize = 2048
       const source = ctx.createMediaElementSource(audioRef.current)
       source.connect(analyser)
       analyser.connect(ctx.destination)
@@ -110,10 +110,6 @@ export default function App() {
             setTracks={setTracks}
             playingId={playingId}
             isPlaying={isPlaying}
-            loops={loops}
-            setLoops={setLoops}
-            quality={quality}
-            setQuality={setQuality}
             onPlay={onPlay}
             onPause={onPause}
             onSkipNext={onSkipNext}
@@ -123,6 +119,8 @@ export default function App() {
             setBackground={setBackground}
             logo={logo}
             setLogo={setLogo}
+            logoPosition={logoPosition}
+            logoSize={logoSize}
             watermark={watermark}
             setWatermark={setWatermark}
             stickers={stickers}
@@ -168,7 +166,9 @@ export default function App() {
             exportSettings={exportSettings}
             setExportSettings={setExportSettings}
             loops={loops}
+            setLoops={setLoops}
             quality={quality}
+            setQuality={setQuality}
             onBack={() => setStep(2)}
             background={background}
             logo={logo}

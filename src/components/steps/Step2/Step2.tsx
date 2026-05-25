@@ -76,7 +76,7 @@ interface Step2Props {
   visualizer: Visualizer
   setVisualizer: React.Dispatch<React.SetStateAction<Visualizer>>
   typography: Typography
-  setTypography: (t: Typography) => void
+  setTypography: React.Dispatch<React.SetStateAction<Typography>>
   onBack: () => void
   onNext: () => void
   playingId: string | null
@@ -106,6 +106,10 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
   const dragOffset = useRef({ x: 0, y: 0 })
   const visIsDragging = useRef(false)
   const visDragOffset = useRef(0)
+  const titleIsDragging = useRef(false)
+  const titleDragOffset = useRef({ x: 0, y: 0 })
+  const subIsDragging = useRef(false)
+  const subDragOffset = useRef({ x: 0, y: 0 })
 
   const [freqData, setFreqData] = useState<number[]>([])
 
@@ -128,6 +132,30 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
     const rect = frame.getBoundingClientRect()
     visDragOffset.current = e.clientY - rect.top - (visualizer.y / 100) * rect.height
     visIsDragging.current = true
+  }
+
+  function handleTitleMouseDown(e: React.MouseEvent) {
+    e.preventDefault()
+    const frame = frameRef.current
+    if (!frame) return
+    const rect = frame.getBoundingClientRect()
+    titleDragOffset.current = {
+      x: e.clientX - rect.left - (typography.titlePosition.x / 100) * rect.width,
+      y: e.clientY - rect.top - (typography.titlePosition.y / 100) * rect.height,
+    }
+    titleIsDragging.current = true
+  }
+
+  function handleSubMouseDown(e: React.MouseEvent) {
+    e.preventDefault()
+    const frame = frameRef.current
+    if (!frame) return
+    const rect = frame.getBoundingClientRect()
+    subDragOffset.current = {
+      x: e.clientX - rect.left - (typography.subPosition.x / 100) * rect.width,
+      y: e.clientY - rect.top - (typography.subPosition.y / 100) * rect.height,
+    }
+    subIsDragging.current = true
   }
 
   useEffect(() => {
@@ -176,10 +204,22 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
         const y = Math.max(5, Math.min(95, ((e.clientY - rect.top - visDragOffset.current) / rect.height) * 100))
         setVisualizer(prev => ({ ...prev, y }))
       }
+      if (titleIsDragging.current) {
+        const x = Math.max(5, Math.min(95, ((e.clientX - rect.left - titleDragOffset.current.x) / rect.width) * 100))
+        const y = Math.max(5, Math.min(95, ((e.clientY - rect.top - titleDragOffset.current.y) / rect.height) * 100))
+        setTypography(prev => ({ ...prev, titlePosition: { x, y } }))
+      }
+      if (subIsDragging.current) {
+        const x = Math.max(5, Math.min(95, ((e.clientX - rect.left - subDragOffset.current.x) / rect.width) * 100))
+        const y = Math.max(5, Math.min(95, ((e.clientY - rect.top - subDragOffset.current.y) / rect.height) * 100))
+        setTypography(prev => ({ ...prev, subPosition: { x, y } }))
+      }
     }
     function onMouseUp() {
       isDragging.current = false
       visIsDragging.current = false
+      titleIsDragging.current = false
+      subIsDragging.current = false
     }
     document.addEventListener('mousemove', onMouseMove)
     document.addEventListener('mouseup', onMouseUp)
@@ -288,18 +328,28 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
             {effects.blur && <div className="s2-frame__blur-overlay" />}
             <div className="s2-frame__content">
               {!logo && <div className="s2-frame__logo"><Icon name="logo" size={26} /></div>}
-              <h2
-                className="s2-frame__title"
-                style={{
-                  fontSize: `${typography.titleSize}px`,
-                  letterSpacing: `${typography.letterSpacing / 1000}em`,
-                }}
-              >
-                {playingTrack?.title}
-              </h2>
-              <div className="s2-frame__sub">
-                {playingTrack?.artist && playingTrack.artist !== 'Unknown' ? `${playingTrack.artist} · ` : ''}Track {String(trackIdx + 1).padStart(2, '0')} / {tracks.length}
-              </div>
+            </div>
+            <h2
+              className="s2-frame__title"
+              style={{
+                fontSize: `${typography.titleSize}px`,
+                letterSpacing: `${typography.letterSpacing / 1000}em`,
+                left: `${typography.titlePosition.x}%`,
+                top: `${typography.titlePosition.y}%`,
+              }}
+              onMouseDown={handleTitleMouseDown}
+            >
+              {playingTrack?.title}
+            </h2>
+            <div
+              className="s2-frame__sub"
+              style={{
+                left: `${typography.subPosition.x}%`,
+                top: `${typography.subPosition.y}%`,
+              }}
+              onMouseDown={handleSubMouseDown}
+            >
+              {playingTrack?.artist && playingTrack.artist !== 'Unknown' ? `${playingTrack.artist} · ` : ''}Track {String(trackIdx + 1).padStart(2, '0')} / {tracks.length}
             </div>
 
             {effects.vis && (

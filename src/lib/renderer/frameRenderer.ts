@@ -62,7 +62,8 @@ export function drawFrame(input: DrawFrameInput): void {
   }
 
   // 4. 타이포그래피
-  const cx = width / 2
+  const titleX = Math.round((typography.titlePosition.x / 100) * width)
+  const titleY = Math.round((typography.titlePosition.y / 100) * height)
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   const titlePx = Math.round(typography.titleSize * (width / 1920))
@@ -73,21 +74,23 @@ export function drawFrame(input: DrawFrameInput): void {
   ctx.shadowBlur = Math.round(titlePx * 0.25)
   ctx.shadowOffsetY = Math.round(titlePx * 0.08)
   ctx.lineJoin = 'round'
-  ctx.strokeText(currentTrack.title, cx, height * 0.48)
+  ctx.strokeText(currentTrack.title, titleX, titleY)
   ctx.fillStyle = 'rgba(255,255,255,0.9)'
-  ctx.fillText(currentTrack.title, cx, height * 0.48)
+  ctx.fillText(currentTrack.title, titleX, titleY)
   ctx.shadowColor = 'transparent'
   ctx.shadowBlur = 0
   ctx.shadowOffsetY = 0
 
+  const subX = Math.round((typography.subPosition.x / 100) * width)
+  const subY = Math.round((typography.subPosition.y / 100) * height)
   const subPx = Math.round(18 * (width / 1920))
   ctx.font = `400 ${subPx}px "Inter", sans-serif`
   ctx.fillStyle = 'rgba(255,255,255,0.6)'
   const artistPrefix = currentTrack.artist && currentTrack.artist !== 'Unknown' ? `${currentTrack.artist} · ` : ''
   ctx.fillText(
     `${artistPrefix}Track ${String(currentTrackIndex + 1).padStart(2, '0')} / ${totalTracks}`,
-    cx,
-    height * 0.55,
+    subX,
+    subY,
   )
 
   // 5. 로고
