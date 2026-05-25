@@ -57,6 +57,16 @@ function waveContainerStyle(y: number, size: number): React.CSSProperties {
   return { top: `${y}%`, transform: 'translateY(-50%)', height: h, cursor: 'ns-resize' }
 }
 
+function rainbowColor(i: number, total: number, energy: number): string {
+  const hue = (i / Math.max(total - 1, 1)) * 240
+  const lightness = 50 + energy * 30
+  return `hsl(${hue}, 100%, ${lightness}%)`
+}
+
+function energyColor(energy: number): string {
+  return `hsl(${energy * 240}, 100%, ${50 + energy * 30}%)`
+}
+
 interface Step2Props {
   tracks: Track[]
   theme: string
@@ -180,6 +190,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
   }, [setLogoPosition, setVisualizer])
 
   const data = freqData.length ? freqData : waveformFor(trackIdx + 1, 80)
+  const energy = data.reduce((s, v) => s + v, 0) / Math.max(data.length, 1)
   const visColor = visualizer.color
   const sizeScale = visualizer.size / 50
   const intensityScale = visualizer.intensity / 100
@@ -297,7 +308,11 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                 {!COMPACT_VIS.includes(visualizer.type) && (
                   <div
                     className="s2-frame__wave"
-                    style={{ opacity: visualizer.opacity / 100, ...waveContainerStyle(visualizer.y, visualizer.size) }}
+                    style={{
+                      opacity: visualizer.opacity / 100,
+                      filter: energy > 0.05 ? `drop-shadow(0 0 ${Math.round(energy * intensityScale * 20)}px ${energyColor(energy)})` : undefined,
+                      ...waveContainerStyle(visualizer.y, visualizer.size),
+                    }}
                     onMouseDown={handleVisMouseDown}
                   >
                     {/* Bars — 그라디언트 막대 */}
@@ -307,7 +322,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                         className="s2-frame__wave-bar"
                         style={{
                           height: `${h * intensityScale * 100}%`,
-                          background: `linear-gradient(180deg, ${visColor} 0%, ${visColor}55 100%)`,
+                          background: rainbowColor(i, data.length, energy),
                         }}
                       />
                     ))}
@@ -318,7 +333,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                         {data.map((h, i) => {
                           const barH = h * intensityScale * 36
                           return <rect key={i} x={i + 0.1} y={40 - barH} width={0.8} height={barH * 2}
-                            fill={visColor} opacity="0.8" />
+                            fill={rainbowColor(i, data.length, energy)} opacity="0.8" />
                         })}
                       </svg>
                     )}
@@ -328,8 +343,8 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                       <svg className="s2-frame__wave-svg" viewBox="0 0 80 40" preserveAspectRatio="none">
                         <defs>
                           <linearGradient id="wfg" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor={visColor} stopOpacity="0.7" />
-                            <stop offset="100%" stopColor={visColor} stopOpacity="0.02" />
+                            <stop offset="0%" stopColor={energyColor(energy)} stopOpacity="0.7" />
+                            <stop offset="100%" stopColor={energyColor(energy)} stopOpacity="0.02" />
                           </linearGradient>
                         </defs>
                         <path
@@ -338,7 +353,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                         />
                         <polyline
                           points={data.map((h, i) => `${i},${40 - h * intensityScale * 38}`).join(' ')}
-                          fill="none" stroke={visColor} strokeWidth="1" opacity="0.9"
+                          fill="none" stroke={energyColor(energy)} strokeWidth="1" opacity="0.9"
                         />
                       </svg>
                     )}
@@ -349,7 +364,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                         <line x1="0" y1="20" x2="80" y2="20" stroke={visColor} strokeWidth="0.3" opacity="0.25" />
                         <polyline
                           points={data.map((h, i) => `${i},${20 - Math.sin(i * 0.3) * h * intensityScale * 18}`).join(' ')}
-                          fill="none" stroke={visColor} strokeWidth="1.2" opacity="0.9"
+                          fill="none" stroke={energyColor(energy)} strokeWidth="1.2" opacity="0.9"
                           strokeLinecap="round" strokeLinejoin="round"
                         />
                       </svg>
@@ -367,7 +382,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                               return (
                                 <div key={`${row}-${col}`} style={{
                                   borderRadius: '2px',
-                                  background: isActive ? visColor : 'rgba(255,255,255,0.07)',
+                                  background: isActive ? rainbowColor(col, cols, energy) : 'rgba(255,255,255,0.07)',
                                 }} />
                               )
                             })
@@ -387,7 +402,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                             return Array.from({ length: dotCount }, (_, dot) => (
                               <circle key={`${col}-${dot}`}
                                 cx={col + 0.5} cy={39 - dot * 3}
-                                r="0.45" fill={visColor} opacity={1 - dot * 0.07}
+                                r="0.45" fill={rainbowColor(col, cols, energy)} opacity={1 - dot * 0.07}
                               />
                             ))
                           }).flat()}

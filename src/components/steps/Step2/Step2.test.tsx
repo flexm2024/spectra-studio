@@ -11,7 +11,7 @@ const base = {
   setTheme: vi.fn(),
   effects: { vis: true, crossfade: false, ducking: true, blur: true },
   setEffects: vi.fn(),
-  visualizer: { type: 'bars' as const, intensity: 70, opacity: 85, y: 75, size: 50 },
+  visualizer: { type: 'bars' as const, intensity: 70, opacity: 85, y: 75, size: 50, color: '#00d4ff' },
   setVisualizer: vi.fn(),
   typography: { titleSize: 48, letterSpacing: -15 },
   setTypography: vi.fn(),
@@ -119,13 +119,13 @@ describe('Step2', () => {
     expect(title.style.letterSpacing).toBe('0.02em')
   })
 
-  it('visualizer.type이 wave일 때 SVG 파형이 렌더링된다', () => {
-    render(<Step2 {...base} visualizer={{ type: 'wave', intensity: 70, opacity: 85 }} />)
+  it('visualizer.type이 waveform일 때 SVG 파형이 렌더링된다', () => {
+    render(<Step2 {...base} visualizer={{ type: 'waveform', intensity: 70, opacity: 85, y: 75, size: 50, color: '#00d4ff' }} />)
     expect(document.querySelector('.s2-frame__wave-svg')).toBeInTheDocument()
   })
 
-  it('visualizer.type이 orb일 때 orb 컨테이너가 렌더링된다', () => {
-    render(<Step2 {...base} visualizer={{ type: 'orb', intensity: 70, opacity: 85 }} />)
+  it('visualizer.type이 circular일 때 orb 컨테이너가 렌더링된다', () => {
+    render(<Step2 {...base} visualizer={{ type: 'circular', intensity: 70, opacity: 85, y: 75, size: 50, color: '#00d4ff' }} />)
     expect(document.querySelector('.s2-frame__orb')).toBeInTheDocument()
   })
 
@@ -138,5 +138,13 @@ describe('Step2', () => {
   it('effects.blur가 true일 때 blur overlay가 렌더링된다', () => {
     render(<Step2 {...base} effects={{ vis: true, crossfade: false, ducking: true, blur: true }} />)
     expect(document.querySelector('.s2-frame__blur-overlay')).toBeInTheDocument()
+  })
+
+  it('bars 타입 렌더링 시 첫 번째 막대 background에 hsl 색상이 적용된다', () => {
+    render(<Step2 {...base} />)
+    const firstBar = document.querySelector('.s2-frame__wave-bar') as HTMLElement
+    // jsdom은 hsl()을 rgb()로 정규화하므로 linear-gradient가 없고 단색임을 확인
+    expect(firstBar.style.background).not.toContain('linear-gradient')
+    expect(firstBar.style.background).toMatch(/rgb/)
   })
 })
