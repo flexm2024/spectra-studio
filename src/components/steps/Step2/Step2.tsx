@@ -69,21 +69,20 @@ function energyColor(energy: number): string {
 
 const CLIP_GAP = 4
 
-function totalClipPx(tracks: Track[]): number {
-  const shown = tracks.slice(0, 8)
-  return shown.reduce((s, t, i) => s + Math.max(48, t.durationSec * 1.5) + (i > 0 ? CLIP_GAP : 0), 0)
+function clipW(t: Track, zoom: number): number {
+  return Math.max(24, t.durationSec * zoom)
 }
 
-function clipPxFromTime(time: number, tracks: Track[]): number {
+function clipPxFromTime(time: number, tracks: Track[], zoom: number): number {
   const shown = tracks.slice(0, 8)
   let acc = 0, px = 0
   for (let i = 0; i < shown.length; i++) {
     const t = shown[i]
-    const w = Math.max(48, t.durationSec * 1.5)
+    const w = clipW(t, zoom)
     if (i > 0) px += CLIP_GAP
     if (time <= acc + t.durationSec || i === shown.length - 1) {
-      const localRatio = t.durationSec > 0 ? Math.max(0, Math.min(1, (time - acc) / t.durationSec)) : 0
-      return px + localRatio * w
+      const r = t.durationSec > 0 ? Math.max(0, Math.min(1, (time - acc) / t.durationSec)) : 0
+      return px + r * w
     }
     px += w
     acc += t.durationSec
@@ -91,20 +90,18 @@ function clipPxFromTime(time: number, tracks: Track[]): number {
   return px
 }
 
-function pxRatioToTime(ratio: number, tracks: Track[]): number {
+function pxToTime(px: number, tracks: Track[], zoom: number): number {
   const shown = tracks.slice(0, 8)
-  const totPx = totalClipPx(tracks)
-  const clickPx = ratio * totPx
-  let acc = 0, px = 0
+  let acc = 0, p = 0
   for (let i = 0; i < shown.length; i++) {
     const t = shown[i]
-    const w = Math.max(48, t.durationSec * 1.5)
-    if (i > 0) px += CLIP_GAP
-    if (clickPx <= px + w || i === shown.length - 1) {
-      const localRatio = w > 0 ? Math.max(0, Math.min(1, (clickPx - px) / w)) : 0
-      return acc + localRatio * t.durationSec
+    const w = clipW(t, zoom)
+    if (i > 0) p += CLIP_GAP
+    if (px <= p + w || i === shown.length - 1) {
+      const r = w > 0 ? Math.max(0, Math.min(1, (px - p) / w)) : 0
+      return acc + r * t.durationSec
     }
-    px += w
+    p += w
     acc += t.durationSec
   }
   return acc
@@ -154,8 +151,11 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
   const titleDragOffset = useRef({ x: 0, y: 0 })
   const subIsDragging = useRef(false)
   const subDragOffset = useRef({ x: 0, y: 0 })
-  const scrubberRef = useRef<HTMLDivElement>(null)
-  const scrubberIsDragging = useRef(false)
+  const [zoom, setZoom] = useState(1.5)
+  const zoomRef = useRef(zoom)
+  zoomRef.current = zoom
+  const timelineRowRef = useRef<HTMLDivElement>(null)
+  const clipHeadIsDragging = useRef(false)
   const onSeekRef = useRef(onSeek)
   onSeekRef.current = onSeek
   const tracksRef = useRef(tracks)
@@ -264,10 +264,11 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
         const y = Math.max(5, Math.min(95, ((e.clientY - rect.top - subDragOffset.current.y) / rect.height) * 100))
         setTypography(prev => ({ ...prev, subPosition: { x, y } }))
       }
-      if (scrubberIsDragging.current && scrubberRef.current) {
-        const sr = scrubberRef.current.getBoundingClientRect()
-        const ratio = Math.max(0, Math.min(1, (e.clientX - sr.left) / sr.width))
-        onSeekRef.current(pxRatioToTime(ratio, tracksRef.current))
+      if (clipHeadIsDragging.current && timelineRowRef.current) {
+        const row = timelineRowRef.current
+        const rect = row.getBoundingClientRect()
+        const px = Math.max(0, e.clientX - rect.left + row.scrollLeft - 14)
+        onSeekRef.current(pxToTime(px, tracksRef.current, zoomRef.current))
       }
     }
     function onMouseUp() {
@@ -275,7 +276,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
       visIsDragging.current = false
       titleIsDragging.current = false
       subIsDragging.current = false
-      scrubberIsDragging.current = false
+      clipHeadIsDragging.current = false
     }
     document.addEventListener('mousemove', onMouseMove)
     document.addEventListener('mouseup', onMouseUp)
@@ -285,6 +286,17 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
     }
   }, [setLogoPosition, setVisualizer])
 
+  useEffect(() => {
+    const el = timelineRowRef.current
+    if (!el) return
+    function onWheel(e: WheelEvent) {
+      e.preventDefault()
+      setZoom(prev => Math.max(0.3, Math.min(20, prev * (e.deltaY < 0 ? 1.15 : 0.87))))
+    }
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onWheel)
+  }, [])
+
   const data = freqData.length ? freqData : waveformFor(trackIdx + 1, 80)
   const energy = data.reduce((s, v) => s + v, 0) / Math.max(data.length, 1)
   const visColor = visualizer.color
@@ -293,8 +305,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
 
   const accTime = tracks.slice(0, Math.max(0, trackIdx)).reduce((s, t) => s + t.durationSec, 0)
   const playlistCurrentTime = accTime + Math.min(currentTime, tracks[Math.max(0, trackIdx)]?.durationSec ?? 0)
-  const totClipPx = totalClipPx(tracks)
-  const progressPct = totClipPx > 0 ? Math.min(100, (clipPxFromTime(playlistCurrentTime, tracks) / totClipPx) * 100) : 0
+  const playheadPx = clipPxFromTime(playlistCurrentTime, tracks, zoom)
 
   return (
     <div className="step2">
@@ -652,14 +663,22 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
         <div className="s2-timeline">
           <div className="s2-timeline__head">
             <span>타임라인</span>
-            <span>스냅 1초 · 줌 50%</span>
+            <span>줌 {Math.round(zoom / 1.5 * 100)}%</span>
           </div>
-          <div className="s2-timeline__row" style={{ position: 'relative' }}>
+          <div className="s2-timeline__row" ref={timelineRowRef} style={{ position: 'relative' }}
+            onMouseDown={e => {
+              const row = timelineRowRef.current!
+              const rect = row.getBoundingClientRect()
+              const px = Math.max(0, e.clientX - rect.left + row.scrollLeft - 14)
+              onSeekRef.current(pxToTime(px, tracksRef.current, zoomRef.current))
+              clipHeadIsDragging.current = true
+            }}
+          >
             {tracks.slice(0, 8).map((t, i) => (
               <div
                 key={t.id}
                 className={`s2-clip${playingId === t.id ? ' s2-clip--active' : ''}`}
-                style={{ width: Math.max(48, t.durationSec * 1.5) }}
+                style={{ width: clipW(t, zoom) }}
                 onClick={() => onPlay(t.id)}
               >
                 {String(i + 1).padStart(2, '0')} · {t.title}
@@ -668,19 +687,9 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
             {tracks.length > 0 && (
               <div
                 className="s2-timeline__clip-playhead"
-                style={{ left: `${14 + clipPxFromTime(playlistCurrentTime, tracks)}px` }}
+                style={{ left: `${14 + playheadPx}px` }}
               />
             )}
-          </div>
-          <div
-            className="s2-timeline__scrubber"
-            ref={scrubberRef}
-            onMouseDown={e => { scrubberIsDragging.current = true; const sr = scrubberRef.current!.getBoundingClientRect(); onSeekRef.current(pxRatioToTime(Math.max(0, Math.min(1, (e.clientX - sr.left) / sr.width)), tracksRef.current)) }}
-          >
-            <div className="s2-timeline__scrubber-track">
-              <div className="s2-timeline__scrubber-fill" style={{ width: `${progressPct}%` }} />
-            </div>
-            <div className="s2-timeline__playhead" style={{ left: `${progressPct}%` }} />
           </div>
         </div>
       </div>

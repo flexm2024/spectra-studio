@@ -170,27 +170,9 @@
   z-index: 2;
 }
 
-/* 타임라인 스크러버 */
-.s2-timeline__scrubber {
-  position: relative; height: 24px; padding: 0 14px;
-  cursor: pointer; display: flex; align-items: center;
-  border-top: 1px solid var(--line-faint); user-select: none;
-}
-.s2-timeline__scrubber-track {
-  flex: 1; height: 3px; background: var(--bg-sunken);
-  border-radius: 2px; overflow: hidden;
-}
-.s2-timeline__scrubber-fill {
-  height: 100%; background: var(--c); border-radius: 2px;
-  transition: width 100ms linear;
-}
-.s2-timeline__playhead {
-  position: absolute; top: 50%;
-  transform: translate(-50%, -50%);
-  width: 10px; height: 10px; border-radius: 50%;
-  background: var(--c); border: 2px solid var(--bg);
-  cursor: grab; pointer-events: none;
-}
+/* 타임라인 행 전체를 클릭/드래그 가능 시크 영역으로 사용 */
+.s2-timeline__row { cursor: pointer; }
+
 
 /* 효과 칩 */
 .effect-list { display: flex; flex-direction: column; gap: 6px; }
