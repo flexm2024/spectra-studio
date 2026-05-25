@@ -119,7 +119,9 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
       const a = document.createElement('a')
       a.href = url
       a.download = `${exportSettings.filename}.mp4`
+      document.body.appendChild(a)
       a.click()
+      document.body.removeChild(a)
       setTimeout(() => URL.revokeObjectURL(url), 60_000)
       setRenderState('done')
     } catch (err) {

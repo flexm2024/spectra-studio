@@ -43,7 +43,9 @@ export default function App() {
     const a = document.createElement('a')
     a.href = url
     a.download = `${exportSettings.filename}.spectra.json`
+    document.body.appendChild(a)
     a.click()
+    document.body.removeChild(a)
     setTimeout(() => URL.revokeObjectURL(url), 60_000)
   }
 
