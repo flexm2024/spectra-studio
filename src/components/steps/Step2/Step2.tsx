@@ -416,7 +416,12 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                 {COMPACT_VIS.includes(visualizer.type) && (
                   <div
                     className="s2-frame__orb"
-                    style={{ opacity: visualizer.opacity / 100, top: `${visualizer.y}%`, left: '50%' }}
+                    style={{
+                      opacity: visualizer.opacity / 100,
+                      top: `${visualizer.y}%`,
+                      left: '50%',
+                      filter: energy > 0.05 ? `drop-shadow(0 0 ${Math.round(energy * intensityScale * 20)}px ${energyColor(energy)})` : undefined,
+                    }}
                   >
                     <svg
                       viewBox="-100 -100 200 200"
@@ -434,7 +439,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                           <line key={i}
                             x1={cos * innerR} y1={sin * innerR}
                             x2={cos * (innerR + barLen)} y2={sin * (innerR + barLen)}
-                            stroke={visColor} strokeWidth="1.5" opacity="0.85"
+                            stroke={rainbowColor(i, data.length, energy)} strokeWidth="1.5" opacity="0.85"
                           />
                         )
                       })}
@@ -446,7 +451,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                         return (
                           <line key={i} x1={0} y1={0}
                             x2={Math.cos(angle) * r} y2={Math.sin(angle) * r}
-                            stroke={visColor} strokeWidth="2" opacity="0.8"
+                            stroke={rainbowColor(i, 40, energy)} strokeWidth="2" opacity="0.8"
                           />
                         )
                       })}
@@ -457,7 +462,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                         const w = (scale * 78 + bandH * intensityScale * 18) * sizeScale
                         return (
                           <rect key={i} x={-w} y={-w} width={w * 2} height={w * 2}
-                            fill="none" stroke={visColor} strokeWidth="1.5"
+                            fill="none" stroke={energyColor(energy)} strokeWidth="1.5"
                             opacity={0.9 - i * 0.13}
                           />
                         )
@@ -471,7 +476,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                           <circle key={i}
                             cx={Math.cos(angle) * r} cy={Math.sin(angle) * r}
                             r={(h * intensityScale * 4 + 0.8) * sizeScale}
-                            fill={visColor} opacity={0.5 + h * 0.5}
+                            fill={rainbowColor(i, data.length, energy)} opacity={0.5 + h * 0.5}
                           />
                         )
                       })}
@@ -485,7 +490,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                         return (
                           <polygon key={i}
                             points={`0,0 ${Math.cos(a1)*r},${Math.sin(a1)*r} ${Math.cos(a2)*r},${Math.sin(a2)*r}`}
-                            fill={visColor} opacity={0.35 + h * 0.55}
+                            fill={rainbowColor(i, 20, energy)} opacity={0.35 + h * 0.55}
                           />
                         )
                       })}
@@ -496,7 +501,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                         const r = (ring * 22 + bandH * intensityScale * 20 + 8) * sizeScale
                         return (
                           <circle key={ring} cx={0} cy={0} r={r}
-                            fill="none" stroke={visColor} strokeWidth="1.5"
+                            fill="none" stroke={energyColor(energy)} strokeWidth="1.5"
                             opacity={0.8 - ring * 0.15}
                           />
                         )

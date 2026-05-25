@@ -147,4 +147,16 @@ describe('Step2', () => {
     expect(firstBar.style.background).not.toContain('linear-gradient')
     expect(firstBar.style.background).toMatch(/rgb/)
   })
+
+  it('circular 타입 렌더링 시 orb 컨테이너가 존재한다', () => {
+    render(<Step2 {...base} visualizer={{ type: 'circular', intensity: 70, opacity: 85, y: 75, size: 50, color: '#00d4ff' }} />)
+    const orb = document.querySelector('.s2-frame__orb') as HTMLElement
+    expect(orb).toBeInTheDocument()
+  })
+
+  it('circular 타입 첫 번째 선에 hsl stroke가 적용된다', () => {
+    render(<Step2 {...base} visualizer={{ type: 'circular', intensity: 70, opacity: 85, y: 75, size: 50, color: '#00d4ff' }} />)
+    const firstLine = document.querySelector('.s2-frame__orb line') as SVGLineElement
+    expect(firstLine?.getAttribute('stroke')).toMatch(/hsl/)
+  })
 })
