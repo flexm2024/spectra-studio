@@ -30,10 +30,16 @@ const VIS_SHAPES: { id: Visualizer['type'], label: string }[] = [
   { id: 'prism',    label: 'Prism'    },
   { id: 'pulse',    label: 'Pulse'    },
   { id: 'particle', label: 'Particle' },
+  { id: 'ripple',   label: 'Ripple'   },
+  { id: 'helix',    label: 'Helix'    },
+  { id: 'hex',      label: 'Hex Grid' },
+  { id: 'ribbon',   label: 'Ribbon'   },
 ]
 
 // 원형 중심 타입 — 좌표 앵커 포지셔닝 사용
-const COMPACT_VIS: Visualizer['type'][] = ['circular', 'burst', 'tunnel', 'galaxy', 'prism', 'pulse']
+const COMPACT_VIS: Visualizer['type'][] = ['circular', 'burst', 'tunnel', 'galaxy', 'prism', 'pulse', 'ripple']
+// 프레임 전체를 덮는 타입
+const FULL_VIS: Visualizer['type'][] = ['hex']
 
 const VIS_COLORS = [
   '#00d4ff', '#a855f7', '#fbbf24', '#f97316', '#22c55e', '#ff3b5c',
@@ -313,23 +319,31 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
     canvas.height = canvas.offsetHeight || 360
     let rafId: number
     let tAnim = 0
+    let prevBass = 0
     function tick() {
       tAnim += 0.016
       const W = canvas!.width, H = canvas!.height
       const fd = freqDataRef.current
       const iScale = visIntensityRef.current / 100
       const sScale = visSizeRef.current / 50
-      ctx!.fillStyle = 'rgba(0,0,0,0.22)'
+      const bass = fd.slice(0, 10).reduce((s, v) => s + v, 0) / 10
+      const bassDelta = Math.max(0, bass - prevBass)
+      prevBass = bass * 0.82 + prevBass * 0.18
+      const isBeat = bassDelta > 0.11
+      ctx!.fillStyle = `rgba(0,0,0,${isBeat ? 0.38 : 0.22})`
       ctx!.fillRect(0, 0, W, H)
-      const bass = fd.slice(0, 12).reduce((s, v) => s + v, 0) / 12
       particlesRef.current!.forEach(p => {
         const dx = 0.5 - p.x, dy = 0.5 - p.y
-        p.vx += dx * bass * 0.012 * iScale
-        p.vy += dy * bass * 0.012 * iScale
-        p.vx += (Math.random() - 0.5) * 0.0008
-        p.vy += (Math.random() - 0.5) * 0.0008
+        if (isBeat) {
+          p.vx -= dx * bassDelta * 0.28
+          p.vy -= dy * bassDelta * 0.28
+        }
+        p.vx += dx * bass * 0.015 * iScale
+        p.vy += dy * bass * 0.015 * iScale
+        p.vx += (Math.random() - 0.5) * 0.0006
+        p.vy += (Math.random() - 0.5) * 0.0006
         const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy)
-        const maxSpeed = 0.01 * Math.max(0.3, iScale)
+        const maxSpeed = (0.012 + bassDelta * 0.09) * Math.max(0.3, iScale)
         if (speed > maxSpeed) { p.vx *= maxSpeed / speed; p.vy *= maxSpeed / speed }
         p.x = ((p.x + p.vx) + 1) % 1
         p.y = ((p.y + p.vy) + 1) % 1
@@ -338,10 +352,10 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
         const hue = (p.x * 220 + tAnim * 30) % 360
         ctx!.save()
         ctx!.shadowColor = `hsl(${hue},100%,65%)`
-        ctx!.shadowBlur = e * 14 * iScale + 2
+        ctx!.shadowBlur = isBeat ? e * 22 * iScale + 7 : e * 14 * iScale + 2
         ctx!.beginPath()
-        ctx!.arc(p.x * W, p.y * H, p.r * sScale * (1 + e * 2.5), 0, Math.PI * 2)
-        ctx!.fillStyle = `hsla(${hue},100%,70%,${0.45 + e * 0.55})`
+        ctx!.arc(p.x * W, p.y * H, p.r * sScale * (1 + e * 2.5 + bassDelta * 3.5), 0, Math.PI * 2)
+        ctx!.fillStyle = `hsla(${hue},100%,${70 + bassDelta * 25}%,${0.45 + e * 0.55})`
         ctx!.fill()
         ctx!.restore()
       })
@@ -501,8 +515,43 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                   />
                 )}
 
-                {/* 와이드 타입: bars / mirror / waveform / scope / led / rain */}
-                {!COMPACT_VIS.includes(visualizer.type) && visualizer.type !== 'particle' && (
+                {/* 프레임 전체 타입: hex */}
+                {FULL_VIS.includes(visualizer.type) && (() => {
+                  const size = 10, cols = 18, rows = 10
+                  return (
+                    <svg
+                      className="s2-frame__full-vis"
+                      viewBox={`0 0 ${(cols * size * 1.73 + size).toFixed(1)} ${(rows * size * 1.5 + size).toFixed(1)}`}
+                      preserveAspectRatio="xMidYMid slice"
+                      style={{ opacity: visualizer.opacity / 100 }}
+                    >
+                      {Array.from({ length: rows }, (_, row) =>
+                        Array.from({ length: cols }, (_, col) => {
+                          const x = col * size * 1.73 + (row % 2) * size * 0.866 + size
+                          const y = row * size * 1.5 + size
+                          const dist = Math.sqrt(((x / (cols * size * 1.73)) - 0.5) ** 2 + ((y / (rows * size * 1.5)) - 0.5) ** 2)
+                          const bin = Math.min(data.length - 1, Math.floor(dist * 2 * data.length))
+                          const v = data[bin] ?? 0
+                          const hueVal = ((dist * 300 + playlistCurrentTime * 50) % 360 + 360) % 360
+                          const pts = Array.from({ length: 6 }, (_, a) => {
+                            const ang = (a * Math.PI) / 3 - Math.PI / 6
+                            return `${(x + Math.cos(ang) * size * 0.88).toFixed(2)},${(y + Math.sin(ang) * size * 0.88).toFixed(2)}`
+                          }).join(' ')
+                          return (
+                            <polygon key={`${row}-${col}`} points={pts}
+                              fill={`hsla(${hueVal},90%,60%,${(0.04 + v * 0.85 * intensityScale).toFixed(2)})`}
+                              stroke={`hsla(${hueVal},80%,70%,${(0.08 + v * 0.5 * intensityScale).toFixed(2)})`}
+                              strokeWidth="0.4"
+                            />
+                          )
+                        })
+                      ).flat()}
+                    </svg>
+                  )
+                })()}
+
+                {/* 와이드 타입: bars / mirror / waveform / scope / led / rain / helix / ribbon */}
+                {!COMPACT_VIS.includes(visualizer.type) && visualizer.type !== 'particle' && !FULL_VIS.includes(visualizer.type) && (
                   <div
                     className="s2-frame__wave"
                     style={{
@@ -512,17 +561,22 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                     }}
                     onMouseDown={handleVisMouseDown}
                   >
-                    {/* Bars — 그라디언트 막대 */}
-                    {visualizer.type === 'bars' && data.map((h, i) => (
-                      <div
-                        key={i}
-                        className="s2-frame__wave-bar"
-                        style={{
-                          height: `${h * intensityScale * 100}%`,
-                          background: rainbowColor(i, data.length, energy),
-                        }}
-                      />
-                    ))}
+                    {/* Bars — 그라데이션 + 반사 */}
+                    {visualizer.type === 'bars' && (
+                      <svg className="s2-frame__wave-svg" viewBox={`0 0 ${data.length} 100`} preserveAspectRatio="none">
+                        {data.map((h, i) => {
+                          const barH = Math.max(1, h * intensityScale * 80)
+                          const color = rainbowColor(i, data.length, energy)
+                          return (
+                            <g key={i}>
+                              <rect x={i + 0.08} y={80 - barH} width={0.84} height={barH} fill={color} opacity="0.95" rx="0.35" />
+                              <rect x={i + 0.08} y={81} width={0.84} height={barH * 0.36} fill={color} opacity="0.18" rx="0.35" />
+                            </g>
+                          )
+                        })}
+                        <rect x="0" y="80.4" width={data.length} height="0.5" fill="rgba(255,255,255,0.09)" />
+                      </svg>
+                    )}
 
                     {/* Mirror — 상하 대칭 막대 */}
                     {visualizer.type === 'mirror' && (
@@ -603,6 +657,67 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                               />
                             ))
                           }).flat()}
+                        </svg>
+                      )
+                    })()}
+
+                    {/* Helix — DNA 이중 나선 */}
+                    {visualizer.type === 'helix' && (() => {
+                      const steps = 80
+                      const phase = playlistCurrentTime * 1.8
+                      return (
+                        <svg className="s2-frame__wave-svg" viewBox="0 0 80 60" preserveAspectRatio="none">
+                          {[0, Math.PI].map((phaseOff, strand) =>
+                            Array.from({ length: steps - 1 }, (_, i) => {
+                              const v = data[Math.floor(i * data.length / steps)]
+                              const y1 = 30 + Math.sin((i / steps) * Math.PI * 4 + phase + phaseOff) * (12 + v * intensityScale * 14)
+                              const y2 = 30 + Math.sin(((i + 1) / steps) * Math.PI * 4 + phase + phaseOff) * (12 + v * intensityScale * 14)
+                              return <line key={`${strand}-${i}`} x1={i} y1={y1} x2={i + 1} y2={y2}
+                                stroke={rainbowColor(i, steps, energy)} strokeWidth="1.6" strokeLinecap="round" opacity="0.9" />
+                            })
+                          )}
+                          {Array.from({ length: 14 }, (_, k) => {
+                            const i = Math.floor(k * steps / 14)
+                            const v = data[Math.floor(i * data.length / steps)]
+                            const phase1 = (i / steps) * Math.PI * 4 + phase
+                            const y1 = 30 + Math.sin(phase1) * (12 + v * intensityScale * 14)
+                            const y2 = 30 + Math.sin(phase1 + Math.PI) * (12 + v * intensityScale * 14)
+                            return <line key={k} x1={i} y1={y1} x2={i} y2={y2}
+                              stroke={rainbowColor(i, steps, energy)} strokeWidth="0.8" opacity="0.28" />
+                          })}
+                        </svg>
+                      )
+                    })()}
+
+                    {/* Ribbon — 흐르는 리본 */}
+                    {visualizer.type === 'ribbon' && (() => {
+                      const pts = data.length
+                      const phase = playlistCurrentTime * 1.4
+                      const top = data.map((v, i) => {
+                        const x = (i / (pts - 1)) * 80
+                        const y = 24 + Math.sin(i * 0.14 + phase) * v * intensityScale * 18
+                        return `${x.toFixed(2)},${y.toFixed(2)}`
+                      })
+                      const bot = [...data].reverse().map((v, i) => {
+                        const ri = pts - 1 - i
+                        const x = (ri / (pts - 1)) * 80
+                        const y = 36 - Math.sin(ri * 0.14 + phase) * v * intensityScale * 8
+                        return `${x.toFixed(2)},${y.toFixed(2)}`
+                      })
+                      const hueA = ((playlistCurrentTime * 60) % 360 + 360) % 360
+                      const hueB = (hueA + 120) % 360
+                      const hueC = (hueA + 240) % 360
+                      return (
+                        <svg className="s2-frame__wave-svg" viewBox="0 0 80 60" preserveAspectRatio="none">
+                          <defs>
+                            <linearGradient id="ribG" x1="0" y1="0" x2="1" y2="0">
+                              <stop offset="0%" stopColor={`hsl(${hueA},100%,65%)`} />
+                              <stop offset="50%" stopColor={`hsl(${hueB},100%,65%)`} />
+                              <stop offset="100%" stopColor={`hsl(${hueC},100%,65%)`} />
+                            </linearGradient>
+                          </defs>
+                          <polygon points={[...top, ...bot].join(' ')} fill="url(#ribG)" opacity={0.28 + energy * 0.38} />
+                          <polyline points={top.join(' ')} fill="none" stroke="url(#ribG)" strokeWidth="1.6" opacity="0.92" strokeLinejoin="round" />
                         </svg>
                       )
                     })()}
@@ -700,6 +815,23 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                           <circle key={ring} cx={0} cy={0} r={r}
                             fill="none" stroke={energyColor(energy)} strokeWidth="1.5"
                             opacity={0.8 - ring * 0.15}
+                          />
+                        )
+                      })}
+
+                      {/* Ripple — 동심 파문 */}
+                      {visualizer.type === 'ripple' && Array.from({ length: 20 }, (_, ri) => {
+                        const ratio = (ri + 1) / 20
+                        const bin = Math.floor(ratio * (data.length - 1))
+                        const v = data[bin] ?? 0
+                        const r = (ratio * 80 + v * intensityScale * 22) * sizeScale
+                        const hueVal = ((ratio * 220 + playlistCurrentTime * 40) % 360 + 360) % 360
+                        return (
+                          <circle key={ri} cx={0} cy={0} r={r}
+                            fill="none"
+                            stroke={`hsl(${hueVal},100%,68%)`}
+                            strokeWidth={1 + v * 2.5 * intensityScale}
+                            opacity={0.12 + v * 0.78}
                           />
                         )
                       })}

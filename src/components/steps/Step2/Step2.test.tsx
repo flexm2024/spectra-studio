@@ -141,12 +141,11 @@ describe('Step2', () => {
     expect(document.querySelector('.s2-frame__blur-overlay')).toBeInTheDocument()
   })
 
-  it('bars 타입 렌더링 시 첫 번째 막대 background에 hsl 색상이 적용된다', () => {
+  it('bars 타입 렌더링 시 SVG rect에 fill 색상이 적용된다', () => {
     render(<Step2 {...base} />)
-    const firstBar = document.querySelector('.s2-frame__wave-bar') as HTMLElement
-    // jsdom은 hsl()을 rgb()로 정규화하므로 linear-gradient가 없고 단색임을 확인
-    expect(firstBar.style.background).not.toContain('linear-gradient')
-    expect(firstBar.style.background).toMatch(/rgb/)
+    const firstRect = document.querySelector('.s2-frame__wave-svg rect') as SVGRectElement
+    expect(firstRect).toBeInTheDocument()
+    expect(firstRect.getAttribute('fill')).toMatch(/hsl/)
   })
 
   it('circular 타입 렌더링 시 orb 컨테이너가 존재한다', () => {
