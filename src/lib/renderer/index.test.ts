@@ -65,11 +65,14 @@ describe('renderVideo', () => {
   it('processAudio를 올바른 인자로 호출한다', async () => {
     const { processAudio } = await import('./audioProcessor')
     await renderVideo(base, vi.fn())
-    expect(processAudio).toHaveBeenCalledWith({
-      tracks: base.tracks,
-      loops: base.loops,
-      crossfade: base.effects.crossfade,
-      ducking: base.effects.ducking,
-    })
+    expect(processAudio).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tracks: base.tracks,
+        loops: base.loops,
+        crossfade: base.effects.crossfade,
+        ducking: base.effects.ducking,
+        onProgress: expect.any(Function),
+      })
+    )
   })
 })

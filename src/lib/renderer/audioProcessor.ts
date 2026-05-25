@@ -34,6 +34,7 @@ export interface AudioProcessorInput {
   crossfade: boolean
   ducking: boolean
   sampleRate?: number
+  onProgress?: (pct: number) => void
 }
 
 export interface AudioProcessorOutput {
@@ -72,20 +73,27 @@ export function computeTrackBoundaries(
 }
 
 export async function processAudio(input: AudioProcessorInput): Promise<AudioProcessorOutput> {
-  const { tracks, loops, crossfade, ducking } = input
+  const { tracks, loops, crossfade, ducking, onProgress } = input
   const sampleRate = input.sampleRate ?? 48000
 
   // Phase 1: 디코딩 전용 임시 컨텍스트
   const decodeCtx = new OfflineAudioContext(2, sampleRate, sampleRate)
 
+  let decoded = 0
   const trackBuffers: AudioBuffer[] = await Promise.all(
     tracks.map(async t => {
+      let buf: AudioBuffer
       if (t.audioUrl) {
         const resp = await fetch(t.audioUrl)
         const arr = await resp.arrayBuffer()
-        return decodeCtx.decodeAudioData(arr)
+        buf = await decodeCtx.decodeAudioData(arr)
+      } else {
+        buf = decodeCtx.createBuffer(2, Math.ceil(t.durationSec * sampleRate), sampleRate)
       }
-      return decodeCtx.createBuffer(2, Math.ceil(t.durationSec * sampleRate), sampleRate)
+      decoded++
+      // 디코딩 단계: 0→70%
+      onProgress?.(Math.round((decoded / Math.max(tracks.length, 1)) * 70))
+      return buf
     })
   )
 
@@ -132,6 +140,7 @@ export async function processAudio(input: AudioProcessorInput): Promise<AudioPro
   }
 
   const audioBuffer = await offline.startRendering()
+  onProgress?.(100)
   return {
     audioBuffer,
     trackBoundaries: boundaries,

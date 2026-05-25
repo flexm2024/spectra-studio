@@ -45,6 +45,7 @@ export async function renderVideo(input: RenderInput, onProgress: (pct: number) 
     loops: input.loops,
     crossfade: input.effects.crossfade,
     ducking: input.effects.ducking,
+    onProgress: pct => onProgress(Math.round(pct * 0.38)),  // 0→38%
   })
   onProgress(40)
 
