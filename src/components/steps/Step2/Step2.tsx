@@ -17,29 +17,12 @@ const THEMES = [
 ]
 
 const VIS_SHAPES: { id: Visualizer['type'], label: string }[] = [
-  { id: 'bars',     label: 'Bars'     },
-  { id: 'mirror',   label: 'Mirror'   },
-  { id: 'waveform', label: 'Waveform' },
-  { id: 'scope',    label: 'Scope'    },
-  { id: 'led',      label: 'LED'      },
-  { id: 'rain',     label: 'Rain'     },
-  { id: 'circular', label: 'Circular' },
-  { id: 'burst',    label: 'Burst'    },
-  { id: 'tunnel',   label: 'Tunnel'   },
-  { id: 'galaxy',   label: 'Galaxy'   },
-  { id: 'prism',    label: 'Prism'    },
-  { id: 'pulse',    label: 'Pulse'    },
-  { id: 'particle', label: 'Particle' },
-  { id: 'ripple',   label: 'Ripple'   },
-  { id: 'helix',    label: 'Helix'    },
-  { id: 'hex',      label: 'Hex Grid' },
-  { id: 'ribbon',   label: 'Ribbon'   },
+  { id: 'bars',     label: '그라데이션' },
+  { id: 'glow',     label: '글로우'    },
+  { id: 'peak',     label: '피크'      },
+  { id: 'particle', label: '파티클'    },
 ]
 
-// 원형 중심 타입 — 좌표 앵커 포지셔닝 사용
-const COMPACT_VIS: Visualizer['type'][] = ['circular', 'burst', 'tunnel', 'galaxy', 'prism', 'pulse', 'ripple']
-// 프레임 전체를 덮는 타입
-const FULL_VIS: Visualizer['type'][] = ['hex']
 
 const VIS_COLORS = [
   '#00d4ff', '#a855f7', '#fbbf24', '#f97316', '#22c55e', '#ff3b5c',
@@ -158,6 +141,8 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
   const titleDragOffset = useRef({ x: 0, y: 0 })
   const subIsDragging = useRef(false)
   const subDragOffset = useRef({ x: 0, y: 0 })
+  const barsCanvasRef = useRef<HTMLCanvasElement>(null)
+  const peaksRef = useRef<{ pos: number; vel: number }[]>([])
   const particleCanvasRef = useRef<HTMLCanvasElement>(null)
   const freqDataRef = useRef<number[]>([])
   const visIntensityRef = useRef(visualizer.intensity)
@@ -308,6 +293,87 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
       document.removeEventListener('mouseup', onMouseUp)
     }
   }, [setLogoPosition, setVisualizer])
+
+  useEffect(() => {
+    if (visualizer.type !== 'glow' && visualizer.type !== 'peak') return
+    const canvas = barsCanvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    const type = visualizer.type
+    canvas.width = canvas.offsetWidth || 400
+    canvas.height = canvas.offsetHeight || 100
+    peaksRef.current = Array.from({ length: 40 }, () => ({ pos: canvas.height, vel: 0 }))
+    let rafId: number
+    function tick() {
+      const W = canvas!.width, H = canvas!.height
+      const fd = freqDataRef.current
+      const iScale = visIntensityRef.current / 100
+      ctx!.clearRect(0, 0, W, H)
+      if (type === 'glow') {
+        const bins = 28
+        for (let i = 0; i < bins; i++) {
+          const v = fd[Math.floor(i * fd.length / bins)] ?? 0
+          const barH = Math.max(2, v * H * 0.94 * iScale)
+          const bw = W / bins
+          const x = i * bw + bw * 0.08
+          const w = bw * 0.84
+          const hueVal = (i / (bins - 1)) * 220
+          ctx!.save()
+          ctx!.shadowColor = `hsl(${hueVal},100%,65%)`
+          ctx!.shadowBlur = v * 24 * iScale + 4
+          const g = ctx!.createLinearGradient(0, H - barH, 0, H)
+          g.addColorStop(0, `hsl(${hueVal},100%,75%)`)
+          g.addColorStop(0.55, `hsl(${hueVal},90%,55%)`)
+          g.addColorStop(1, `hsl(${hueVal},80%,38%)`)
+          ctx!.fillStyle = g
+          ctx!.beginPath()
+          if ('roundRect' in ctx!) ctx!.roundRect(x, H - barH, w, barH, 4)
+          else ctx!.rect(x, H - barH, w, barH)
+          ctx!.fill()
+          ctx!.restore()
+        }
+      } else {
+        const bins = 40
+        for (let i = 0; i < bins; i++) {
+          const v = fd[Math.floor(i * fd.length / bins)] ?? 0
+          const barH = Math.max(2, v * H * 0.90 * iScale)
+          const bw = W / bins
+          const x = i * bw + bw * 0.1
+          const w = bw * 0.8
+          const hueVal = (i / (bins - 1)) * 220
+          const barTop = H - barH
+          ctx!.fillStyle = `hsla(${hueVal},70%,42%,0.55)`
+          ctx!.beginPath()
+          if ('roundRect' in ctx!) ctx!.roundRect(x, barTop, w, barH, [3, 3, 0, 0])
+          else ctx!.rect(x, barTop, w, barH)
+          ctx!.fill()
+          ctx!.save()
+          ctx!.shadowColor = `hsl(${hueVal},100%,70%)`
+          ctx!.shadowBlur = 6
+          ctx!.fillStyle = `hsl(${hueVal},100%,78%)`
+          ctx!.fillRect(x, barTop, w, 2)
+          ctx!.restore()
+          const pk = peaksRef.current[i]
+          if (barTop < pk.pos) { pk.pos = barTop; pk.vel = 0 }
+          pk.vel += 0.5
+          pk.pos += pk.vel
+          if (pk.pos > H - 3) { pk.pos = H - 3; pk.vel = 0 }
+          ctx!.save()
+          ctx!.shadowColor = `hsl(${hueVal},100%,75%)`
+          ctx!.shadowBlur = 10
+          ctx!.beginPath()
+          ctx!.arc(x + w / 2, pk.pos, w * 0.42, 0, Math.PI * 2)
+          ctx!.fillStyle = `hsl(${hueVal},100%,82%)`
+          ctx!.fill()
+          ctx!.restore()
+        }
+      }
+      rafId = requestAnimationFrame(tick)
+    }
+    rafId = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(rafId)
+  }, [visualizer.type])
 
   useEffect(() => {
     if (visualizer.type !== 'particle') return
@@ -506,7 +572,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
 
             {effects.vis && (
               <>
-                {/* 파티클 타입 — canvas 기반 풀프레임 */}
+                {/* Particle — canvas 풀프레임 */}
                 {visualizer.type === 'particle' && (
                   <canvas
                     ref={particleCanvasRef}
@@ -515,48 +581,12 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                   />
                 )}
 
-                {/* 프레임 전체 타입: hex */}
-                {FULL_VIS.includes(visualizer.type) && (() => {
-                  const size = 10, cols = 18, rows = 10
-                  return (
-                    <svg
-                      className="s2-frame__full-vis"
-                      viewBox={`0 0 ${(cols * size * 1.73 + size).toFixed(1)} ${(rows * size * 1.5 + size).toFixed(1)}`}
-                      preserveAspectRatio="xMidYMid slice"
-                      style={{ opacity: visualizer.opacity / 100 }}
-                    >
-                      {Array.from({ length: rows }, (_, row) =>
-                        Array.from({ length: cols }, (_, col) => {
-                          const x = col * size * 1.73 + (row % 2) * size * 0.866 + size
-                          const y = row * size * 1.5 + size
-                          const dist = Math.sqrt(((x / (cols * size * 1.73)) - 0.5) ** 2 + ((y / (rows * size * 1.5)) - 0.5) ** 2)
-                          const bin = Math.min(data.length - 1, Math.floor(dist * 2 * data.length))
-                          const v = data[bin] ?? 0
-                          const hueVal = ((dist * 300 + playlistCurrentTime * 50) % 360 + 360) % 360
-                          const pts = Array.from({ length: 6 }, (_, a) => {
-                            const ang = (a * Math.PI) / 3 - Math.PI / 6
-                            return `${(x + Math.cos(ang) * size * 0.88).toFixed(2)},${(y + Math.sin(ang) * size * 0.88).toFixed(2)}`
-                          }).join(' ')
-                          return (
-                            <polygon key={`${row}-${col}`} points={pts}
-                              fill={`hsla(${hueVal},90%,60%,${(0.04 + v * 0.85 * intensityScale).toFixed(2)})`}
-                              stroke={`hsla(${hueVal},80%,70%,${(0.08 + v * 0.5 * intensityScale).toFixed(2)})`}
-                              strokeWidth="0.4"
-                            />
-                          )
-                        })
-                      ).flat()}
-                    </svg>
-                  )
-                })()}
-
-                {/* 와이드 타입: bars / mirror / waveform / scope / led / rain / helix / ribbon */}
-                {!COMPACT_VIS.includes(visualizer.type) && visualizer.type !== 'particle' && !FULL_VIS.includes(visualizer.type) && (
+                {/* 막대 타입: bars / glow / peak */}
+                {visualizer.type !== 'particle' && (
                   <div
                     className="s2-frame__wave"
                     style={{
                       opacity: visualizer.opacity / 100,
-                      filter: energy > 0.05 ? `drop-shadow(0 0 ${Math.round(energy * intensityScale * 20)}px ${energyColor(energy)})` : undefined,
                       ...waveContainerStyle(visualizer.y, visualizer.size),
                     }}
                     onMouseDown={handleVisMouseDown}
@@ -577,276 +607,13 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                         <rect x="0" y="80.4" width={data.length} height="0.5" fill="rgba(255,255,255,0.09)" />
                       </svg>
                     )}
-
-                    {/* Mirror — 상하 대칭 막대 */}
-                    {visualizer.type === 'mirror' && (
-                      <svg className="s2-frame__wave-svg" viewBox={`0 0 ${data.length} 80`} preserveAspectRatio="none">
-                        {data.map((h, i) => {
-                          const barH = h * intensityScale * 36
-                          return <rect key={i} x={i + 0.1} y={40 - barH} width={0.8} height={barH * 2}
-                            fill={rainbowColor(i, data.length, energy)} opacity="0.8" />
-                        })}
-                      </svg>
+                    {/* Glow / Peak — canvas */}
+                    {(visualizer.type === 'glow' || visualizer.type === 'peak') && (
+                      <canvas ref={barsCanvasRef} className="s2-frame__bars-canvas" />
                     )}
-
-                    {/* Waveform — 채워진 파형 */}
-                    {visualizer.type === 'waveform' && (
-                      <svg className="s2-frame__wave-svg" viewBox="0 0 80 40" preserveAspectRatio="none">
-                        <defs>
-                          <linearGradient id="wfg" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor={energyColor(energy)} stopOpacity="0.7" />
-                            <stop offset="100%" stopColor={energyColor(energy)} stopOpacity="0.02" />
-                          </linearGradient>
-                        </defs>
-                        <path
-                          d={`M0,40 ${data.map((h, i) => `L${i},${40 - h * intensityScale * 38}`).join(' ')} L79,40 Z`}
-                          fill="url(#wfg)"
-                        />
-                        <polyline
-                          points={data.map((h, i) => `${i},${40 - h * intensityScale * 38}`).join(' ')}
-                          fill="none" stroke={energyColor(energy)} strokeWidth="1" opacity="0.9"
-                        />
-                      </svg>
-                    )}
-
-                    {/* Scope — 오실로스코프 파형 */}
-                    {visualizer.type === 'scope' && (
-                      <svg className="s2-frame__wave-svg" viewBox="0 0 80 40" preserveAspectRatio="none">
-                        <line x1="0" y1="20" x2="80" y2="20" stroke={visColor} strokeWidth="0.3" opacity="0.25" />
-                        <polyline
-                          points={data.map((h, i) => `${i},${20 - Math.sin(i * 0.3) * h * intensityScale * 18}`).join(' ')}
-                          fill="none" stroke={energyColor(energy)} strokeWidth="1.2" opacity="0.9"
-                          strokeLinecap="round" strokeLinejoin="round"
-                        />
-                      </svg>
-                    )}
-
-                    {/* LED — 격자 도트 */}
-                    {visualizer.type === 'led' && (() => {
-                      const cols = 20, rows = 8
-                      return (
-                        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gridTemplateRows: `repeat(${rows}, 1fr)`, gap: '1.5px', width: '100%', height: '100%' }}>
-                          {Array.from({ length: rows }, (_, row) =>
-                            Array.from({ length: cols }, (_, col) => {
-                              const h = data[Math.floor(col * (data.length / cols))]
-                              const isActive = (rows - 1 - row) / rows < h * intensityScale
-                              return (
-                                <div key={`${row}-${col}`} style={{
-                                  borderRadius: '2px',
-                                  background: isActive ? rainbowColor(col, cols, energy) : 'rgba(255,255,255,0.07)',
-                                }} />
-                              )
-                            })
-                          ).flat()}
-                        </div>
-                      )
-                    })()}
-
-                    {/* Rain — 수직 도트 컬럼 */}
-                    {visualizer.type === 'rain' && (() => {
-                      const cols = 24
-                      return (
-                        <svg className="s2-frame__wave-svg" viewBox={`0 0 ${cols} 40`} preserveAspectRatio="none">
-                          {Array.from({ length: cols }, (_, col) => {
-                            const h = data[Math.floor(col * data.length / cols)]
-                            const dotCount = Math.max(1, Math.floor(h * intensityScale * 12))
-                            return Array.from({ length: dotCount }, (_, dot) => (
-                              <circle key={`${col}-${dot}`}
-                                cx={col + 0.5} cy={39 - dot * 3}
-                                r="0.45" fill={rainbowColor(col, cols, energy)} opacity={1 - dot * 0.07}
-                              />
-                            ))
-                          }).flat()}
-                        </svg>
-                      )
-                    })()}
-
-                    {/* Helix — DNA 이중 나선 */}
-                    {visualizer.type === 'helix' && (() => {
-                      const steps = 80
-                      const phase = playlistCurrentTime * 1.8
-                      return (
-                        <svg className="s2-frame__wave-svg" viewBox="0 0 80 60" preserveAspectRatio="none">
-                          {[0, Math.PI].map((phaseOff, strand) =>
-                            Array.from({ length: steps - 1 }, (_, i) => {
-                              const v = data[Math.floor(i * data.length / steps)]
-                              const y1 = 30 + Math.sin((i / steps) * Math.PI * 4 + phase + phaseOff) * (12 + v * intensityScale * 14)
-                              const y2 = 30 + Math.sin(((i + 1) / steps) * Math.PI * 4 + phase + phaseOff) * (12 + v * intensityScale * 14)
-                              return <line key={`${strand}-${i}`} x1={i} y1={y1} x2={i + 1} y2={y2}
-                                stroke={rainbowColor(i, steps, energy)} strokeWidth="1.6" strokeLinecap="round" opacity="0.9" />
-                            })
-                          )}
-                          {Array.from({ length: 14 }, (_, k) => {
-                            const i = Math.floor(k * steps / 14)
-                            const v = data[Math.floor(i * data.length / steps)]
-                            const phase1 = (i / steps) * Math.PI * 4 + phase
-                            const y1 = 30 + Math.sin(phase1) * (12 + v * intensityScale * 14)
-                            const y2 = 30 + Math.sin(phase1 + Math.PI) * (12 + v * intensityScale * 14)
-                            return <line key={k} x1={i} y1={y1} x2={i} y2={y2}
-                              stroke={rainbowColor(i, steps, energy)} strokeWidth="0.8" opacity="0.28" />
-                          })}
-                        </svg>
-                      )
-                    })()}
-
-                    {/* Ribbon — 흐르는 리본 */}
-                    {visualizer.type === 'ribbon' && (() => {
-                      const pts = data.length
-                      const phase = playlistCurrentTime * 1.4
-                      const top = data.map((v, i) => {
-                        const x = (i / (pts - 1)) * 80
-                        const y = 24 + Math.sin(i * 0.14 + phase) * v * intensityScale * 18
-                        return `${x.toFixed(2)},${y.toFixed(2)}`
-                      })
-                      const bot = [...data].reverse().map((v, i) => {
-                        const ri = pts - 1 - i
-                        const x = (ri / (pts - 1)) * 80
-                        const y = 36 - Math.sin(ri * 0.14 + phase) * v * intensityScale * 8
-                        return `${x.toFixed(2)},${y.toFixed(2)}`
-                      })
-                      const hueA = ((playlistCurrentTime * 60) % 360 + 360) % 360
-                      const hueB = (hueA + 120) % 360
-                      const hueC = (hueA + 240) % 360
-                      return (
-                        <svg className="s2-frame__wave-svg" viewBox="0 0 80 60" preserveAspectRatio="none">
-                          <defs>
-                            <linearGradient id="ribG" x1="0" y1="0" x2="1" y2="0">
-                              <stop offset="0%" stopColor={`hsl(${hueA},100%,65%)`} />
-                              <stop offset="50%" stopColor={`hsl(${hueB},100%,65%)`} />
-                              <stop offset="100%" stopColor={`hsl(${hueC},100%,65%)`} />
-                            </linearGradient>
-                          </defs>
-                          <polygon points={[...top, ...bot].join(' ')} fill="url(#ribG)" opacity={0.28 + energy * 0.38} />
-                          <polyline points={top.join(' ')} fill="none" stroke="url(#ribG)" strokeWidth="1.6" opacity="0.92" strokeLinejoin="round" />
-                        </svg>
-                      )
-                    })()}
                   </div>
                 )}
 
-                {/* 컴팩트 타입: circular/burst/tunnel/galaxy/prism/pulse — SVG 앵커 */}
-                {COMPACT_VIS.includes(visualizer.type) && (
-                  <div
-                    className="s2-frame__orb"
-                    style={{
-                      opacity: visualizer.opacity / 100,
-                      top: `${visualizer.y}%`,
-                      left: '50%',
-                      filter: energy > 0.05 ? `drop-shadow(0 0 ${Math.round(energy * intensityScale * 20)}px ${energyColor(energy)})` : undefined,
-                    }}
-                  >
-                    <svg
-                      viewBox="-100 -100 200 200"
-                      width={`${visualizer.size * 2}px`}
-                      height={`${visualizer.size * 2}px`}
-                      style={{ position: 'absolute', left: 0, top: 0, transform: 'translate(-50%, -50%)', overflow: 'visible' }}
-                    >
-                      {/* Circular — 원형 스펙트럼 */}
-                      {visualizer.type === 'circular' && data.map((h, i) => {
-                        const angle = (i / data.length) * 2 * Math.PI - Math.PI / 2
-                        const innerR = 28 * sizeScale
-                        const barLen = h * intensityScale * 62 * sizeScale
-                        const cos = Math.cos(angle), sin = Math.sin(angle)
-                        return (
-                          <line key={i}
-                            x1={cos * innerR} y1={sin * innerR}
-                            x2={cos * (innerR + barLen)} y2={sin * (innerR + barLen)}
-                            stroke={rainbowColor(i, data.length, energy)} strokeWidth="1.5" opacity="0.85"
-                          />
-                        )
-                      })}
-
-                      {/* Burst — 방사형 선 */}
-                      {visualizer.type === 'burst' && data.filter((_, i) => i % 2 === 0).map((h, i) => {
-                        const angle = (i / 40) * 2 * Math.PI
-                        const r = h * intensityScale * 82 * sizeScale + 4
-                        return (
-                          <line key={i} x1={0} y1={0}
-                            x2={Math.cos(angle) * r} y2={Math.sin(angle) * r}
-                            stroke={rainbowColor(i, 40, energy)} strokeWidth="2" opacity="0.8"
-                          />
-                        )
-                      })}
-
-                      {/* Tunnel — 동심 사각형 */}
-                      {visualizer.type === 'tunnel' && [1, 0.72, 0.5, 0.32, 0.18].map((scale, i) => {
-                        const bandH = data[Math.floor(i * (data.length / 5))]
-                        const w = (scale * 78 + bandH * intensityScale * 18) * sizeScale
-                        return (
-                          <rect key={i} x={-w} y={-w} width={w * 2} height={w * 2}
-                            fill="none" stroke={energyColor(energy)} strokeWidth="1.5"
-                            opacity={0.9 - i * 0.13}
-                          />
-                        )
-                      })}
-
-                      {/* Galaxy — 원형 궤도 도트 */}
-                      {visualizer.type === 'galaxy' && data.map((h, i) => {
-                        const angle = (i / data.length) * 2 * Math.PI
-                        const r = (30 + h * intensityScale * 58) * sizeScale
-                        return (
-                          <circle key={i}
-                            cx={Math.cos(angle) * r} cy={Math.sin(angle) * r}
-                            r={(h * intensityScale * 4 + 0.8) * sizeScale}
-                            fill={rainbowColor(i, data.length, energy)} opacity={0.5 + h * 0.5}
-                          />
-                        )
-                      })}
-
-                      {/* Prism — 방사형 삼각 웨지 */}
-                      {visualizer.type === 'prism' && data.filter((_, i) => i % 4 === 0).map((h, i) => {
-                        const count = 20
-                        const a1 = (i / count) * 2 * Math.PI
-                        const a2 = ((i + 0.7) / count) * 2 * Math.PI
-                        const r = (h * intensityScale * 88 + 6) * sizeScale
-                        return (
-                          <polygon key={i}
-                            points={`0,0 ${Math.cos(a1)*r},${Math.sin(a1)*r} ${Math.cos(a2)*r},${Math.sin(a2)*r}`}
-                            fill={rainbowColor(i, 20, energy)} opacity={0.35 + h * 0.55}
-                          />
-                        )
-                      })}
-
-                      {/* Pulse — 동심원 펄스 */}
-                      {visualizer.type === 'pulse' && [0, 1, 2, 3].map((ring) => {
-                        const bandH = data[Math.floor(ring * data.length / 4)]
-                        const r = (ring * 22 + bandH * intensityScale * 20 + 8) * sizeScale
-                        return (
-                          <circle key={ring} cx={0} cy={0} r={r}
-                            fill="none" stroke={energyColor(energy)} strokeWidth="1.5"
-                            opacity={0.8 - ring * 0.15}
-                          />
-                        )
-                      })}
-
-                      {/* Ripple — 동심 파문 */}
-                      {visualizer.type === 'ripple' && Array.from({ length: 20 }, (_, ri) => {
-                        const ratio = (ri + 1) / 20
-                        const bin = Math.floor(ratio * (data.length - 1))
-                        const v = data[bin] ?? 0
-                        const r = (ratio * 80 + v * intensityScale * 22) * sizeScale
-                        const hueVal = ((ratio * 220 + playlistCurrentTime * 40) % 360 + 360) % 360
-                        return (
-                          <circle key={ri} cx={0} cy={0} r={r}
-                            fill="none"
-                            stroke={`hsl(${hueVal},100%,68%)`}
-                            strokeWidth={1 + v * 2.5 * intensityScale}
-                            opacity={0.12 + v * 0.78}
-                          />
-                        )
-                      })}
-                    </svg>
-                  </div>
-                )}
-
-                {/* 컴팩트 타입 드래그 핸들 */}
-                {COMPACT_VIS.includes(visualizer.type) && (
-                  <div
-                    className="s2-frame__vis-handle"
-                    style={{ top: `${visualizer.y}%` }}
-                    onMouseDown={handleVisMouseDown}
-                  />
-                )}
               </>
             )}
 

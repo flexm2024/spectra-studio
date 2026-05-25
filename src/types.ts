@@ -55,9 +55,7 @@ export interface Effects {
 }
 
 export interface Visualizer {
-  type: 'bars' | 'mirror' | 'waveform' | 'scope' | 'led' | 'rain'
-      | 'circular' | 'burst' | 'tunnel' | 'galaxy' | 'prism' | 'pulse'
-      | 'particle' | 'ripple' | 'helix' | 'hex' | 'ribbon'
+  type: 'bars' | 'glow' | 'peak' | 'particle'
   intensity: number
   opacity: number
   y: number     // 0–100, 스테이지 높이 대비 수직 중심 위치 (%)

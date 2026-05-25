@@ -120,20 +120,25 @@ describe('Step2', () => {
     expect(title.style.letterSpacing).toBe('0.02em')
   })
 
-  it('visualizer.type이 waveform일 때 SVG 파형이 렌더링된다', () => {
-    render(<Step2 {...base} visualizer={{ type: 'waveform', intensity: 70, opacity: 85, y: 75, size: 50, color: '#00d4ff' }} />)
+  it('visualizer.type이 bars일 때 wave-svg가 렌더링된다', () => {
+    render(<Step2 {...base} visualizer={{ type: 'bars', intensity: 70, opacity: 85, y: 75, size: 50, color: '#00d4ff' }} />)
     expect(document.querySelector('.s2-frame__wave-svg')).toBeInTheDocument()
   })
 
-  it('visualizer.type이 circular일 때 orb 컨테이너가 렌더링된다', () => {
-    render(<Step2 {...base} visualizer={{ type: 'circular', intensity: 70, opacity: 85, y: 75, size: 50, color: '#00d4ff' }} />)
-    expect(document.querySelector('.s2-frame__orb')).toBeInTheDocument()
+  it('visualizer.type이 glow일 때 bars-canvas가 렌더링된다', () => {
+    render(<Step2 {...base} visualizer={{ type: 'glow', intensity: 70, opacity: 85, y: 75, size: 50, color: '#00d4ff' }} />)
+    expect(document.querySelector('.s2-frame__bars-canvas')).toBeInTheDocument()
+  })
+
+  it('visualizer.type이 peak일 때 bars-canvas가 렌더링된다', () => {
+    render(<Step2 {...base} visualizer={{ type: 'peak', intensity: 70, opacity: 85, y: 75, size: 50, color: '#00d4ff' }} />)
+    expect(document.querySelector('.s2-frame__bars-canvas')).toBeInTheDocument()
   })
 
   it('effects.vis가 false일 때 비주얼라이저가 렌더링되지 않는다', () => {
     render(<Step2 {...base} effects={{ vis: false, crossfade: false, ducking: true, blur: false }} />)
     expect(document.querySelector('.s2-frame__wave')).not.toBeInTheDocument()
-    expect(document.querySelector('.s2-frame__orb')).not.toBeInTheDocument()
+    expect(document.querySelector('.s2-frame__bars-canvas')).not.toBeInTheDocument()
   })
 
   it('effects.blur가 true일 때 blur overlay가 렌더링된다', () => {
@@ -146,18 +151,6 @@ describe('Step2', () => {
     const firstRect = document.querySelector('.s2-frame__wave-svg rect') as SVGRectElement
     expect(firstRect).toBeInTheDocument()
     expect(firstRect.getAttribute('fill')).toMatch(/hsl/)
-  })
-
-  it('circular 타입 렌더링 시 orb 컨테이너가 존재한다', () => {
-    render(<Step2 {...base} visualizer={{ type: 'circular', intensity: 70, opacity: 85, y: 75, size: 50, color: '#00d4ff' }} />)
-    const orb = document.querySelector('.s2-frame__orb') as HTMLElement
-    expect(orb).toBeInTheDocument()
-  })
-
-  it('circular 타입 첫 번째 선에 hsl stroke가 적용된다', () => {
-    render(<Step2 {...base} visualizer={{ type: 'circular', intensity: 70, opacity: 85, y: 75, size: 50, color: '#00d4ff' }} />)
-    const firstLine = document.querySelector('.s2-frame__orb line') as SVGLineElement
-    expect(firstLine?.getAttribute('stroke')).toMatch(/hsl/)
   })
 
   it('particle 타입 렌더링 시 particle canvas가 렌더링된다', () => {
