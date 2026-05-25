@@ -11,7 +11,7 @@ const base = {
   setTheme: vi.fn(),
   effects: { vis: true, crossfade: false, ducking: true, blur: true },
   setEffects: vi.fn(),
-  visualizer: { type: 'bars' as const, intensity: 70, opacity: 85, y: 75, size: 50, color: '#00d4ff' },
+  visualizer: { type: 'bars' as const, intensity: 70, opacity: 85, y: 75, size: 50, width: 85, color: '#00d4ff' },
   setVisualizer: vi.fn(),
   typography: { titleSize: 48, letterSpacing: -15, titlePosition: { x: 50, y: 48 }, subPosition: { x: 50, y: 55 } },
   setTypography: vi.fn(),
@@ -121,17 +121,17 @@ describe('Step2', () => {
   })
 
   it('visualizer.type이 bars일 때 wave-svg가 렌더링된다', () => {
-    render(<Step2 {...base} visualizer={{ type: 'bars', intensity: 70, opacity: 85, y: 75, size: 50, color: '#00d4ff' }} />)
+    render(<Step2 {...base} visualizer={{ type: 'bars', intensity: 70, opacity: 85, y: 75, size: 50, width: 85, color: '#00d4ff' }} />)
     expect(document.querySelector('.s2-frame__wave-svg')).toBeInTheDocument()
   })
 
   it('visualizer.type이 glow일 때 bars-canvas가 렌더링된다', () => {
-    render(<Step2 {...base} visualizer={{ type: 'glow', intensity: 70, opacity: 85, y: 75, size: 50, color: '#00d4ff' }} />)
+    render(<Step2 {...base} visualizer={{ type: 'glow', intensity: 70, opacity: 85, y: 75, size: 50, width: 85, color: '#00d4ff' }} />)
     expect(document.querySelector('.s2-frame__bars-canvas')).toBeInTheDocument()
   })
 
   it('visualizer.type이 peak일 때 bars-canvas가 렌더링된다', () => {
-    render(<Step2 {...base} visualizer={{ type: 'peak', intensity: 70, opacity: 85, y: 75, size: 50, color: '#00d4ff' }} />)
+    render(<Step2 {...base} visualizer={{ type: 'peak', intensity: 70, opacity: 85, y: 75, size: 50, width: 85, color: '#00d4ff' }} />)
     expect(document.querySelector('.s2-frame__bars-canvas')).toBeInTheDocument()
   })
 
@@ -154,7 +154,7 @@ describe('Step2', () => {
   })
 
   it('particle 타입 렌더링 시 particle canvas가 렌더링된다', () => {
-    render(<Step2 {...base} visualizer={{ type: 'particle', intensity: 70, opacity: 85, y: 75, size: 50, color: '#00d4ff' }} />)
+    render(<Step2 {...base} visualizer={{ type: 'particle', intensity: 70, opacity: 85, y: 75, size: 50, width: 85, color: '#00d4ff' }} />)
     expect(document.querySelector('.s2-frame__particle-canvas')).toBeInTheDocument()
   })
 })

@@ -112,7 +112,7 @@
 }
 .s2-frame__sub:active { cursor: grabbing; }
 .s2-frame__wave {
-  position: absolute; left: 60px; right: 60px;
+  position: absolute;
   display: flex; gap: 3px; align-items: flex-end; z-index: 2;
 }
 .s2-frame__wave-bar {

@@ -20,7 +20,7 @@ export default function App() {
   const [quality, setQuality] = useState<'96k' | '128k' | '192k'>('192k')
   const [theme, setTheme] = useState('midnight')
   const [effects, setEffects] = useState<Effects>({ vis: true, crossfade: false, ducking: true, blur: true })
-  const [visualizer, setVisualizer] = useState<Visualizer>({ type: 'bars', intensity: 70, opacity: 85, y: 75, size: 50, color: '#00d4ff' })
+  const [visualizer, setVisualizer] = useState<Visualizer>({ type: 'bars', intensity: 70, opacity: 85, y: 75, size: 50, width: 85, color: '#00d4ff' })
   const [typography, setTypography] = useState<Typography>({ titleSize: 48, letterSpacing: -15, titlePosition: { x: 50, y: 48 }, subPosition: { x: 50, y: 55 } })
   const [exportSettings, setExportSettings] = useState<ExportSettings>({
     filename: 'my-playlist',
@@ -93,6 +93,7 @@ export default function App() {
   const handleTrackEnded = () => onSkipNext()
 
   const onSeek = (playlistTime: number) => {
+    ensureAudioContext()
     let acc = 0
     for (const track of tracks) {
       const end = acc + track.durationSec

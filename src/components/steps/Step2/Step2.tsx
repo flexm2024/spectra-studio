@@ -42,9 +42,16 @@ const fmt = (sec: number) => {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
-function waveContainerStyle(y: number, size: number): React.CSSProperties {
+function waveContainerStyle(y: number, size: number, width: number): React.CSSProperties {
   const h = `${Math.max(10, Math.round(size * 0.8))}px`
-  return { top: `${y}%`, transform: 'translateY(-50%)', height: h, cursor: 'ns-resize' }
+  return {
+    top: `${y}%`,
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: `${Math.max(10, width)}%`,
+    height: h,
+    cursor: 'ns-resize',
+  }
 }
 
 function rainbowColor(i: number, total: number, energy: number): string {
@@ -500,12 +507,20 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
             ))}
           </div>
           <div className="slider-row">
-            <div className="slider-row__label">크기</div>
+            <div className="slider-row__label">높이</div>
             <input className="slider" type="range" min={0} max={100}
               value={visualizer.size}
               onChange={e => setVisualizer(prev => ({ ...prev, size: Number(e.target.value) }))}
             />
             <div className="slider-row__value">{visualizer.size}</div>
+          </div>
+          <div className="slider-row">
+            <div className="slider-row__label">가로 폭</div>
+            <input className="slider" type="range" min={10} max={100}
+              value={visualizer.width}
+              onChange={e => setVisualizer(prev => ({ ...prev, width: Number(e.target.value) }))}
+            />
+            <div className="slider-row__value">{visualizer.width}%</div>
           </div>
           <div className="slider-row">
             <div className="slider-row__label">강도</div>
@@ -587,7 +602,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                     className="s2-frame__wave"
                     style={{
                       opacity: visualizer.opacity / 100,
-                      ...waveContainerStyle(visualizer.y, visualizer.size),
+                      ...waveContainerStyle(visualizer.y, visualizer.size, visualizer.width),
                     }}
                     onMouseDown={handleVisMouseDown}
                   >

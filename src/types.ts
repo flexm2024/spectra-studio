@@ -59,7 +59,8 @@ export interface Visualizer {
   intensity: number
   opacity: number
   y: number     // 0–100, 스테이지 높이 대비 수직 중심 위치 (%)
-  size: number  // 0–100, UI 미리보기 기준 크기
+  size: number  // 0–100, 높이 크기
+  width: number // 0–100, 스테이지 너비 대비 가로 폭 (%)
   color: string // 비주얼라이저 색상 hex
 }
 
