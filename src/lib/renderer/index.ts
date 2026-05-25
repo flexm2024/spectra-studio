@@ -43,6 +43,7 @@ export async function renderVideo(input: RenderInput, onProgress: (pct: number) 
     tracks: input.tracks,
     loops: input.loops,
     crossfade: input.effects.crossfade,
+    ducking: input.effects.ducking,
   })
   onProgress(40)
 

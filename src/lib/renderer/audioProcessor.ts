@@ -4,11 +4,35 @@ import type { Track } from '../../types'
 
 const FPS = 30
 const CROSSFADE_SEC = 1
+const TARGET_DBFS = -14    // −14 LUFS 근사 기준
+const MAX_NORM_GAIN = 4.0  // +12 dB 상한 (조용한 트랙 과증폭 방지)
+const MIN_NORM_GAIN = 0.1  // −20 dB 하한
+
+export function calcRMS(buffer: AudioBuffer): number {
+  let sumSq = 0, count = 0
+  for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+    const data = buffer.getChannelData(ch)
+    for (let i = 0; i < data.length; i++) {
+      sumSq += data[i] * data[i]
+      count++
+    }
+  }
+  return count > 0 ? Math.sqrt(sumSq / count) : 0
+}
+
+export function calcNormGain(buffer: AudioBuffer): number {
+  const rms = calcRMS(buffer)
+  if (rms < 1e-6) return 1  // 무음 트랙은 건드리지 않음
+  const dbFS = 20 * Math.log10(rms)
+  const gainDB = TARGET_DBFS - dbFS
+  return Math.min(MAX_NORM_GAIN, Math.max(MIN_NORM_GAIN, Math.pow(10, gainDB / 20)))
+}
 
 export interface AudioProcessorInput {
   tracks: Track[]
   loops: 1 | 2 | 3
   crossfade: boolean
+  ducking: boolean
   sampleRate?: number
 }
 
@@ -48,7 +72,7 @@ export function computeTrackBoundaries(
 }
 
 export async function processAudio(input: AudioProcessorInput): Promise<AudioProcessorOutput> {
-  const { tracks, loops, crossfade } = input
+  const { tracks, loops, crossfade, ducking } = input
   const sampleRate = input.sampleRate ?? 48000
 
   // Phase 1: 디코딩 전용 임시 컨텍스트
@@ -76,22 +100,33 @@ export async function processAudio(input: AudioProcessorInput): Promise<AudioPro
     trackBuffers.forEach((buf, i) => {
       const src = offline.createBufferSource()
       src.buffer = buf
-      const startTime = boundaries[loop * tracks.length + i]  // boundaries는 이미 절대 시각
+      const startTime = boundaries[loop * tracks.length + i]
+
+      // 체인: src → [normGain?] → [fadeGain?] → destination
+      let outNode: AudioNode = src
+
+      if (ducking) {
+        const normGain = offline.createGain()
+        normGain.gain.value = calcNormGain(buf)
+        src.connect(normGain)
+        outNode = normGain
+      }
 
       if (crossfade) {
-        const gain = offline.createGain()
-        src.connect(gain)
-        gain.connect(offline.destination)
+        const fadeGain = offline.createGain()
+        outNode.connect(fadeGain)
+        fadeGain.connect(offline.destination)
         if (i > 0) {
-          gain.gain.setValueAtTime(0, startTime)
-          gain.gain.linearRampToValueAtTime(1, startTime + CROSSFADE_SEC)
+          fadeGain.gain.setValueAtTime(0, startTime)
+          fadeGain.gain.linearRampToValueAtTime(1, startTime + CROSSFADE_SEC)
         }
         const endTime = startTime + buf.duration
-        gain.gain.setValueAtTime(1, endTime - CROSSFADE_SEC)
-        gain.gain.linearRampToValueAtTime(0, endTime)
+        fadeGain.gain.setValueAtTime(1, endTime - CROSSFADE_SEC)
+        fadeGain.gain.linearRampToValueAtTime(0, endTime)
       } else {
-        src.connect(offline.destination)
+        outNode.connect(offline.destination)
       }
+
       src.start(startTime)
     })
   }

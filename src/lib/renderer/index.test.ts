@@ -70,6 +70,7 @@ describe('renderVideo', () => {
       tracks: base.tracks,
       loops: base.loops,
       crossfade: base.effects.crossfade,
+      ducking: base.effects.ducking,
     })
   })
 })
