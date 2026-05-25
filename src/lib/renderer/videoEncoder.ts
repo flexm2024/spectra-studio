@@ -9,10 +9,16 @@ import type { AudioProcessorOutput } from './audioProcessor'
 
 const FPS = 30
 
-const BITRATE: Record<string, number> = {
+const VIDEO_BITRATE: Record<string, number> = {
   '720p': 4_000_000,
   '1080p': 8_000_000,
   '4k': 25_000_000,
+}
+
+const AUDIO_BITRATE: Record<string, number> = {
+  '96k': 96_000,
+  '128k': 128_000,
+  '192k': 192_000,
 }
 
 const RESOLUTION: Record<string, [number, number]> = {
@@ -25,12 +31,13 @@ export interface EncodeVideoInput {
   audioResult: AudioProcessorOutput
   frameInputBase: Omit<DrawFrameInput, 'canvas' | 'frequencyData' | 'currentTrack' | 'currentTrackIndex'>
   resolution: '720p' | '1080p' | '4k'
+  quality: '96k' | '128k' | '192k'
   tracks: Track[]
   onProgress: (pct: number) => void
 }
 
 export async function encodeVideo(input: EncodeVideoInput): Promise<Blob> {
-  const { audioResult, frameInputBase, resolution, tracks } = input
+  const { audioResult, frameInputBase, resolution, quality, tracks } = input
   const [width, height] = RESOLUTION[resolution]
   const { audioBuffer, trackBoundaries, frameCount } = audioResult
   const pcmData = audioBuffer.getChannelData(0)
@@ -57,7 +64,7 @@ export async function encodeVideo(input: EncodeVideoInput): Promise<Blob> {
     codec: 'avc1.640028',
     width,
     height,
-    bitrate: BITRATE[resolution],
+    bitrate: VIDEO_BITRATE[resolution],
     framerate: FPS,
   })
 
@@ -69,7 +76,7 @@ export async function encodeVideo(input: EncodeVideoInput): Promise<Blob> {
     codec: 'mp4a.40.2',
     sampleRate: audioBuffer.sampleRate,
     numberOfChannels: 2,
-    bitrate: 192_000,
+    bitrate: AUDIO_BITRATE[quality],
   })
 
   const canvas = new OffscreenCanvas(width, height)

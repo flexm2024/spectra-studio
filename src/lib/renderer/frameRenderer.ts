@@ -118,18 +118,23 @@ export function drawFrame(input: DrawFrameInput): void {
   })
 }
 
-function rainbowColor(i: number, total: number, energy: number): string {
-  const hue = (i / Math.max(total - 1, 1)) * 240
-  const lightness = 50 + energy * 30
-  return `hsl(${hue}, 100%, ${lightness}%)`
+function hexHue(hex: string): number {
+  const r = parseInt(hex.slice(1, 3), 16) / 255
+  const g = parseInt(hex.slice(3, 5), 16) / 255
+  const b = parseInt(hex.slice(5, 7), 16) / 255
+  const max = Math.max(r, g, b), min = Math.min(r, g, b)
+  if (max === min) return 0
+  const d = max - min
+  const h = max === r ? ((g - b) / d + (g < b ? 6 : 0))
+          : max === g ? (b - r) / d + 2
+          : (r - g) / d + 4
+  return h * 60
 }
 
-function energyColor(energy: number): string {
-  return `hsl(${energy * 240}, 100%, ${50 + energy * 30}%)`
-}
-
-function energyColorAlpha(energy: number, alpha: number): string {
-  return `hsla(${energy * 240}, 100%, ${50 + energy * 30}%, ${alpha})`
+function barHue(i: number, total: number, color: string): number {
+  return color === 'rainbow'
+    ? (i / Math.max(total - 1, 1)) * 240
+    : hexHue(color) + (i / Math.max(total - 1, 1) - 0.5) * 40
 }
 
 function drawVisualizer(
@@ -143,24 +148,60 @@ function drawVisualizer(
   const intensity = visualizer.intensity / 100
   const sizeScale = visualizer.size / 50
   const yCenter = height * (visualizer.y / 100)
-  const cx = width / 2
+  const visW = Math.round(width * (Math.max(10, visualizer.width) / 100))
+  const visX = (width - visW) / 2
 
   const energy = frequencyData.reduce((s, v) => s + v, 0) / Math.max(frequencyData.length, 1)
-  const glowPx = energy * intensity * 40
+  const maxH = height * 0.42 * sizeScale
 
   ctx.globalAlpha = opacity
 
-  if (visualizer.type === 'bars') {
+  if (visualizer.type === 'bars' || visualizer.type === 'particle') {
     const numBars = frequencyData.length
-    const barW = width / numBars
-    const maxH = height * 0.45 * sizeScale
+    const barW = visW / numBars
     for (let i = 0; i < numBars; i++) {
-      const rc = rainbowColor(i, numBars, energy)
-      ctx.shadowBlur = glowPx
-      ctx.shadowColor = rc
-      ctx.fillStyle = rc
+      const hue = barHue(i, numBars, visualizer.color)
+      const c = `hsl(${hue}, 100%, ${50 + energy * 30}%)`
+      ctx.shadowBlur = energy * intensity * 40
+      ctx.shadowColor = c
+      ctx.fillStyle = c
       const barH = frequencyData[i] * intensity * maxH
-      ctx.fillRect(i * barW, yCenter - barH, barW - 1, barH)
+      ctx.fillRect(visX + i * barW, yCenter - barH, barW - 1, barH)
+    }
+  } else if (visualizer.type === 'glow') {
+    const bins = 28
+    const barW = visW / bins
+    for (let i = 0; i < bins; i++) {
+      const fd = frequencyData[Math.floor(i * frequencyData.length / bins)] ?? 0
+      const barH = Math.max(2, fd * intensity * maxH)
+      const hue = barHue(i, bins, visualizer.color)
+      ctx.save()
+      ctx.shadowColor = `hsl(${hue}, 100%, 65%)`
+      ctx.shadowBlur = fd * intensity * 40 + 5
+      const grad = ctx.createLinearGradient(0, yCenter - barH, 0, yCenter)
+      grad.addColorStop(0, `hsl(${hue}, 100%, 78%)`)
+      grad.addColorStop(0.55, `hsl(${hue}, 90%, 55%)`)
+      grad.addColorStop(1, `hsl(${hue}, 80%, 38%)`)
+      ctx.fillStyle = grad
+      ctx.fillRect(visX + i * barW + barW * 0.08, yCenter - barH, barW * 0.84, barH)
+      ctx.restore()
+    }
+  } else if (visualizer.type === 'peak') {
+    const bins = 40
+    const barW = visW / bins
+    const lineH = Math.max(2, Math.round(2 * (height / 1080)))
+    for (let i = 0; i < bins; i++) {
+      const fd = frequencyData[Math.floor(i * frequencyData.length / bins)] ?? 0
+      const barH = Math.max(2, fd * intensity * maxH)
+      const hue = barHue(i, bins, visualizer.color)
+      ctx.fillStyle = `hsla(${hue}, 70%, 42%, 0.55)`
+      ctx.fillRect(visX + i * barW + barW * 0.1, yCenter - barH, barW * 0.8, barH)
+      ctx.save()
+      ctx.shadowColor = `hsl(${hue}, 100%, 70%)`
+      ctx.shadowBlur = 6
+      ctx.fillStyle = `hsl(${hue}, 100%, 82%)`
+      ctx.fillRect(visX + i * barW + barW * 0.1, yCenter - barH, barW * 0.8, lineH)
+      ctx.restore()
     }
   }
 

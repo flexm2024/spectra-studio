@@ -27,10 +27,7 @@ const base = {
   visualizer: { type: 'bars' as const, intensity: 70, opacity: 85, y: 75, size: 50, width: 85, color: 'rainbow' },
   exportSettings: {
     filename: 'my-playlist',
-    format: 'mp4' as const,
     resolution: '1080p' as const,
-    thumbnail: true,
-    chapters: false,
   },
   loops: 1 as const,
   setLoops: vi.fn(),
@@ -77,19 +74,8 @@ describe('Step3', () => {
     render(<Step3 {...base} quality="96k" />)
     expect(screen.getByText(/96 kbps/)).toBeInTheDocument()
   })
-  it('"프로젝트로 저장" 버튼이 비활성화되어 있다', () => {
-    render(<Step3 {...base} />)
-    const saveBtn = screen.getByRole('button', { name: /프로젝트로 저장/ })
-    expect(saveBtn).toBeDisabled()
-  })
-
-  describe('Step3 새 props 수용', () => {
-    const baseV2 = {
-      ...base,
-      background: { type: 'gradient' } as Background,
-      stickers: [] as string[],
-      typography: { titleSize: 48, letterSpacing: -15, titlePosition: { x: 50, y: 48 }, subPosition: { x: 50, y: 55 } } as Typography,
-    }
+describe('Step3 새 props 수용', () => {
+    const baseV2 = { ...base }
 
     it('background prop을 받아도 정상 렌더링된다', () => {
       render(<Step3 {...baseV2} />)

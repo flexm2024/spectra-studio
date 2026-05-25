@@ -73,10 +73,7 @@ export interface Typography {
 
 export interface ExportSettings {
   filename: string
-  format: 'mp4' | 'webm' | 'mov'
   resolution: '720p' | '1080p' | '4k'
-  thumbnail: boolean
-  chapters: boolean
 }
 
 export interface LogoPosition {

@@ -34,6 +34,7 @@ export interface RenderInput {
   typography: Typography
   exportSettings: ExportSettings
   loops: 1 | 2 | 3
+  quality: '96k' | '128k' | '192k'
 }
 
 export async function renderVideo(input: RenderInput, onProgress: (pct: number) => void): Promise<Blob> {
@@ -76,6 +77,7 @@ export async function renderVideo(input: RenderInput, onProgress: (pct: number) 
       totalTracks: input.tracks.length,
     },
     resolution: input.exportSettings.resolution,
+    quality: input.quality,
     tracks: input.tracks,
     onProgress: pct => onProgress(40 + pct * 0.6),
   })

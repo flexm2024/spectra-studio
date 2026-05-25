@@ -4,7 +4,6 @@ import './Step3.css'
 import Icon from '../../../icons'
 import Button from '../../shared/Button'
 import SegmentedControl from '../../shared/SegmentedControl'
-import Switch from '../../shared/Switch'
 import { waveformFor } from '../../../data/sampleTracks'
 import type { Track, Effects, Visualizer, ExportSettings, Background, LogoPosition, Typography } from '../../../types'
 import { renderVideo } from '../../../lib/renderer'
@@ -110,13 +109,13 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
     setProgress(0)
     try {
       const blob = await renderVideo(
-        { tracks, theme, effects, visualizer, typography, background, logo, logoPosition, logoSize, watermark, stickers, exportSettings, loops },
+        { tracks, theme, effects, visualizer, typography, background, logo, logoPosition, logoSize, watermark, stickers, exportSettings, loops, quality },
         pct => setProgress(Math.round(pct)),
       )
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `${exportSettings.filename}.${exportSettings.format}`
+      a.download = `${exportSettings.filename}.mp4`
       a.click()
       setTimeout(() => URL.revokeObjectURL(url), 60_000)
       setRenderState('done')
@@ -289,19 +288,6 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
         </div>
 
         <div className="form-section">
-          <div className="form-section__label">파일 포맷</div>
-          <SegmentedControl
-            options={[
-              { value: 'mp4'  as const, label: 'MP4',  hint: 'H.264'  },
-              { value: 'webm' as const, label: 'WebM', hint: 'VP9'    },
-              { value: 'mov'  as const, label: 'MOV',  hint: 'ProRes' },
-            ]}
-            value={exportSettings.format}
-            onChange={format => setExportSettings({ ...exportSettings, format })}
-          />
-        </div>
-
-        <div className="form-section">
           <div className="form-section__label">해상도</div>
           <SegmentedControl
             options={[
@@ -327,39 +313,9 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
           <SegmentedControl options={QUALITY_OPTIONS} value={quality} onChange={setQuality} />
         </div>
 
-        <div className="form-section">
-          <div className="form-section__label">옵션</div>
-          <div className="s3-options">
-            <label className="s3-option">
-              <Switch
-                on={exportSettings.thumbnail}
-                onChange={() => setExportSettings({ ...exportSettings, thumbnail: !exportSettings.thumbnail })}
-              />
-              <div className="s3-option__meta">
-                <div className="s3-option__title">썸네일 자동 생성</div>
-                <div className="s3-option__sub">YouTube/Spotify용 1280×720</div>
-              </div>
-            </label>
-            <label className="s3-option">
-              <Switch
-                on={exportSettings.chapters}
-                onChange={() => setExportSettings({ ...exportSettings, chapters: !exportSettings.chapters })}
-              />
-              <div className="s3-option__meta">
-                <div className="s3-option__title">챕터 마커 포함</div>
-                <div className="s3-option__sub">각 트랙을 챕터로 분할</div>
-              </div>
-            </label>
-          </div>
-        </div>
-
         <div className="s3-estimate">
           <div className="s3-estimate__row">
-            <span>예상 렌더링 시간</span>
-            <span className="s3-estimate__val">≈ 2분 18초</span>
-          </div>
-          <div className="s3-estimate__row">
-            <span>최종 파일 크기</span>
+            <span>MP4 · H.264 · AAC</span>
             <span className="s3-estimate__val">≈ {sizeMb} MB</span>
           </div>
         </div>
@@ -413,9 +369,6 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
               </button>
             </div>
           )}
-          <button type="button" className="s3-btn-full s3-btn-save" style={{ marginTop: 8 }} disabled>
-            <Icon name="folder" size={14} /> 프로젝트로 저장 (준비 중)
-          </button>
         </div>
       </div>
     </div>

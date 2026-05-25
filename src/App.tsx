@@ -24,10 +24,7 @@ export default function App() {
   const [typography, setTypography] = useState<Typography>({ titleSize: 20, letterSpacing: -15, titlePosition: { x: 50, y: 48 }, subPosition: { x: 50, y: 55 } })
   const [exportSettings, setExportSettings] = useState<ExportSettings>({
     filename: 'my-playlist',
-    format: 'mp4',
     resolution: '1080p',
-    thumbnail: true,
-    chapters: false,
   })
   const [background, setBackground] = useState<Background>({ type: 'gradient' })
   const [logo, setLogo] = useState<string | undefined>(undefined)
