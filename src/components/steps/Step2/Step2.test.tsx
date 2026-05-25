@@ -30,6 +30,7 @@ const base = {
   logoSize: 52,
   setLogoSize: vi.fn(),
   currentTime: 0,
+  onSeek: vi.fn(),
   analyserRef: { current: null },
 }
 

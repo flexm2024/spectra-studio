@@ -92,6 +92,36 @@ export default function App() {
 
   const handleTrackEnded = () => onSkipNext()
 
+  const onSeek = (playlistTime: number) => {
+    let acc = 0
+    for (const track of tracks) {
+      const end = acc + track.durationSec
+      if (playlistTime < end || track === tracks[tracks.length - 1]) {
+        const offset = Math.max(0, playlistTime - acc)
+        setPlayingId(track.id)
+        setIsPlaying(true)
+        if (track.audioUrl && audioRef.current) {
+          if (audioRef.current.src !== track.audioUrl) {
+            audioRef.current.src = track.audioUrl
+            audioRef.current.addEventListener('canplay', () => {
+              if (audioRef.current) {
+                audioRef.current.currentTime = offset
+                audioRef.current.play().catch(() => {})
+              }
+            }, { once: true })
+          } else {
+            audioRef.current.currentTime = offset
+            audioRef.current.play().catch(() => {})
+          }
+        } else {
+          setAudioCurrentTime(offset)
+        }
+        return
+      }
+      acc += track.durationSec
+    }
+  }
+
   return (
     <div className="app">
       <audio
@@ -154,6 +184,7 @@ export default function App() {
             logoSize={logoSize}
             setLogoSize={setLogoSize}
             currentTime={audioCurrentTime}
+            onSeek={onSeek}
             analyserRef={analyserRef}
           />
         )}

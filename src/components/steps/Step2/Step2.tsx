@@ -92,10 +92,11 @@ interface Step2Props {
   logoSize: number
   setLogoSize: (s: number) => void
   currentTime: number
+  onSeek: (time: number) => void
   analyserRef: React.RefObject<AnalyserNode | null>
 }
 
-export default function Step2({ tracks, theme, setTheme, effects, setEffects, visualizer, setVisualizer, typography, setTypography, onBack, onNext, playingId, isPlaying, onPlay, onPause, onSkipNext, onSkipPrev, background, logo, logoPosition, setLogoPosition, logoSize, setLogoSize, currentTime, analyserRef }: Step2Props) {
+export default function Step2({ tracks, theme, setTheme, effects, setEffects, visualizer, setVisualizer, typography, setTypography, onBack, onNext, playingId, isPlaying, onPlay, onPause, onSkipNext, onSkipPrev, background, logo, logoPosition, setLogoPosition, logoSize, setLogoSize, currentTime, onSeek, analyserRef }: Step2Props) {
   const themeObj = THEMES.find(t => t.id === theme) ?? THEMES[0]
   const playingTrack = tracks.find(t => t.id === playingId) ?? tracks[0]
   const trackIdx = tracks.findIndex(t => t.id === playingId)
@@ -110,6 +111,10 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
   const titleDragOffset = useRef({ x: 0, y: 0 })
   const subIsDragging = useRef(false)
   const subDragOffset = useRef({ x: 0, y: 0 })
+  const scrubberRef = useRef<HTMLDivElement>(null)
+  const scrubberIsDragging = useRef(false)
+  const onSeekRef = useRef(onSeek)
+  onSeekRef.current = onSeek
 
   const [freqData, setFreqData] = useState<number[]>([])
 
@@ -214,12 +219,19 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
         const y = Math.max(5, Math.min(95, ((e.clientY - rect.top - subDragOffset.current.y) / rect.height) * 100))
         setTypography(prev => ({ ...prev, subPosition: { x, y } }))
       }
+      if (scrubberIsDragging.current && scrubberRef.current) {
+        const sr = scrubberRef.current.getBoundingClientRect()
+        const ratio = Math.max(0, Math.min(1, (e.clientX - sr.left) / sr.width))
+        const total = tracks.reduce((s, t) => s + t.durationSec, 0)
+        onSeekRef.current(ratio * total)
+      }
     }
     function onMouseUp() {
       isDragging.current = false
       visIsDragging.current = false
       titleIsDragging.current = false
       subIsDragging.current = false
+      scrubberIsDragging.current = false
     }
     document.addEventListener('mousemove', onMouseMove)
     document.addEventListener('mouseup', onMouseUp)
@@ -234,6 +246,10 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
   const visColor = visualizer.color
   const sizeScale = visualizer.size / 50
   const intensityScale = visualizer.intensity / 100
+
+  const accTime = tracks.slice(0, Math.max(0, trackIdx)).reduce((s, t) => s + t.durationSec, 0)
+  const playlistCurrentTime = accTime + Math.min(currentTime, tracks[Math.max(0, trackIdx)]?.durationSec ?? 0)
+  const progressPct = totalSec > 0 ? Math.min(100, (playlistCurrentTime / totalSec) * 100) : 0
 
   return (
     <div className="step2">
@@ -604,6 +620,16 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                 {String(i + 1).padStart(2, '0')} · {t.title}
               </div>
             ))}
+          </div>
+          <div
+            className="s2-timeline__scrubber"
+            ref={scrubberRef}
+            onMouseDown={e => { scrubberIsDragging.current = true; const sr = scrubberRef.current!.getBoundingClientRect(); onSeekRef.current(Math.max(0, Math.min(1, (e.clientX - sr.left) / sr.width)) * totalSec) }}
+          >
+            <div className="s2-timeline__scrubber-track">
+              <div className="s2-timeline__scrubber-fill" style={{ width: `${progressPct}%` }} />
+            </div>
+            <div className="s2-timeline__playhead" style={{ left: `${progressPct}%` }} />
           </div>
         </div>
       </div>
