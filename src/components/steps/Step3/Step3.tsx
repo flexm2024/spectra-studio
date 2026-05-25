@@ -185,7 +185,6 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
               <img src={background.src} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
             )}
             {effects.blur && <div className="s3-final__blur-overlay" />}
-            <div className="s3-final__badge">SPECTRA</div>
             <h2
               className="s3-final__title"
               style={{

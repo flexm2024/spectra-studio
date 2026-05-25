@@ -102,23 +102,28 @@ export async function encodeVideo(input: EncodeVideoInput): Promise<Blob> {
       videoEncoder.encode(videoFrame, { keyFrame: fi % 60 === 0 })
       videoFrame.close()
 
-      // 30프레임마다 한 번만 progress 업데이트 (React 재렌더 최소화)
-      if (fi % 30 === 0 || fi === frameCount - 1) {
-        input.onProgress((fi / frameCount) * 80)
-        // 메인 스레드에 제어를 잠시 돌려 UI 업데이트 허용
+      // 60프레임마다 progress 업데이트 (재렌더 최소화, 깜빡임 감소)
+      if (fi % 60 === 0 || fi === frameCount - 1) {
+        input.onProgress((fi / frameCount) * 76)
         await new Promise(r => setTimeout(r, 0))
       }
     }
+
+    // 비디오 flush — 인코더 큐 소진 (진행률 76→82%)
+    input.onProgress(78)
     await videoEncoder.flush()
     if (encoderError) throw encoderError
+    input.onProgress(82)
 
-    // 오디오 인코딩 (f32-planar: ch0 먼저, ch1 뒤)
+    // 오디오 인코딩 (f32-planar: ch0 먼저, ch1 뒤) 82→95%
     const ch0 = audioBuffer.getChannelData(0)
     const ch1 = audioBuffer.numberOfChannels >= 2
       ? audioBuffer.getChannelData(1)
       : audioBuffer.getChannelData(0)  // 모노 폴백
     const CHUNK = 4096
     const sr = audioBuffer.sampleRate
+    const totalChunks = Math.ceil(audioBuffer.length / CHUNK)
+    let chunkIdx = 0
     for (let offset = 0; offset < audioBuffer.length; offset += CHUNK) {
       const end = Math.min(offset + CHUNK, audioBuffer.length)
       const size = end - offset
@@ -135,11 +140,16 @@ export async function encodeVideo(input: EncodeVideoInput): Promise<Blob> {
       })
       audioEncoder.encode(audioData)
       audioData.close()
+      chunkIdx++
+      if (chunkIdx % 50 === 0) {
+        input.onProgress(82 + (chunkIdx / totalChunks) * 13)
+        await new Promise(r => setTimeout(r, 0))
+      }
     }
     await audioEncoder.flush()
     if (encoderError) throw encoderError
 
-    input.onProgress(95)
+    input.onProgress(96)
     muxer.finalize()
     return new Blob([target.buffer], { type: 'video/mp4' })
   } finally {
