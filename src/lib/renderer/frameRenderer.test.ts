@@ -14,6 +14,7 @@ const mockCtx = {
   textAlign: '' as unknown,
   textBaseline: '' as unknown,
   fillText: vi.fn(),
+  strokeText: vi.fn(),
   save: vi.fn(),
   restore: vi.fn(),
   beginPath: vi.fn(),
@@ -24,8 +25,12 @@ const mockCtx = {
   stroke: vi.fn(),
   strokeStyle: '' as unknown,
   lineWidth: 0,
+  shadowBlur: 0,
+  shadowColor: 'transparent',
   createLinearGradient: vi.fn().mockReturnValue({ addColorStop: vi.fn() }),
   measureText: vi.fn().mockReturnValue({ width: 100 }),
+  closePath: vi.fn(),
+  strokeRect: vi.fn(),
 }
 
 const mockCanvas = { getContext: vi.fn().mockReturnValue(mockCtx), width: 1920, height: 1080 }
@@ -46,7 +51,7 @@ const base: DrawFrameInput = {
   logoSize: 52,
   stickerImages: [],
   effects: { vis: true, crossfade: false, ducking: false, blur: false },
-  visualizer: { type: 'bars', intensity: 70, opacity: 85, y: 75, size: 50 },
+  visualizer: { type: 'bars', intensity: 70, opacity: 85, y: 75, size: 50, color: '#00d4ff' },
   typography: { titleSize: 48, letterSpacing: -15 },
   currentTrack: track,
   currentTrackIndex: 0,
@@ -97,5 +102,19 @@ describe('drawFrame', () => {
     expect(call).toBeDefined()
     expect(call![1]).toBe(882)
     expect(call![2]).toBe(462)
+  })
+
+  it('bars 타입에서 non-zero 주파수 데이터가 있으면 shadowBlur가 설정됐다가 0으로 리셋된다', () => {
+    const shadowBlurSets: number[] = []
+    Object.defineProperty(mockCtx, 'shadowBlur', {
+      set(v: number) { shadowBlurSets.push(v) },
+      get() { return shadowBlurSets.at(-1) ?? 0 },
+      configurable: true,
+    })
+    const freqData = new Float32Array(80).fill(0.5)
+    drawFrame({ ...base, frequencyData: freqData })
+    Object.defineProperty(mockCtx, 'shadowBlur', { value: 0, writable: true, configurable: true })
+    expect(shadowBlurSets.some(v => v > 0)).toBe(true)
+    expect(shadowBlurSets.at(-1)).toBe(0)
   })
 })
