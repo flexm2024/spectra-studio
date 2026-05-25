@@ -106,6 +106,7 @@
 .preview-card { overflow: hidden; }
 .preview-frame {
   aspect-ratio: 16 / 9; background: #0a0d14;
+  border-radius: var(--r-m);
   position: relative; overflow: hidden;
   display: flex; align-items: center; justify-content: center; color: oklch(1 0 0);
 }
@@ -215,6 +216,20 @@
   transition: opacity 120ms ease;
 }
 .drop-slot--filled:hover .drop-slot__change { opacity: 1; }
+.drop-slot__remove {
+  position: absolute;
+  top: 6px; right: 6px;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: oklch(1 0 0);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; z-index: 3;
+  opacity: 0; transition: opacity 120ms ease;
+}
+.drop-slot--filled:hover .drop-slot__remove { opacity: 1; }
+.drop-slot__remove:hover { background: rgba(220, 40, 40, 0.8); }
 
 /* 스티커 그리드 */
 .sticker-grid {
@@ -264,11 +279,11 @@
   object-fit: cover;
 }
 
-/* Step1 프리뷰 로고 이미지 */
+/* Step1 프리뷰 로고 이미지 — Step2 스테이지와 동일한 절대 좌표 배치 */
 .preview-frame__logo-img {
-  width: 42px;
-  height: 42px;
-  border-radius: 11px;
+  position: absolute;
   object-fit: contain;
-  background: rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  transform: translate(-50%, -50%);
+  z-index: 3;
 }

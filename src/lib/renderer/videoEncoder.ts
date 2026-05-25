@@ -93,7 +93,12 @@ export async function encodeVideo(input: EncodeVideoInput): Promise<Blob> {
       videoEncoder.encode(videoFrame, { keyFrame: fi % 60 === 0 })
       videoFrame.close()
 
-      input.onProgress((fi / frameCount) * 80)
+      // 30프레임마다 한 번만 progress 업데이트 (React 재렌더 최소화)
+      if (fi % 30 === 0 || fi === frameCount - 1) {
+        input.onProgress((fi / frameCount) * 80)
+        // 메인 스레드에 제어를 잠시 돌려 UI 업데이트 허용
+        await new Promise(r => setTimeout(r, 0))
+      }
     }
     await videoEncoder.flush()
     if (encoderError) throw encoderError

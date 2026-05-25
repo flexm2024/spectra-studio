@@ -39,10 +39,9 @@ export default function Header({ step, setStep }: HeaderProps) {
       </div>
 
       <div className="header__right">
-        <Button variant="ghost">
-          <Icon name="eye" size={14} /> 미리보기 <span className="kbd">P</span>
+        <Button variant="ghost" disabled title="준비 중">
+          <Icon name="download" size={14} /> 저장
         </Button>
-        <Button><Icon name="download" size={14} /> 저장</Button>
         <Button variant="primary" onClick={() => setStep(3)}>
           <Icon name="export" size={14} /> 출력
         </Button>

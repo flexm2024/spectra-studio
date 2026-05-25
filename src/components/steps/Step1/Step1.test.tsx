@@ -10,10 +10,6 @@ const base = {
   setTracks: vi.fn(),
   playingId: null as string | null,
   isPlaying: false,
-  loops: 1 as const,
-  setLoops: vi.fn(),
-  quality: '192k' as const,
-  setQuality: vi.fn(),
   onPlay: vi.fn(),
   onPause: vi.fn(),
   onSkipNext: vi.fn(),
@@ -108,15 +104,6 @@ describe('Step1', () => {
     expect(onPause).toHaveBeenCalledTimes(1)
   })
 
-  it('초기화 버튼 클릭 시 setLoops(1)과 setQuality("192k")가 호출된다', () => {
-    const setLoops = vi.fn()
-    const setQuality = vi.fn()
-    render(<Step1 {...base} setLoops={setLoops} setQuality={setQuality} loops={3} quality="96k" />)
-    fireEvent.click(screen.getByText('초기화'))
-    expect(setLoops).toHaveBeenCalledWith(1)
-    expect(setQuality).toHaveBeenCalledWith('192k')
-  })
-
   it('프리뷰 스킵 이전 버튼 클릭 시 onSkipPrev가 호출된다', () => {
     const onSkipPrev = vi.fn()
     render(<Step1 {...base} onSkipPrev={onSkipPrev} />)
@@ -150,7 +137,6 @@ describe('Step1', () => {
     vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:fake-logo')
     vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
     render(<Step1 {...base} setLogo={setLogo} />)
-    fireEvent.click(screen.getByText('로고'))
     const logoInput = document.querySelector('[data-testid="logo-file-input"]') as HTMLInputElement
     const file = new File([''], 'logo.png', { type: 'image/png' })
     fireEvent.change(logoInput, { target: { files: [file] } })

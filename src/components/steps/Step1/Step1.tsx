@@ -5,17 +5,13 @@ import Icon from '../../../icons'
 import Button from '../../shared/Button'
 import SegmentedControl from '../../shared/SegmentedControl'
 import { waveformFor } from '../../../data/sampleTracks'
-import type { Track, Background } from '../../../types'
+import type { Track, Background, LogoPosition } from '../../../types'
 
 interface Step1Props {
   tracks: Track[]
   setTracks: (tracks: Track[] | ((prev: Track[]) => Track[])) => void
   playingId: string | null
   isPlaying: boolean
-  loops: 1 | 2 | 3
-  setLoops: (l: 1 | 2 | 3) => void
-  quality: '96k' | '128k' | '192k'
-  setQuality: (q: '96k' | '128k' | '192k') => void
   onPlay: (id: string) => void
   onPause: () => void
   onSkipNext: () => void
@@ -25,24 +21,14 @@ interface Step1Props {
   setBackground: (bg: Background) => void
   logo: string | undefined
   setLogo: (url: string | undefined) => void
+  logoPosition?: LogoPosition
+  logoSize?: number
   watermark: string | undefined
   setWatermark: (url: string | undefined) => void
   stickers: string[]
   setStickers: (s: string[] | ((prev: string[]) => string[])) => void
   currentTime: number
 }
-
-const LOOP_OPTIONS = [
-  { value: 1 as const, label: '1회' },
-  { value: 2 as const, label: '2회' },
-  { value: 3 as const, label: '3회' },
-]
-
-const QUALITY_OPTIONS = [
-  { value: '96k' as const,  label: '96k',  hint: '표준' },
-  { value: '128k' as const, label: '128k', hint: '권장' },
-  { value: '192k' as const, label: '192k', hint: '고음질' },
-]
 
 const BG_OPTIONS = [
   { value: 'image' as const,    label: '이미지' },
@@ -53,17 +39,15 @@ const BG_OPTIONS = [
 export default function Step1({
   tracks, setTracks,
   playingId, isPlaying,
-  loops, setLoops,
-  quality, setQuality,
   onPlay, onPause, onSkipNext, onSkipPrev,
   onNext,
   background, setBackground,
   logo, setLogo,
+  logoPosition, logoSize,
   watermark, setWatermark,
   stickers, setStickers,
   currentTime,
 }: Step1Props) {
-  const [activeTab, setActiveTab] = useState<'background' | 'logo' | 'stickers'>('background')
   const [dragId, setDragId] = useState<string | null>(null)
   const [overId, setOverId] = useState<string | null>(null)
 
@@ -177,7 +161,6 @@ export default function Step1({
   const totalSec = tracks.reduce((acc, t) => acc + t.durationSec, 0)
   const fmt = (sec: number) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`
   const totalDur = fmt(totalSec)
-  const finalDur = fmt(totalSec * loops)
 
   const playingTrack = tracks.find(t => t.id === playingId) ?? tracks[0]
 
@@ -365,13 +348,26 @@ export default function Step1({
               : <div className="preview-frame__bg" />
             }
             <div className="preview-frame__content">
-              {logo
-                ? <img className="preview-frame__logo-img" src={logo} alt="" />
-                : <div className="preview-frame__logo"><Icon name="logo" size={22} /></div>
-              }
+              {!logo && <div className="preview-frame__logo"><Icon name="logo" size={22} /></div>}
               <h2 className="preview-frame__title">{playingTrack?.title}</h2>
-              <div className="preview-frame__sub">{playingTrack?.artist} · {playingTrack?.tag}</div>
+              <div className="preview-frame__sub">
+                {playingTrack?.artist && playingTrack.artist !== 'Unknown' ? `${playingTrack.artist} · ` : ''}
+                Track {String((tracks.findIndex(t => t.id === playingId) + 1) || 1).padStart(2, '0')} / {tracks.length || 1}
+              </div>
             </div>
+            {logo && (
+              <img
+                className="preview-frame__logo-img"
+                src={logo}
+                alt=""
+                style={{
+                  left: `${logoPosition?.x ?? 85}%`,
+                  top: `${logoPosition?.y ?? 8}%`,
+                  width: `${((logoSize ?? 52) / 640) * 100}%`,
+                  height: `${((logoSize ?? 52) / 640) * 100}%`,
+                }}
+              />
+            )}
             <div className="preview-vis">
               {waveformFor(parseInt(playingTrack?.id ?? '1'), 64).map((h, i) => (
                 <div key={i} className="preview-vis__bar" style={{ height: `${h * 100}%` }} />
@@ -401,185 +397,176 @@ export default function Step1({
           </div>
         </div>
 
-        {/* 브랜딩 카드 */}
-        <div className="card">
-          <div className="tabs">
-            {(['background', 'logo', 'stickers'] as const).map(tab => (
-              <button
-                key={tab}
-                type="button"
-                className={`tab${activeTab === tab ? ' tab--active' : ''}`}
-                onClick={() => setActiveTab(tab)}
-              >
-                <Icon name={tab === 'background' ? 'image' : tab === 'logo' ? 'layers' : 'sticker'} size={14} />
-                {tab === 'background' ? '배경' : tab === 'logo' ? '로고' : <>스티커 <span className="tab__badge">{stickers.length} / 5</span></>}
-              </button>
-            ))}
-          </div>
-          {activeTab === 'background' && (
-            <div style={{ padding: 14 }}>
-              <div
-                className={`drop-slot${background.src ? ' drop-slot--filled' : ''}`}
-                onClick={() => bgFileRef.current?.click()}
-                onDragOver={e => e.preventDefault()}
-                onDrop={e => { e.preventDefault(); handleBgFile(e.dataTransfer.files) }}
-              >
-                {background.src ? (
-                  <>
-                    <img className="drop-slot__thumb" src={background.src} alt="" />
-                    <div className="drop-slot__change">변경</div>
-                  </>
-                ) : (
-                  <>
-                    <Icon name="image" size={22} />
-                    <div>배경 이미지를 끌어다 놓거나 클릭</div>
-                    <div className="drop-slot__hint">JPG · PNG · 최소 1920×1080</div>
-                  </>
-                )}
-              </div>
-              <input
-                data-testid="bg-file-input"
-                ref={bgFileRef}
-                type="file"
-                accept="image/*"
-                style={{ display: 'none' }}
-                onChange={e => { handleBgFile(e.target.files); e.target.value = '' }}
-              />
-              <div className="form-section" style={{ paddingLeft: 0, paddingRight: 0 }}>
-                <div className="form-section__label">배경 타입</div>
-                <SegmentedControl
-                  options={BG_OPTIONS}
-                  value={background.type}
-                  onChange={type => setBackground({ ...background, type })}
-                />
-              </div>
-            </div>
-          )}
-          {activeTab === 'logo' && (
-            <div style={{ padding: 14, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <div
-                className={`drop-slot${logo ? ' drop-slot--filled' : ''}`}
-                onClick={() => logoFileRef.current?.click()}
-                onDragOver={e => e.preventDefault()}
-                onDrop={e => { e.preventDefault(); handleLogoFile(e.dataTransfer.files) }}
-              >
-                {logo ? (
-                  <>
-                    <img className="drop-slot__thumb" src={logo} alt="" />
-                    <div className="drop-slot__change">변경</div>
-                  </>
-                ) : (
-                  <>
-                    <Icon name="layers" size={20} />
-                    <div style={{ fontSize: 11.5, fontWeight: 600 }}>로고</div>
-                    <div className="drop-slot__hint">PNG · SVG</div>
-                  </>
-                )}
-              </div>
-              <input
-                data-testid="logo-file-input"
-                ref={logoFileRef}
-                type="file"
-                accept="image/*,.svg"
-                style={{ display: 'none' }}
-                onChange={e => { handleLogoFile(e.target.files); e.target.value = '' }}
-              />
-              <div
-                className={`drop-slot${watermark ? ' drop-slot--filled' : ''}`}
-                onClick={() => watermarkFileRef.current?.click()}
-                onDragOver={e => e.preventDefault()}
-                onDrop={e => { e.preventDefault(); handleWatermarkFile(e.dataTransfer.files) }}
-              >
-                {watermark ? (
-                  <>
-                    <img className="drop-slot__thumb" src={watermark} alt="" />
-                    <div className="drop-slot__change">변경</div>
-                  </>
-                ) : (
-                  <>
-                    <Icon name="sticker" size={20} />
-                    <div style={{ fontSize: 11.5, fontWeight: 600 }}>워터마크</div>
-                    <div className="drop-slot__hint">선택 · PNG</div>
-                  </>
-                )}
-              </div>
-              <input
-                data-testid="watermark-file-input"
-                ref={watermarkFileRef}
-                type="file"
-                accept="image/*"
-                style={{ display: 'none' }}
-                onChange={e => { handleWatermarkFile(e.target.files); e.target.value = '' }}
-              />
-            </div>
-          )}
-          {activeTab === 'stickers' && (
-            <div style={{ padding: 14 }}>
-              {stickers.length > 0 && (
-                <div className="sticker-grid">
-                  {stickers.map(url => (
-                    <div key={url} className="sticker-item">
-                      <img src={url} alt="" />
-                      <button
-                        type="button"
-                        className="sticker-item__del"
-                        onClick={() => handleDeleteSticker(url)}
-                      >
-                        <Icon name="x" size={10} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {stickers.length < 5 && (
-                <div
-                  className="drop-slot"
-                  onClick={() => stickerFileRef.current?.click()}
-                  onDragOver={e => e.preventDefault()}
-                  onDrop={e => { e.preventDefault(); handleStickerFiles(e.dataTransfer.files) }}
-                >
-                  <Icon name="sticker" size={22} />
-                  <div>스티커/GIF를 끌어다 놓으세요</div>
-                  <div className="drop-slot__hint">GIF · PNG · 최대 5개</div>
-                </div>
-              )}
-              <input
-                data-testid="sticker-file-input"
-                ref={stickerFileRef}
-                type="file"
-                accept="image/*,.gif"
-                multiple
-                style={{ display: 'none' }}
-                onChange={e => { handleStickerFiles(e.target.files); e.target.value = '' }}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* 인코딩 설정 */}
+        {/* 배경 */}
         <div className="card">
           <div className="card__head">
-            <div className="card__title" style={{ fontSize: 13 }}>
-              <Icon name="settings" size={14} /> 인코딩 설정
+            <div className="card__title"><Icon name="image" size={14} /> 배경</div>
+          </div>
+          <div style={{ padding: 14 }}>
+            <div
+              className={`drop-slot${background.src ? ' drop-slot--filled' : ''}`}
+              onClick={() => bgFileRef.current?.click()}
+              onDragOver={e => e.preventDefault()}
+              onDrop={e => { e.preventDefault(); handleBgFile(e.dataTransfer.files) }}
+            >
+              {background.src ? (
+                <>
+                  <img className="drop-slot__thumb" src={background.src} alt="" />
+                  <div className="drop-slot__change">변경</div>
+                  <button type="button" className="drop-slot__remove" onClick={e => { e.stopPropagation(); URL.revokeObjectURL(background.src!); setBackground({ type: 'gradient' }) }}>
+                    <Icon name="x" size={10} />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Icon name="image" size={22} />
+                  <div>배경 이미지를 끌어다 놓거나 클릭</div>
+                  <div className="drop-slot__hint">JPG · PNG · 최소 1920×1080</div>
+                </>
+              )}
+            </div>
+            <input
+              data-testid="bg-file-input"
+              ref={bgFileRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={e => { handleBgFile(e.target.files); e.target.value = '' }}
+            />
+            <div className="form-section" style={{ paddingLeft: 0, paddingRight: 0 }}>
+              <div className="form-section__label">배경 타입</div>
+              <SegmentedControl
+                options={BG_OPTIONS}
+                value={background.type}
+                onChange={type => setBackground({ ...background, type })}
+              />
             </div>
           </div>
-          <div className="form-section">
-            <div className="form-section__label">
-              재생 반복
-              <span className="form-section__hint">최종 길이 ≈ {finalDur}</span>
+        </div>
+
+        {/* 로고 · 워터마크 */}
+        <div className="card">
+          <div className="card__head">
+            <div className="card__title"><Icon name="layers" size={14} /> 로고 · 워터마크</div>
+          </div>
+          <div style={{ padding: 14, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div
+              className={`drop-slot${logo ? ' drop-slot--filled' : ''}`}
+              onClick={() => logoFileRef.current?.click()}
+              onDragOver={e => e.preventDefault()}
+              onDrop={e => { e.preventDefault(); handleLogoFile(e.dataTransfer.files) }}
+            >
+              {logo ? (
+                <>
+                  <img className="drop-slot__thumb" src={logo} alt="" />
+                  <div className="drop-slot__change">변경</div>
+                  <button type="button" className="drop-slot__remove" onClick={e => { e.stopPropagation(); URL.revokeObjectURL(logo); setLogo(undefined) }}>
+                    <Icon name="x" size={10} />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Icon name="layers" size={20} />
+                  <div style={{ fontSize: 11.5, fontWeight: 600 }}>로고</div>
+                  <div className="drop-slot__hint">PNG · SVG</div>
+                </>
+              )}
             </div>
-            <SegmentedControl options={LOOP_OPTIONS} value={loops} onChange={setLoops} />
+            <input
+              data-testid="logo-file-input"
+              ref={logoFileRef}
+              type="file"
+              accept="image/*,.svg"
+              style={{ display: 'none' }}
+              onChange={e => { handleLogoFile(e.target.files); e.target.value = '' }}
+            />
+            <div
+              className={`drop-slot${watermark ? ' drop-slot--filled' : ''}`}
+              onClick={() => watermarkFileRef.current?.click()}
+              onDragOver={e => e.preventDefault()}
+              onDrop={e => { e.preventDefault(); handleWatermarkFile(e.dataTransfer.files) }}
+            >
+              {watermark ? (
+                <>
+                  <img className="drop-slot__thumb" src={watermark} alt="" />
+                  <div className="drop-slot__change">변경</div>
+                  <button type="button" className="drop-slot__remove" onClick={e => { e.stopPropagation(); URL.revokeObjectURL(watermark); setWatermark(undefined) }}>
+                    <Icon name="x" size={10} />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Icon name="sticker" size={20} />
+                  <div style={{ fontSize: 11.5, fontWeight: 600 }}>워터마크</div>
+                  <div className="drop-slot__hint">선택 · PNG</div>
+                </>
+              )}
+            </div>
+            <input
+              data-testid="watermark-file-input"
+              ref={watermarkFileRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={e => { handleWatermarkFile(e.target.files); e.target.value = '' }}
+            />
           </div>
-          <div className="form-section">
-            <div className="form-section__label">오디오 품질</div>
-            <SegmentedControl options={QUALITY_OPTIONS} value={quality} onChange={setQuality} />
+        </div>
+
+        {/* 스티커 */}
+        <div className="card">
+          <div className="card__head">
+            <div className="card__title">
+              <Icon name="sticker" size={14} /> 스티커
+              <span className="card__sub">{stickers.length} / 5</span>
+            </div>
           </div>
-          <div className="foot-cta">
-            <Button variant="danger-ghost" onClick={() => { setLoops(1); setQuality('192k') }}><Icon name="reset" size={14} /> 초기화</Button>
-            <Button variant="primary" size="lg" onClick={onNext}>
-              스튜디오 입장 <Icon name="arrowRight" size={14} />
-            </Button>
+          <div style={{ padding: 14 }}>
+            {stickers.length > 0 && (
+              <div className="sticker-grid">
+                {stickers.map(url => (
+                  <div key={url} className="sticker-item">
+                    <img src={url} alt="" />
+                    <button
+                      type="button"
+                      className="sticker-item__del"
+                      onClick={() => handleDeleteSticker(url)}
+                    >
+                      <Icon name="x" size={10} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {stickers.length < 5 && (
+              <div
+                className="drop-slot"
+                onClick={() => stickerFileRef.current?.click()}
+                onDragOver={e => e.preventDefault()}
+                onDrop={e => { e.preventDefault(); handleStickerFiles(e.dataTransfer.files) }}
+              >
+                <Icon name="sticker" size={22} />
+                <div>스티커/GIF를 끌어다 놓으세요</div>
+                <div className="drop-slot__hint">GIF · PNG · 최대 5개</div>
+              </div>
+            )}
+            <input
+              data-testid="sticker-file-input"
+              ref={stickerFileRef}
+              type="file"
+              accept="image/*,.gif"
+              multiple
+              style={{ display: 'none' }}
+              onChange={e => { handleStickerFiles(e.target.files); e.target.value = '' }}
+            />
           </div>
+        </div>
+
+        {/* 스튜디오 입장 */}
+        <div className="foot-cta">
+          <Button variant="primary" size="lg" onClick={onNext}>
+            스튜디오 입장 <Icon name="arrowRight" size={14} />
+          </Button>
         </div>
       </div>
     </div>
