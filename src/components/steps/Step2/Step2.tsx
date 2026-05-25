@@ -17,16 +17,27 @@ const THEMES = [
 ]
 
 const VIS_SHAPES: { id: Visualizer['type'], label: string }[] = [
-  { id: 'bars',   label: 'Bars'   },
-  { id: 'wave',   label: 'Wave'   },
-  { id: 'mirror', label: 'Mirror' },
-  { id: 'dots',   label: 'Dots'   },
-  { id: 'orb',    label: 'Orb'    },
-  { id: 'ring',   label: 'Ring'   },
+  { id: 'bars',     label: 'Bars'     },
+  { id: 'mirror',   label: 'Mirror'   },
+  { id: 'waveform', label: 'Waveform' },
+  { id: 'scope',    label: 'Scope'    },
+  { id: 'led',      label: 'LED'      },
+  { id: 'rain',     label: 'Rain'     },
+  { id: 'circular', label: 'Circular' },
+  { id: 'burst',    label: 'Burst'    },
+  { id: 'tunnel',   label: 'Tunnel'   },
+  { id: 'galaxy',   label: 'Galaxy'   },
+  { id: 'prism',    label: 'Prism'    },
+  { id: 'pulse',    label: 'Pulse'    },
 ]
 
-// orb, ring은 컴팩트(원형 중심) 타입 — 수직 드래그 핸들 별도 표시
-const COMPACT_VIS: Visualizer['type'][] = ['orb', 'ring']
+// 원형 중심 타입 — 좌표 앵커 포지셔닝 사용
+const COMPACT_VIS: Visualizer['type'][] = ['circular', 'burst', 'tunnel', 'galaxy', 'prism', 'pulse']
+
+const VIS_COLORS = [
+  '#00d4ff', '#a855f7', '#fbbf24', '#f97316', '#22c55e', '#ff3b5c',
+  '#00ffcc', '#818cf8', '#fb7185', '#84cc16', '#f0abfc', '#ffffff',
+]
 
 const EFFECT_ITEMS = [
   { key: 'vis'       as const, icon: 'waveform', title: '오디오 비주얼라이저', sub: '파형이 음원에 반응' },
@@ -110,18 +121,30 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
   }
 
   useEffect(() => {
-    if (!isPlaying) {
-      setFreqData([])
-      return
-    }
+    if (!isPlaying) { setFreqData([]); return }
     let rafId: number
-    const buf = new Uint8Array(128)
+    let buf: Uint8Array<ArrayBuffer> | null = null
+    let logMap: { lo: number; hi: number }[] | null = null
+
     function tick() {
       const analyser = analyserRef.current
       if (analyser) {
+        if (!buf) {
+          const bins = analyser.frequencyBinCount
+          buf = new Uint8Array(bins)
+          const nyq = (analyser.context as AudioContext).sampleRate / 2
+          const fMin = 30, fMax = Math.min(18000, nyq)
+          logMap = Array.from({ length: 80 }, (_, i) => ({
+            lo: Math.max(0, Math.floor(fMin * Math.pow(fMax / fMin,  i      / 80) / nyq * bins)),
+            hi: Math.min(bins - 1, Math.ceil (fMin * Math.pow(fMax / fMin, (i + 1) / 80) / nyq * bins)),
+          }))
+        }
         analyser.getByteFrequencyData(buf)
-        const step = buf.length / 80
-        setFreqData(Array.from({ length: 80 }, (_, i) => buf[Math.floor(i * step)] / 255))
+        setFreqData(logMap!.map(({ lo, hi }) => {
+          let s = 0, n = 0
+          for (let b = lo; b <= hi; b++) { s += buf![b]; n++ }
+          return n ? s / n / 255 : 0
+        }))
       }
       rafId = requestAnimationFrame(tick)
     }
@@ -157,6 +180,9 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
   }, [setLogoPosition, setVisualizer])
 
   const data = freqData.length ? freqData : waveformFor(trackIdx + 1, 80)
+  const visColor = visualizer.color
+  const sizeScale = visualizer.size / 50
+  const intensityScale = visualizer.intensity / 100
 
   return (
     <div className="step2">
@@ -194,10 +220,19 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
               </div>
             ))}
           </div>
+          <div className="vis-color-swatches">
+            {VIS_COLORS.map(hex => (
+              <div
+                key={hex}
+                className={`vis-color-swatch${visualizer.color === hex ? ' vis-color-swatch--active' : ''}`}
+                style={{ background: hex === '#ffffff' ? 'rgba(255,255,255,0.9)' : hex }}
+                onClick={() => setVisualizer(prev => ({ ...prev, color: hex }))}
+              />
+            ))}
+          </div>
           <div className="slider-row">
             <div className="slider-row__label">크기</div>
-            <input
-              className="slider" type="range" min={0} max={100}
+            <input className="slider" type="range" min={0} max={100}
               value={visualizer.size}
               onChange={e => setVisualizer(prev => ({ ...prev, size: Number(e.target.value) }))}
             />
@@ -205,8 +240,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
           </div>
           <div className="slider-row">
             <div className="slider-row__label">강도</div>
-            <input
-              className="slider" type="range" min={0} max={100}
+            <input className="slider" type="range" min={0} max={100}
               value={visualizer.intensity}
               onChange={e => setVisualizer(prev => ({ ...prev, intensity: Number(e.target.value) }))}
             />
@@ -214,8 +248,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
           </div>
           <div className="slider-row">
             <div className="slider-row__label">불투명도</div>
-            <input
-              className="slider" type="range" min={0} max={100}
+            <input className="slider" type="range" min={0} max={100}
               value={visualizer.opacity}
               onChange={e => setVisualizer(prev => ({ ...prev, opacity: Number(e.target.value) }))}
             />
@@ -240,14 +273,10 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
             ref={frameRef}
             style={{ background: background.src ? undefined : themeObj.bg }}
           >
-            {background.src && (
-              <img className="s2-frame__bg-img" src={background.src} alt="" />
-            )}
+            {background.src && <img className="s2-frame__bg-img" src={background.src} alt="" />}
             {effects.blur && <div className="s2-frame__blur-overlay" />}
             <div className="s2-frame__content">
-              {!logo && (
-                <div className="s2-frame__logo"><Icon name="logo" size={26} /></div>
-              )}
+              {!logo && <div className="s2-frame__logo"><Icon name="logo" size={26} /></div>}
               <h2
                 className="s2-frame__title"
                 style={{
@@ -258,90 +287,209 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                 {playingTrack?.title}
               </h2>
               <div className="s2-frame__sub">
-                {playingTrack?.artist} · Track {String(trackIdx + 1).padStart(2, '0')} / {tracks.length}
+                {playingTrack?.artist && playingTrack.artist !== 'Unknown' ? `${playingTrack.artist} · ` : ''}Track {String(trackIdx + 1).padStart(2, '0')} / {tracks.length}
               </div>
             </div>
+
             {effects.vis && (
               <>
-                {/* 와이드 타입: bars / wave / mirror / dots */}
+                {/* 와이드 타입: bars / mirror / waveform / scope / led / rain */}
                 {!COMPACT_VIS.includes(visualizer.type) && (
                   <div
                     className="s2-frame__wave"
                     style={{ opacity: visualizer.opacity / 100, ...waveContainerStyle(visualizer.y, visualizer.size) }}
                     onMouseDown={handleVisMouseDown}
                   >
+                    {/* Bars — 그라디언트 막대 */}
                     {visualizer.type === 'bars' && data.map((h, i) => (
                       <div
                         key={i}
                         className="s2-frame__wave-bar"
-                        style={{ height: `${h * (visualizer.intensity / 100) * 100}%` }}
+                        style={{
+                          height: `${h * intensityScale * 100}%`,
+                          background: `linear-gradient(180deg, ${visColor} 0%, ${visColor}55 100%)`,
+                        }}
                       />
                     ))}
-                    {visualizer.type === 'wave' && (
+
+                    {/* Mirror — 상하 대칭 막대 */}
+                    {visualizer.type === 'mirror' && (
+                      <svg className="s2-frame__wave-svg" viewBox={`0 0 ${data.length} 80`} preserveAspectRatio="none">
+                        {data.map((h, i) => {
+                          const barH = h * intensityScale * 36
+                          return <rect key={i} x={i + 0.1} y={40 - barH} width={0.8} height={barH * 2}
+                            fill={visColor} opacity="0.8" />
+                        })}
+                      </svg>
+                    )}
+
+                    {/* Waveform — 채워진 파형 */}
+                    {visualizer.type === 'waveform' && (
                       <svg className="s2-frame__wave-svg" viewBox="0 0 80 40" preserveAspectRatio="none">
+                        <defs>
+                          <linearGradient id="wfg" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor={visColor} stopOpacity="0.7" />
+                            <stop offset="100%" stopColor={visColor} stopOpacity="0.02" />
+                          </linearGradient>
+                        </defs>
+                        <path
+                          d={`M0,40 ${data.map((h, i) => `L${i},${40 - h * intensityScale * 38}`).join(' ')} L79,40 Z`}
+                          fill="url(#wfg)"
+                        />
                         <polyline
-                          className="s2-frame__wave-line"
-                          points={data.map((h, i) => `${i},${40 - h * (visualizer.intensity / 100) * 38}`).join(' ')}
+                          points={data.map((h, i) => `${i},${40 - h * intensityScale * 38}`).join(' ')}
+                          fill="none" stroke={visColor} strokeWidth="1" opacity="0.9"
                         />
                       </svg>
                     )}
-                    {visualizer.type === 'mirror' && (
+
+                    {/* Scope — 오실로스코프 파형 */}
+                    {visualizer.type === 'scope' && (
                       <svg className="s2-frame__wave-svg" viewBox="0 0 80 40" preserveAspectRatio="none">
-                        {data.map((h, i) => {
-                          const bh = h * (visualizer.intensity / 100) * 17
-                          return (
-                            <React.Fragment key={i}>
-                              <rect x={i} y={20 - bh} width={0.7} height={bh} fill="var(--c)" opacity="0.85" />
-                              <rect x={i} y={20}      width={0.7} height={bh} fill="var(--c)" opacity="0.85" />
-                            </React.Fragment>
-                          )
-                        })}
+                        <line x1="0" y1="20" x2="80" y2="20" stroke={visColor} strokeWidth="0.3" opacity="0.25" />
+                        <polyline
+                          points={data.map((h, i) => `${i},${20 - Math.sin(i * 0.3) * h * intensityScale * 18}`).join(' ')}
+                          fill="none" stroke={visColor} strokeWidth="1.2" opacity="0.9"
+                          strokeLinecap="round" strokeLinejoin="round"
+                        />
                       </svg>
                     )}
-                    {visualizer.type === 'dots' && (
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around', width: '100%', height: '100%', gap: '2px' }}>
-                        {data.filter((_, i) => i % 2 === 0).map((h, i) => {
-                          const r = Math.max(2, h * (visualizer.intensity / 100) * 10)
-                          return (
-                            <div
-                              key={i}
-                              style={{ width: `${r * 2}px`, height: `${r * 2}px`, borderRadius: '50%', background: 'var(--c)', flexShrink: 0 }}
-                            />
-                          )
-                        })}
-                      </div>
-                    )}
+
+                    {/* LED — 격자 도트 */}
+                    {visualizer.type === 'led' && (() => {
+                      const cols = 20, rows = 8
+                      return (
+                        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gridTemplateRows: `repeat(${rows}, 1fr)`, gap: '1.5px', width: '100%', height: '100%' }}>
+                          {Array.from({ length: rows }, (_, row) =>
+                            Array.from({ length: cols }, (_, col) => {
+                              const h = data[Math.floor(col * (data.length / cols))]
+                              const isActive = (rows - 1 - row) / rows < h * intensityScale
+                              return (
+                                <div key={`${row}-${col}`} style={{
+                                  borderRadius: '2px',
+                                  background: isActive ? visColor : 'rgba(255,255,255,0.07)',
+                                }} />
+                              )
+                            })
+                          ).flat()}
+                        </div>
+                      )
+                    })()}
+
+                    {/* Rain — 수직 도트 컬럼 */}
+                    {visualizer.type === 'rain' && (() => {
+                      const cols = 24
+                      return (
+                        <svg className="s2-frame__wave-svg" viewBox={`0 0 ${cols} 40`} preserveAspectRatio="none">
+                          {Array.from({ length: cols }, (_, col) => {
+                            const h = data[Math.floor(col * data.length / cols)]
+                            const dotCount = Math.max(1, Math.floor(h * intensityScale * 12))
+                            return Array.from({ length: dotCount }, (_, dot) => (
+                              <circle key={`${col}-${dot}`}
+                                cx={col + 0.5} cy={39 - dot * 3}
+                                r="0.45" fill={visColor} opacity={1 - dot * 0.07}
+                              />
+                            ))
+                          }).flat()}
+                        </svg>
+                      )
+                    })()}
                   </div>
                 )}
-                {/* 컴팩트 타입: orb / ring */}
+
+                {/* 컴팩트 타입: circular/burst/tunnel/galaxy/prism/pulse — SVG 앵커 */}
                 {COMPACT_VIS.includes(visualizer.type) && (
                   <div
                     className="s2-frame__orb"
                     style={{ opacity: visualizer.opacity / 100, top: `${visualizer.y}%`, left: '50%' }}
                   >
-                    {visualizer.type === 'orb' && (() => {
-                      const energy = freqData.length ? freqData.reduce((a, v) => a + v, 0) / freqData.length : 0
-                      const sizeScale = visualizer.size / 50
-                      return [1, 0.65, 0.35].map((scale, i) => {
-                        const w = scale * (1 + energy * 0.5) * visualizer.intensity * 0.8 * sizeScale
+                    <svg
+                      viewBox="-100 -100 200 200"
+                      width={`${visualizer.size * 2}px`}
+                      height={`${visualizer.size * 2}px`}
+                      style={{ position: 'absolute', left: 0, top: 0, transform: 'translate(-50%, -50%)', overflow: 'visible' }}
+                    >
+                      {/* Circular — 원형 스펙트럼 */}
+                      {visualizer.type === 'circular' && data.map((h, i) => {
+                        const angle = (i / data.length) * 2 * Math.PI - Math.PI / 2
+                        const innerR = 28 * sizeScale
+                        const barLen = h * intensityScale * 62 * sizeScale
+                        const cos = Math.cos(angle), sin = Math.sin(angle)
                         return (
-                          <div key={i} className="s2-frame__orb-ring" style={{ width: `${w}px`, height: `${w}px` }} />
+                          <line key={i}
+                            x1={cos * innerR} y1={sin * innerR}
+                            x2={cos * (innerR + barLen)} y2={sin * (innerR + barLen)}
+                            stroke={visColor} strokeWidth="1.5" opacity="0.85"
+                          />
                         )
-                      })
-                    })()}
-                    {visualizer.type === 'ring' && (() => {
-                      const energy = freqData.length ? freqData.reduce((a, v) => a + v, 0) / freqData.length : 0
-                      const sizeScale = visualizer.size / 50
-                      const r = (50 + energy * 35) * sizeScale * (visualizer.intensity / 100)
-                      return (
-                        <>
-                          <div className="s2-frame__orb-ring" style={{ width: `${r * 2}px`, height: `${r * 2}px` }} />
-                          <div className="s2-frame__orb-ring" style={{ width: `${r * 1.4}px`, height: `${r * 1.4}px`, opacity: 0.35 }} />
-                        </>
-                      )
-                    })()}
+                      })}
+
+                      {/* Burst — 방사형 선 */}
+                      {visualizer.type === 'burst' && data.filter((_, i) => i % 2 === 0).map((h, i) => {
+                        const angle = (i / 40) * 2 * Math.PI
+                        const r = h * intensityScale * 82 * sizeScale + 4
+                        return (
+                          <line key={i} x1={0} y1={0}
+                            x2={Math.cos(angle) * r} y2={Math.sin(angle) * r}
+                            stroke={visColor} strokeWidth="2" opacity="0.8"
+                          />
+                        )
+                      })}
+
+                      {/* Tunnel — 동심 사각형 */}
+                      {visualizer.type === 'tunnel' && [1, 0.72, 0.5, 0.32, 0.18].map((scale, i) => {
+                        const bandH = data[Math.floor(i * (data.length / 5))]
+                        const w = (scale * 78 + bandH * intensityScale * 18) * sizeScale
+                        return (
+                          <rect key={i} x={-w} y={-w} width={w * 2} height={w * 2}
+                            fill="none" stroke={visColor} strokeWidth="1.5"
+                            opacity={0.9 - i * 0.13}
+                          />
+                        )
+                      })}
+
+                      {/* Galaxy — 원형 궤도 도트 */}
+                      {visualizer.type === 'galaxy' && data.map((h, i) => {
+                        const angle = (i / data.length) * 2 * Math.PI
+                        const r = (30 + h * intensityScale * 58) * sizeScale
+                        return (
+                          <circle key={i}
+                            cx={Math.cos(angle) * r} cy={Math.sin(angle) * r}
+                            r={(h * intensityScale * 4 + 0.8) * sizeScale}
+                            fill={visColor} opacity={0.5 + h * 0.5}
+                          />
+                        )
+                      })}
+
+                      {/* Prism — 방사형 삼각 웨지 */}
+                      {visualizer.type === 'prism' && data.filter((_, i) => i % 4 === 0).map((h, i) => {
+                        const count = 20
+                        const a1 = (i / count) * 2 * Math.PI
+                        const a2 = ((i + 0.7) / count) * 2 * Math.PI
+                        const r = (h * intensityScale * 88 + 6) * sizeScale
+                        return (
+                          <polygon key={i}
+                            points={`0,0 ${Math.cos(a1)*r},${Math.sin(a1)*r} ${Math.cos(a2)*r},${Math.sin(a2)*r}`}
+                            fill={visColor} opacity={0.35 + h * 0.55}
+                          />
+                        )
+                      })}
+
+                      {/* Pulse — 동심원 펄스 */}
+                      {visualizer.type === 'pulse' && [0, 1, 2, 3].map((ring) => {
+                        const bandH = data[Math.floor(ring * data.length / 4)]
+                        const r = (ring * 22 + bandH * intensityScale * 20 + 8) * sizeScale
+                        return (
+                          <circle key={ring} cx={0} cy={0} r={r}
+                            fill="none" stroke={visColor} strokeWidth="1.5"
+                            opacity={0.8 - ring * 0.15}
+                          />
+                        )
+                      })}
+                    </svg>
                   </div>
                 )}
+
                 {/* 컴팩트 타입 드래그 핸들 */}
                 {COMPACT_VIS.includes(visualizer.type) && (
                   <div
@@ -352,8 +500,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                 )}
               </>
             )}
-            <div className="s2-frame__badge-l">SPECTRA · LIVE</div>
-            <div className="s2-frame__badge-r">{String(trackIdx + 1).padStart(2, '0')} / {tracks.length}</div>
+
             {logo && (
               <img
                 className="s2-frame__logo-drag"
@@ -370,18 +517,6 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
           <Button variant="ghost" size="icon" data-testid="stage-skip-prev" onClick={() => onSkipPrev()}><Icon name="skipBack" size={14} /></Button>
           <button type="button" className="s2-play-btn" onClick={() => { if (isPlaying) { onPause() } else if (playingTrack) { onPlay(playingTrack.id) } }}><Icon name={isPlaying ? 'pause' : 'play'} size={14} /></button>
           <Button variant="ghost" size="icon" data-testid="stage-skip-next" onClick={() => onSkipNext()}><Icon name="skipForward" size={14} /></Button>
-          {logo && (
-            <>
-              <div className="s2-ctrl-divider" />
-              <span className="s2-ctrl-label">로고</span>
-              <input
-                type="range" min={24} max={120} value={logoSize}
-                onChange={e => setLogoSize(Number(e.target.value))}
-                className="slider s2-ctrl-slider"
-              />
-              <span className="s2-ctrl-value">{logoSize}px</span>
-            </>
-          )}
         </div>
         <div className="s2-timeline">
           <div className="s2-timeline__head">
@@ -433,8 +568,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
           <div className="s2-section-label">타이포그래피</div>
           <div className="slider-row">
             <div className="slider-row__label">제목 크기</div>
-            <input
-              className="slider" type="range" min={20} max={80}
+            <input className="slider" type="range" min={20} max={80}
               value={typography.titleSize}
               onChange={e => setTypography({ ...typography, titleSize: Number(e.target.value) })}
             />
@@ -442,13 +576,28 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
           </div>
           <div className="slider-row">
             <div className="slider-row__label">자간</div>
-            <input
-              className="slider" type="range" min={-50} max={50}
+            <input className="slider" type="range" min={-50} max={50}
               value={typography.letterSpacing}
               onChange={e => setTypography({ ...typography, letterSpacing: Number(e.target.value) })}
             />
             <div className="slider-row__value">{typography.letterSpacing}</div>
           </div>
+
+          {logo && (
+            <>
+              <hr className="divider" />
+              <div className="s2-section-label">로고</div>
+              <div className="slider-row">
+                <div className="slider-row__label">크기</div>
+                <input className="slider" type="range" min={24} max={120}
+                  value={logoSize}
+                  onChange={e => setLogoSize(Number(e.target.value))}
+                />
+                <div className="slider-row__value">{logoSize}px</div>
+              </div>
+              <div className="s2-hint">위치는 마우스로 조정</div>
+            </>
+          )}
 
           <hr className="divider" />
           <div className="s2-nav">
