@@ -108,13 +108,13 @@ describe('drawFrame', () => {
     const shadowBlurSets: number[] = []
     Object.defineProperty(mockCtx, 'shadowBlur', {
       set(v: number) { shadowBlurSets.push(v) },
-      get() { return shadowBlurSets.at(-1) ?? 0 },
+      get() { return shadowBlurSets[shadowBlurSets.length - 1] ?? 0 },
       configurable: true,
     })
     const freqData = new Float32Array(80).fill(0.5)
     drawFrame({ ...base, frequencyData: freqData })
     Object.defineProperty(mockCtx, 'shadowBlur', { value: 0, writable: true, configurable: true })
     expect(shadowBlurSets.some(v => v > 0)).toBe(true)
-    expect(shadowBlurSets.at(-1)).toBe(0)
+    expect(shadowBlurSets[shadowBlurSets.length - 1]).toBe(0)
   })
 })
