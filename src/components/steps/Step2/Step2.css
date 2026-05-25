@@ -158,6 +158,18 @@
   border-color: var(--c); color: oklch(1 0 0);
 }
 
+/* 클립 행 수직 플레이헤드 라인 */
+.s2-timeline__clip-playhead {
+  position: absolute;
+  top: 4px; bottom: 4px;
+  width: 2px;
+  background: var(--c);
+  border-radius: 1px;
+  opacity: 0.85;
+  pointer-events: none;
+  z-index: 2;
+}
+
 /* 타임라인 스크러버 */
 .s2-timeline__scrubber {
   position: relative; height: 24px; padding: 0 14px;

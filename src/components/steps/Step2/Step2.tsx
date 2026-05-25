@@ -67,6 +67,49 @@ function energyColor(energy: number): string {
   return `hsl(${energy * 240}, 100%, ${50 + energy * 30}%)`
 }
 
+const CLIP_GAP = 4
+
+function totalClipPx(tracks: Track[]): number {
+  const shown = tracks.slice(0, 8)
+  return shown.reduce((s, t, i) => s + Math.max(48, t.durationSec * 1.5) + (i > 0 ? CLIP_GAP : 0), 0)
+}
+
+function clipPxFromTime(time: number, tracks: Track[]): number {
+  const shown = tracks.slice(0, 8)
+  let acc = 0, px = 0
+  for (let i = 0; i < shown.length; i++) {
+    const t = shown[i]
+    const w = Math.max(48, t.durationSec * 1.5)
+    if (i > 0) px += CLIP_GAP
+    if (time <= acc + t.durationSec || i === shown.length - 1) {
+      const localRatio = t.durationSec > 0 ? Math.max(0, Math.min(1, (time - acc) / t.durationSec)) : 0
+      return px + localRatio * w
+    }
+    px += w
+    acc += t.durationSec
+  }
+  return px
+}
+
+function pxRatioToTime(ratio: number, tracks: Track[]): number {
+  const shown = tracks.slice(0, 8)
+  const totPx = totalClipPx(tracks)
+  const clickPx = ratio * totPx
+  let acc = 0, px = 0
+  for (let i = 0; i < shown.length; i++) {
+    const t = shown[i]
+    const w = Math.max(48, t.durationSec * 1.5)
+    if (i > 0) px += CLIP_GAP
+    if (clickPx <= px + w || i === shown.length - 1) {
+      const localRatio = w > 0 ? Math.max(0, Math.min(1, (clickPx - px) / w)) : 0
+      return acc + localRatio * t.durationSec
+    }
+    px += w
+    acc += t.durationSec
+  }
+  return acc
+}
+
 interface Step2Props {
   tracks: Track[]
   theme: string
@@ -115,6 +158,8 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
   const scrubberIsDragging = useRef(false)
   const onSeekRef = useRef(onSeek)
   onSeekRef.current = onSeek
+  const tracksRef = useRef(tracks)
+  tracksRef.current = tracks
 
   const [freqData, setFreqData] = useState<number[]>([])
 
@@ -222,8 +267,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
       if (scrubberIsDragging.current && scrubberRef.current) {
         const sr = scrubberRef.current.getBoundingClientRect()
         const ratio = Math.max(0, Math.min(1, (e.clientX - sr.left) / sr.width))
-        const total = tracks.reduce((s, t) => s + t.durationSec, 0)
-        onSeekRef.current(ratio * total)
+        onSeekRef.current(pxRatioToTime(ratio, tracksRef.current))
       }
     }
     function onMouseUp() {
@@ -249,7 +293,8 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
 
   const accTime = tracks.slice(0, Math.max(0, trackIdx)).reduce((s, t) => s + t.durationSec, 0)
   const playlistCurrentTime = accTime + Math.min(currentTime, tracks[Math.max(0, trackIdx)]?.durationSec ?? 0)
-  const progressPct = totalSec > 0 ? Math.min(100, (playlistCurrentTime / totalSec) * 100) : 0
+  const totClipPx = totalClipPx(tracks)
+  const progressPct = totClipPx > 0 ? Math.min(100, (clipPxFromTime(playlistCurrentTime, tracks) / totClipPx) * 100) : 0
 
   return (
     <div className="step2">
@@ -609,7 +654,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
             <span>타임라인</span>
             <span>스냅 1초 · 줌 50%</span>
           </div>
-          <div className="s2-timeline__row">
+          <div className="s2-timeline__row" style={{ position: 'relative' }}>
             {tracks.slice(0, 8).map((t, i) => (
               <div
                 key={t.id}
@@ -620,11 +665,17 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                 {String(i + 1).padStart(2, '0')} · {t.title}
               </div>
             ))}
+            {tracks.length > 0 && (
+              <div
+                className="s2-timeline__clip-playhead"
+                style={{ left: `${14 + clipPxFromTime(playlistCurrentTime, tracks)}px` }}
+              />
+            )}
           </div>
           <div
             className="s2-timeline__scrubber"
             ref={scrubberRef}
-            onMouseDown={e => { scrubberIsDragging.current = true; const sr = scrubberRef.current!.getBoundingClientRect(); onSeekRef.current(Math.max(0, Math.min(1, (e.clientX - sr.left) / sr.width)) * totalSec) }}
+            onMouseDown={e => { scrubberIsDragging.current = true; const sr = scrubberRef.current!.getBoundingClientRect(); onSeekRef.current(pxRatioToTime(Math.max(0, Math.min(1, (e.clientX - sr.left) / sr.width)), tracksRef.current)) }}
           >
             <div className="s2-timeline__scrubber-track">
               <div className="s2-timeline__scrubber-fill" style={{ width: `${progressPct}%` }} />
