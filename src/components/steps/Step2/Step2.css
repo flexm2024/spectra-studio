@@ -213,6 +213,9 @@
 }
 .vis-color-swatch:hover { border-color: rgba(255,255,255,0.35); }
 .vis-color-swatch--active { border-color: var(--c) !important; box-shadow: 0 0 0 1px var(--c); }
+.vis-color-swatch--rainbow {
+  background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red);
+}
 .vis-shape-card {
   padding: 6px 4px;
   border-radius: var(--r-m);

@@ -20,8 +20,8 @@ export default function App() {
   const [quality, setQuality] = useState<'96k' | '128k' | '192k'>('192k')
   const [theme, setTheme] = useState('midnight')
   const [effects, setEffects] = useState<Effects>({ vis: true, crossfade: false, ducking: true, blur: true })
-  const [visualizer, setVisualizer] = useState<Visualizer>({ type: 'bars', intensity: 70, opacity: 85, y: 75, size: 50, width: 85, color: '#00d4ff' })
-  const [typography, setTypography] = useState<Typography>({ titleSize: 48, letterSpacing: -15, titlePosition: { x: 50, y: 48 }, subPosition: { x: 50, y: 55 } })
+  const [visualizer, setVisualizer] = useState<Visualizer>({ type: 'bars', intensity: 70, opacity: 85, y: 75, size: 50, width: 85, color: 'rainbow' })
+  const [typography, setTypography] = useState<Typography>({ titleSize: 20, letterSpacing: -15, titlePosition: { x: 50, y: 48 }, subPosition: { x: 50, y: 55 } })
   const [exportSettings, setExportSettings] = useState<ExportSettings>({
     filename: 'my-playlist',
     format: 'mp4',
@@ -31,7 +31,7 @@ export default function App() {
   })
   const [background, setBackground] = useState<Background>({ type: 'gradient' })
   const [logo, setLogo] = useState<string | undefined>(undefined)
-  const [logoPosition, setLogoPosition] = useState<LogoPosition>({ x: 85, y: 8 })
+  const [logoPosition, setLogoPosition] = useState<LogoPosition>({ x: 8, y: 8 })
   const [logoSize, setLogoSize] = useState(52)
   const [watermark, setWatermark] = useState<string | undefined>(undefined)
   const [stickers, setStickers] = useState<string[]>([])

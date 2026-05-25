@@ -25,6 +25,7 @@ const VIS_SHAPES: { id: Visualizer['type'], label: string }[] = [
 
 
 const VIS_COLORS = [
+  'rainbow',
   '#00d4ff', '#a855f7', '#fbbf24', '#f97316', '#22c55e', '#ff3b5c',
   '#00ffcc', '#818cf8', '#fb7185', '#84cc16', '#f0abfc', '#ffffff',
 ]
@@ -54,10 +55,24 @@ function waveContainerStyle(y: number, size: number, width: number): React.CSSPr
   }
 }
 
-function rainbowColor(i: number, total: number, energy: number): string {
-  const hue = (i / Math.max(total - 1, 1)) * 240
-  const lightness = 50 + energy * 30
-  return `hsl(${hue}, 100%, ${lightness}%)`
+function hexHue(hex: string): number {
+  const r = parseInt(hex.slice(1, 3), 16) / 255
+  const g = parseInt(hex.slice(3, 5), 16) / 255
+  const b = parseInt(hex.slice(5, 7), 16) / 255
+  const max = Math.max(r, g, b), min = Math.min(r, g, b)
+  if (max === min) return 0
+  const d = max - min
+  const h = max === r ? ((g - b) / d + (g < b ? 6 : 0))
+          : max === g ? (b - r) / d + 2
+          : (r - g) / d + 4
+  return h * 60
+}
+
+function barColor(i: number, total: number, energy: number, color: string): string {
+  const hue = color === 'rainbow'
+    ? (i / Math.max(total - 1, 1)) * 240
+    : hexHue(color) + (i / Math.max(total - 1, 1) - 0.5) * 40
+  return `hsl(${hue}, 100%, ${50 + energy * 30}%)`
 }
 
 function energyColor(energy: number): string {
@@ -156,6 +171,9 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
   visIntensityRef.current = visualizer.intensity
   const visSizeRef = useRef(visualizer.size)
   visSizeRef.current = visualizer.size
+  const visColorRef = useRef(visualizer.color)
+  visColorRef.current = visualizer.color
+  const smoothedFreqRef = useRef<number[]>([])
   const particlesRef = useRef<{ x: number; y: number; vx: number; vy: number; r: number }[] | null>(null)
   if (!particlesRef.current) {
     particlesRef.current = Array.from({ length: 220 }, () => ({
@@ -243,11 +261,19 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
           }))
         }
         analyser.getByteFrequencyData(buf)
-        setFreqData(logMap!.map(({ lo, hi }) => {
+        const raw = logMap!.map(({ lo, hi }) => {
           let s = 0, n = 0
           for (let b = lo; b <= hi; b++) { s += buf![b]; n++ }
           return n ? s / n / 255 : 0
-        }))
+        })
+        const prev = smoothedFreqRef.current
+        const smoothed = raw.map((v, i) => {
+          const p = prev[i] ?? v
+          // 빠른 상승(0.7), 느린 하강(0.15) — 막대가 올라갈 때 즉각 반응, 내려갈 때 서서히
+          return p > v ? p * 0.85 + v * 0.15 : p * 0.3 + v * 0.7
+        })
+        smoothedFreqRef.current = smoothed
+        setFreqData(smoothed)
       }
       rafId = requestAnimationFrame(tick)
     }
@@ -312,25 +338,30 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
     canvas.height = canvas.offsetHeight || 100
     peaksRef.current = Array.from({ length: 40 }, () => ({ pos: canvas.height, vel: 0 }))
     let rafId: number
+    const smoothed: number[] = []
     function tick() {
       const W = canvas!.width, H = canvas!.height
       const fd = freqDataRef.current
       const iScale = visIntensityRef.current / 100
+      const color = visColorRef.current
       ctx!.clearRect(0, 0, W, H)
       if (type === 'glow') {
         const bins = 28
         for (let i = 0; i < bins; i++) {
-          const v = fd[Math.floor(i * fd.length / bins)] ?? 0
+          const raw = fd[Math.floor(i * fd.length / bins)] ?? 0
+          const p = smoothed[i] ?? raw
+          const v = p > raw ? p * 0.84 + raw * 0.16 : p * 0.25 + raw * 0.75
+          smoothed[i] = v
           const barH = Math.max(2, v * H * 0.94 * iScale)
           const bw = W / bins
           const x = i * bw + bw * 0.08
           const w = bw * 0.84
-          const hueVal = (i / (bins - 1)) * 220
+          const hueVal = color === 'rainbow' ? (i / (bins - 1)) * 220 : hexHue(color) + (i / (bins - 1) - 0.5) * 40
           ctx!.save()
           ctx!.shadowColor = `hsl(${hueVal},100%,65%)`
-          ctx!.shadowBlur = v * 24 * iScale + 4
+          ctx!.shadowBlur = v * 28 * iScale + 5
           const g = ctx!.createLinearGradient(0, H - barH, 0, H)
-          g.addColorStop(0, `hsl(${hueVal},100%,75%)`)
+          g.addColorStop(0, `hsl(${hueVal},100%,78%)`)
           g.addColorStop(0.55, `hsl(${hueVal},90%,55%)`)
           g.addColorStop(1, `hsl(${hueVal},80%,38%)`)
           ctx!.fillStyle = g
@@ -343,12 +374,15 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
       } else {
         const bins = 40
         for (let i = 0; i < bins; i++) {
-          const v = fd[Math.floor(i * fd.length / bins)] ?? 0
+          const raw = fd[Math.floor(i * fd.length / bins)] ?? 0
+          const p = smoothed[i] ?? raw
+          const v = p > raw ? p * 0.84 + raw * 0.16 : p * 0.25 + raw * 0.75
+          smoothed[i] = v
           const barH = Math.max(2, v * H * 0.90 * iScale)
           const bw = W / bins
           const x = i * bw + bw * 0.1
           const w = bw * 0.8
-          const hueVal = (i / (bins - 1)) * 220
+          const hueVal = color === 'rainbow' ? (i / (bins - 1)) * 220 : hexHue(color) + (i / (bins - 1) - 0.5) * 40
           const barTop = H - barH
           ctx!.fillStyle = `hsla(${hueVal},70%,42%,0.55)`
           ctx!.beginPath()
@@ -363,8 +397,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
           ctx!.restore()
           const pk = peaksRef.current[i]
           if (barTop < pk.pos) { pk.pos = barTop; pk.vel = 0 }
-          pk.vel += 0.5
-          pk.pos += pk.vel
+          pk.vel += 0.5; pk.pos += pk.vel
           if (pk.pos > H - 3) { pk.pos = H - 3; pk.vel = 0 }
           ctx!.save()
           ctx!.shadowColor = `hsl(${hueVal},100%,75%)`
@@ -422,7 +455,10 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
         p.y = ((p.y + p.vy) + 1) % 1
         const bin = Math.min(fd.length - 1, Math.floor(p.x * fd.length))
         const e = fd[bin] ?? 0
-        const hue = (p.x * 220 + tAnim * 30) % 360
+        const color = visColorRef.current
+        const hue = color === 'rainbow'
+          ? (p.x * 220 + tAnim * 30) % 360
+          : (hexHue(color) + (p.x - 0.5) * 60 + tAnim * 15) % 360
         ctx!.save()
         ctx!.shadowColor = `hsl(${hue},100%,65%)`
         ctx!.shadowBlur = isBeat ? e * 22 * iScale + 7 : e * 14 * iScale + 2
@@ -500,8 +536,8 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
             {VIS_COLORS.map(hex => (
               <div
                 key={hex}
-                className={`vis-color-swatch${visualizer.color === hex ? ' vis-color-swatch--active' : ''}`}
-                style={{ background: hex === '#ffffff' ? 'rgba(255,255,255,0.9)' : hex }}
+                className={`vis-color-swatch${visualizer.color === hex ? ' vis-color-swatch--active' : ''}${hex === 'rainbow' ? ' vis-color-swatch--rainbow' : ''}`}
+                style={hex === 'rainbow' ? {} : { background: hex === '#ffffff' ? 'rgba(255,255,255,0.9)' : hex }}
                 onClick={() => setVisualizer(prev => ({ ...prev, color: hex }))}
               />
             ))}
@@ -611,7 +647,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                       <svg className="s2-frame__wave-svg" viewBox={`0 0 ${data.length} 100`} preserveAspectRatio="none">
                         {data.map((h, i) => {
                           const barH = Math.max(1, h * intensityScale * 80)
-                          const color = rainbowColor(i, data.length, energy)
+                          const color = barColor(i, data.length, energy, visualizer.color)
                           return (
                             <g key={i}>
                               <rect x={i + 0.08} y={80 - barH} width={0.84} height={barH} fill={color} opacity="0.95" rx="0.35" />
