@@ -160,4 +160,9 @@ describe('Step2', () => {
     const firstLine = document.querySelector('.s2-frame__orb line') as SVGLineElement
     expect(firstLine?.getAttribute('stroke')).toMatch(/hsl/)
   })
+
+  it('particle 타입 렌더링 시 particle canvas가 렌더링된다', () => {
+    render(<Step2 {...base} visualizer={{ type: 'particle', intensity: 70, opacity: 85, y: 75, size: 50, color: '#00d4ff' }} />)
+    expect(document.querySelector('.s2-frame__particle-canvas')).toBeInTheDocument()
+  })
 })

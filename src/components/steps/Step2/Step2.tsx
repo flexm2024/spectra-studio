@@ -29,6 +29,7 @@ const VIS_SHAPES: { id: Visualizer['type'], label: string }[] = [
   { id: 'galaxy',   label: 'Galaxy'   },
   { id: 'prism',    label: 'Prism'    },
   { id: 'pulse',    label: 'Pulse'    },
+  { id: 'particle', label: 'Particle' },
 ]
 
 // 원형 중심 타입 — 좌표 앵커 포지셔닝 사용
@@ -151,6 +152,22 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
   const titleDragOffset = useRef({ x: 0, y: 0 })
   const subIsDragging = useRef(false)
   const subDragOffset = useRef({ x: 0, y: 0 })
+  const particleCanvasRef = useRef<HTMLCanvasElement>(null)
+  const freqDataRef = useRef<number[]>([])
+  const visIntensityRef = useRef(visualizer.intensity)
+  visIntensityRef.current = visualizer.intensity
+  const visSizeRef = useRef(visualizer.size)
+  visSizeRef.current = visualizer.size
+  const particlesRef = useRef<{ x: number; y: number; vx: number; vy: number; r: number }[] | null>(null)
+  if (!particlesRef.current) {
+    particlesRef.current = Array.from({ length: 220 }, () => ({
+      x: Math.random(), y: Math.random(),
+      vx: (Math.random() - 0.5) * 0.003,
+      vy: (Math.random() - 0.5) * 0.003,
+      r: Math.random() * 1.8 + 0.5,
+    }))
+  }
+
   const [zoom, setZoom] = useState(1.5)
   const zoomRef = useRef(zoom)
   zoomRef.current = zoom
@@ -287,6 +304,54 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
   }, [setLogoPosition, setVisualizer])
 
   useEffect(() => {
+    if (visualizer.type !== 'particle') return
+    const canvas = particleCanvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    canvas.width = canvas.offsetWidth || 640
+    canvas.height = canvas.offsetHeight || 360
+    let rafId: number
+    let tAnim = 0
+    function tick() {
+      tAnim += 0.016
+      const W = canvas!.width, H = canvas!.height
+      const fd = freqDataRef.current
+      const iScale = visIntensityRef.current / 100
+      const sScale = visSizeRef.current / 50
+      ctx!.fillStyle = 'rgba(0,0,0,0.22)'
+      ctx!.fillRect(0, 0, W, H)
+      const bass = fd.slice(0, 12).reduce((s, v) => s + v, 0) / 12
+      particlesRef.current!.forEach(p => {
+        const dx = 0.5 - p.x, dy = 0.5 - p.y
+        p.vx += dx * bass * 0.012 * iScale
+        p.vy += dy * bass * 0.012 * iScale
+        p.vx += (Math.random() - 0.5) * 0.0008
+        p.vy += (Math.random() - 0.5) * 0.0008
+        const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy)
+        const maxSpeed = 0.01 * Math.max(0.3, iScale)
+        if (speed > maxSpeed) { p.vx *= maxSpeed / speed; p.vy *= maxSpeed / speed }
+        p.x = ((p.x + p.vx) + 1) % 1
+        p.y = ((p.y + p.vy) + 1) % 1
+        const bin = Math.min(fd.length - 1, Math.floor(p.x * fd.length))
+        const e = fd[bin] ?? 0
+        const hue = (p.x * 220 + tAnim * 30) % 360
+        ctx!.save()
+        ctx!.shadowColor = `hsl(${hue},100%,65%)`
+        ctx!.shadowBlur = e * 14 * iScale + 2
+        ctx!.beginPath()
+        ctx!.arc(p.x * W, p.y * H, p.r * sScale * (1 + e * 2.5), 0, Math.PI * 2)
+        ctx!.fillStyle = `hsla(${hue},100%,70%,${0.45 + e * 0.55})`
+        ctx!.fill()
+        ctx!.restore()
+      })
+      rafId = requestAnimationFrame(tick)
+    }
+    rafId = requestAnimationFrame(tick)
+    return () => { cancelAnimationFrame(rafId); ctx?.clearRect(0, 0, canvas!.width, canvas!.height) }
+  }, [visualizer.type])
+
+  useEffect(() => {
     const el = timelineRowRef.current
     if (!el) return
     function onWheel(e: WheelEvent) {
@@ -298,6 +363,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
   }, [])
 
   const data = freqData.length ? freqData : waveformFor(trackIdx + 1, 80)
+  freqDataRef.current = data
   const energy = data.reduce((s, v) => s + v, 0) / Math.max(data.length, 1)
   const visColor = visualizer.color
   const sizeScale = visualizer.size / 50
@@ -426,8 +492,17 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
 
             {effects.vis && (
               <>
+                {/* 파티클 타입 — canvas 기반 풀프레임 */}
+                {visualizer.type === 'particle' && (
+                  <canvas
+                    ref={particleCanvasRef}
+                    className="s2-frame__particle-canvas"
+                    style={{ opacity: visualizer.opacity / 100 }}
+                  />
+                )}
+
                 {/* 와이드 타입: bars / mirror / waveform / scope / led / rain */}
-                {!COMPACT_VIS.includes(visualizer.type) && (
+                {!COMPACT_VIS.includes(visualizer.type) && visualizer.type !== 'particle' && (
                   <div
                     className="s2-frame__wave"
                     style={{
