@@ -9,6 +9,18 @@ import { waveformFor } from '../../../data/sampleTracks'
 import type { Track, Effects, Visualizer, ExportSettings, Background, LogoPosition, Typography } from '../../../types'
 import { renderVideo } from '../../../lib/renderer'
 
+const LOOP_OPTIONS = [
+  { value: 1 as const, label: '1회' },
+  { value: 2 as const, label: '2회' },
+  { value: 3 as const, label: '3회' },
+]
+
+const QUALITY_OPTIONS = [
+  { value: '96k'  as const, label: '96k',  hint: '표준'   },
+  { value: '128k' as const, label: '128k', hint: '권장'   },
+  { value: '192k' as const, label: '192k', hint: '고음질' },
+]
+
 const THEMES = [
   { id: 'midnight', label: 'Midnight',  bg: 'linear-gradient(135deg, #0c1a2e, #050813)' },
   { id: 'cyanwave', label: 'Cyan Wave', bg: 'linear-gradient(135deg, #042f3f, #0a647a)' },
@@ -30,6 +42,26 @@ function logoPositionLabel(pos: LogoPosition): string {
   return `${x}${y}단`
 }
 
+function hexHue(hex: string): number {
+  const r = parseInt(hex.slice(1, 3), 16) / 255
+  const g = parseInt(hex.slice(3, 5), 16) / 255
+  const b = parseInt(hex.slice(5, 7), 16) / 255
+  const max = Math.max(r, g, b), min = Math.min(r, g, b)
+  if (max === min) return 0
+  const d = max - min
+  const h = max === r ? ((g - b) / d + (g < b ? 6 : 0))
+          : max === g ? (b - r) / d + 2
+          : (r - g) / d + 4
+  return h * 60
+}
+
+function previewBarColor(i: number, total: number, color: string): string {
+  const hue = color === 'rainbow'
+    ? (i / Math.max(total - 1, 1)) * 240
+    : hexHue(color) + (i / Math.max(total - 1, 1) - 0.5) * 40
+  return `hsl(${hue}, 100%, 65%)`
+}
+
 interface Step3Props {
   tracks: Track[]
   theme: string
@@ -38,7 +70,9 @@ interface Step3Props {
   exportSettings: ExportSettings
   setExportSettings: (s: ExportSettings) => void
   loops: 1 | 2 | 3
+  setLoops: (l: 1 | 2 | 3) => void
   quality: '96k' | '128k' | '192k'
+  setQuality: (q: '96k' | '128k' | '192k') => void
   onBack: () => void
   background: Background
   logo?: string
@@ -49,19 +83,30 @@ interface Step3Props {
   typography: Typography
 }
 
-type RenderState = 'idle' | 'rendering' | 'done'
+type RenderState = 'idle' | 'rendering' | 'done' | 'error'
 
-export default function Step3({ tracks, theme, effects, visualizer, exportSettings, setExportSettings, loops, quality, onBack, background, logo, logoPosition, logoSize, watermark, stickers, typography }: Step3Props) {
+export default function Step3({ tracks, theme, effects, visualizer, exportSettings, setExportSettings, loops, setLoops, quality, setQuality, onBack, background, logo, logoPosition, logoSize, watermark, stickers, typography }: Step3Props) {
+  const canRender = typeof VideoEncoder !== 'undefined'
+    && typeof AudioEncoder !== 'undefined'
+    && typeof OffscreenCanvas !== 'undefined'
+
   const [renderState, setRenderState] = useState<RenderState>('idle')
   const [progress, setProgress] = useState(0)
+  const [renderError, setRenderError] = useState<string | null>(null)
 
   const totalSec = tracks.reduce((acc, t) => acc + t.durationSec, 0)
-  const totalDur = `${Math.floor(totalSec / 60)}:${String(totalSec % 60).padStart(2, '0')}`
+  const fmt = (sec: number) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`
+  const totalDur = fmt(totalSec)
+  const previewWaveData = waveformFor(1, 80)
+  const finalDur = fmt(totalSec * loops)
   const sizeMb = Math.round(totalSec * (exportSettings.resolution === '4k' ? 1.5 : exportSettings.resolution === '1080p' ? 0.42 : 0.22))
   const themeObj = THEMES.find(t => t.id === theme) ?? THEMES[0]
 
   const startRender = async () => {
+    if (!canRender) return
+    if (tracks.length === 0) return
     setRenderState('rendering')
+    setRenderError(null)
     setProgress(0)
     try {
       const blob = await renderVideo(
@@ -71,13 +116,15 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `${exportSettings.filename}.mp4`
+      a.download = `${exportSettings.filename}.${exportSettings.format}`
       a.click()
       setTimeout(() => URL.revokeObjectURL(url), 60_000)
       setRenderState('done')
     } catch (err) {
       console.error('렌더링 실패:', err)
-      setRenderState('idle')
+      const msg = err instanceof Error ? err.message : String(err)
+      setRenderError(msg)
+      setRenderState('error')
     }
   }
 
@@ -120,18 +167,78 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
         </div>
 
         <div className="s3-final">
-          <div className="s3-final__inner" style={{ background: themeObj.bg }}>
-            <div className="s3-final__content">
-              <div className="s3-final__logo"><Icon name="logo" size={26} /></div>
-              <h2 className="s3-final__title">가을 산책 플레이리스트</h2>
-              <div className="s3-final__meta">{tracks.length} TRACKS · {totalDur} · {exportSettings.resolution.toUpperCase()}</div>
-            </div>
+          <div className="s3-final__inner" style={{ background: background.src ? undefined : themeObj.bg }}>
+            {background.src && (
+              <img src={background.src} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+            )}
+            {effects.blur && <div className="s3-final__blur-overlay" />}
             <div className="s3-final__badge">SPECTRA</div>
-            <div className="s3-final__wave">
-              {waveformFor(11, 100).map((h, i) => (
-                <div key={i} className="s3-final__wave-bar" style={{ height: `${h * 60}%` }} />
-              ))}
+            <h2
+              className="s3-final__title"
+              style={{
+                left: `${typography.titlePosition.x}%`,
+                top: `${typography.titlePosition.y}%`,
+                fontSize: `${typography.titleSize}px`,
+                letterSpacing: `${typography.letterSpacing / 1000}em`,
+              }}
+            >
+              {tracks.length > 0 ? tracks[0].title : '플레이리스트'}
+            </h2>
+            <div
+              className="s3-final__sub"
+              style={{
+                left: `${typography.subPosition.x}%`,
+                top: `${typography.subPosition.y}%`,
+              }}
+            >
+              {tracks.length} TRACKS · {totalDur} · {exportSettings.resolution.toUpperCase()}
             </div>
+            {effects.vis && (
+              <div
+                className="s3-final__wave"
+                style={{
+                  top: `${visualizer.y}%`,
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  width: `${Math.max(10, visualizer.width)}%`,
+                  height: `${Math.max(10, Math.round(visualizer.size * 0.8))}px`,
+                  opacity: visualizer.opacity / 100,
+                }}
+              >
+                <svg width="100%" height="100%" viewBox={`0 0 ${previewWaveData.length} 100`} preserveAspectRatio="none">
+                  {previewWaveData.map((h, i) => {
+                    const barH = Math.max(1, h * (visualizer.intensity / 100) * 80)
+                    return (
+                      <rect key={i} x={i + 0.08} y={80 - barH} width={0.84} height={barH}
+                        fill={previewBarColor(i, previewWaveData.length, visualizer.color)} opacity="0.95" rx="0.35" />
+                    )
+                  })}
+                  <rect x="0" y="80.4" width={previewWaveData.length} height="0.5" fill="rgba(255,255,255,0.09)" />
+                </svg>
+              </div>
+            )}
+            {!logo && (
+              <div className="s3-final__logo" style={{ left: `${logoPosition.x}%`, top: `${logoPosition.y}%` }}>
+                <Icon name="logo" size={26} />
+              </div>
+            )}
+            {logo && (
+              <img
+                src={logo}
+                alt=""
+                style={{
+                  position: 'absolute',
+                  left: `${logoPosition.x}%`,
+                  top: `${logoPosition.y}%`,
+                  transform: 'translate(-50%, -50%)',
+                  width: `${logoSize}px`,
+                  height: `${logoSize}px`,
+                  borderRadius: '14px',
+                  objectFit: 'contain',
+                  zIndex: 4,
+                }}
+              />
+            )}
           </div>
         </div>
 
@@ -208,6 +315,19 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
         </div>
 
         <div className="form-section">
+          <div className="form-section__label">
+            재생 반복
+            <span className="form-section__hint">최종 길이 ≈ {finalDur}</span>
+          </div>
+          <SegmentedControl options={LOOP_OPTIONS} value={loops} onChange={setLoops} />
+        </div>
+
+        <div className="form-section">
+          <div className="form-section__label">오디오 품질</div>
+          <SegmentedControl options={QUALITY_OPTIONS} value={quality} onChange={setQuality} />
+        </div>
+
+        <div className="form-section">
           <div className="form-section__label">옵션</div>
           <div className="s3-options">
             <label className="s3-option">
@@ -245,10 +365,33 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
         </div>
 
         <div className="s3-render">
-          {renderState === 'idle' && (
-            <button type="button" className="s3-btn-full" onClick={startRender}>
-              <Icon name="export" size={15} /> 렌더링 시작
-            </button>
+          {!canRender && (
+            <div className="s3-compat-warn">
+              이 브라우저는 영상 인코딩을 지원하지 않습니다.
+              Chrome 또는 Edge 94 이상을 사용해 주세요.
+            </div>
+          )}
+          {canRender && tracks.length === 0 && (
+            <div className="s3-compat-warn">
+              트랙이 없습니다. Step 1에서 음원을 추가해 주세요.
+            </div>
+          )}
+          {(renderState === 'idle' || renderState === 'error') && (
+            <>
+              <button
+                type="button"
+                className="s3-btn-full"
+                onClick={startRender}
+                disabled={!canRender || tracks.length === 0}
+              >
+                <Icon name="export" size={15} /> 렌더링 시작
+              </button>
+              {renderState === 'error' && renderError && (
+                <div className="s3-render-error">
+                  오류: {renderError}
+                </div>
+              )}
+            </>
           )}
           {renderState === 'rendering' && (
             <div className="render-progress">
@@ -260,18 +403,18 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
           )}
           {renderState === 'done' && (
             <div className="render-done">
-              <div className="render-done__msg">✓ 렌더링 완료</div>
+              <div className="render-done__msg">✓ 렌더링 완료 — 다운로드가 시작됩니다</div>
               <button
                 type="button"
                 className="s3-btn-full"
-                onClick={() => { setRenderState('idle'); setProgress(0) }}
+                onClick={() => { setRenderState('idle'); setProgress(0); setRenderError(null) }}
               >
                 다시 내보내기
               </button>
             </div>
           )}
-          <button type="button" className="s3-btn-full" style={{ marginTop: 8 }} disabled>
-            <Icon name="folder" size={14} /> 프로젝트로 저장
+          <button type="button" className="s3-btn-full s3-btn-save" style={{ marginTop: 8 }} disabled>
+            <Icon name="folder" size={14} /> 프로젝트로 저장 (준비 중)
           </button>
         </div>
       </div>

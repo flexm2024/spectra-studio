@@ -1,5 +1,5 @@
 // Step3 컴포넌트 테스트
-import { describe, it, expect, vi } from 'vitest'
+import { beforeAll, afterAll, describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import Step3 from './Step3'
 import { sampleTracks } from '../../../data/sampleTracks'
@@ -9,6 +9,16 @@ import { renderVideo } from '../../../lib/renderer'
 vi.mock('../../../lib/renderer', () => ({
   renderVideo: vi.fn().mockResolvedValue(new Blob(['fake'], { type: 'video/mp4' })),
 }))
+
+// WebCodecs API는 jsdom에서 미지원 — 렌더링 테스트가 작동하도록 스텁
+beforeAll(() => {
+  vi.stubGlobal('VideoEncoder', class {})
+  vi.stubGlobal('AudioEncoder', class {})
+  vi.stubGlobal('OffscreenCanvas', class {})
+})
+afterAll(() => {
+  vi.unstubAllGlobals()
+})
 
 const base = {
   tracks: sampleTracks,
