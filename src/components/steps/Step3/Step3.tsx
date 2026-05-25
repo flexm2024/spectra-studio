@@ -1,5 +1,5 @@
 // Step 3 — 영상 출력: 설정 요약, 내보내기 패널, 렌더링 진행 UI
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './Step3.css'
 import Icon from '../../../icons'
 import Button from '../../shared/Button'
@@ -80,11 +80,14 @@ interface Step3Props {
   watermark?: string
   stickers: string[]
   typography: Typography
+  onSave?: () => void
+  autoStart?: boolean
+  onAutoStartDone?: () => void
 }
 
 type RenderState = 'idle' | 'rendering' | 'done' | 'error'
 
-export default function Step3({ tracks, theme, effects, visualizer, exportSettings, setExportSettings, loops, setLoops, quality, setQuality, onBack, background, logo, logoPosition, logoSize, watermark, stickers, typography }: Step3Props) {
+export default function Step3({ tracks, theme, effects, visualizer, exportSettings, setExportSettings, loops, setLoops, quality, setQuality, onBack, background, logo, logoPosition, logoSize, watermark, stickers, typography, onSave, autoStart, onAutoStartDone }: Step3Props) {
   const canRender = typeof VideoEncoder !== 'undefined'
     && typeof AudioEncoder !== 'undefined'
     && typeof OffscreenCanvas !== 'undefined'
@@ -126,6 +129,15 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
       setRenderState('error')
     }
   }
+
+  useEffect(() => {
+    if (autoStart && canRender && tracks.length > 0) {
+      onAutoStartDone?.()
+      startRender()
+    }
+    // autoStart 값이 true로 바뀔 때 한 번만 실행
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoStart])
 
   return (
     <div className="step3">
@@ -284,7 +296,7 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
             value={exportSettings.filename}
             onChange={e => setExportSettings({ ...exportSettings, filename: e.target.value })}
           />
-          <div className="s3-filename-hint">{exportSettings.filename}.{exportSettings.format}</div>
+          <div className="s3-filename-hint">{exportSettings.filename}.mp4</div>
         </div>
 
         <div className="form-section">
@@ -319,6 +331,12 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
             <span className="s3-estimate__val">≈ {sizeMb} MB</span>
           </div>
         </div>
+
+        {onSave && (
+          <button type="button" className="s3-btn-save" onClick={onSave}>
+            <Icon name="download" size={14} /> 프로젝트 저장
+          </button>
+        )}
 
         <div className="s3-render">
           {!canRender && (

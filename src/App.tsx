@@ -33,6 +33,19 @@ export default function App() {
   const [watermark, setWatermark] = useState<string | undefined>(undefined)
   const [stickers, setStickers] = useState<string[]>([])
   const [audioCurrentTime, setAudioCurrentTime] = useState(0)
+  const [pendingExport, setPendingExport] = useState(false)
+
+  const handleSave = () => {
+    const data = { theme, effects, visualizer, typography, exportSettings, loops, quality }
+    const json = JSON.stringify(data, null, 2)
+    const blob = new Blob([json], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${exportSettings.filename}.spectra.json`
+    a.click()
+    setTimeout(() => URL.revokeObjectURL(url), 60_000)
+  }
 
   function ensureAudioContext() {
     if (analyserRef.current || !audioRef.current) return
@@ -130,7 +143,12 @@ export default function App() {
         onTimeUpdate={e => setAudioCurrentTime(e.currentTarget.currentTime)}
       />
       <Sidebar step={step} setStep={setStep} tracks={tracks} />
-      <Header step={step} setStep={setStep} />
+      <Header
+        step={step}
+        setStep={setStep}
+        onSave={handleSave}
+        onExport={() => { setStep(3); setPendingExport(true) }}
+      />
       <main className="main">
         {step === 1 && (
           <Step1
@@ -206,6 +224,9 @@ export default function App() {
             watermark={watermark}
             stickers={stickers}
             typography={typography}
+            onSave={handleSave}
+            autoStart={pendingExport}
+            onAutoStartDone={() => setPendingExport(false)}
           />
         )}
       </main>

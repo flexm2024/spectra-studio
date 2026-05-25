@@ -6,6 +6,8 @@ import Button from '../shared/Button'
 interface HeaderProps {
   step: 1 | 2 | 3
   setStep: (n: 1 | 2 | 3) => void
+  onSave: () => void
+  onExport: () => void
 }
 
 const STEPS = [
@@ -14,7 +16,7 @@ const STEPS = [
   { num: 3 as const, label: '영상 출력' },
 ]
 
-export default function Header({ step, setStep }: HeaderProps) {
+export default function Header({ step, setStep, onSave, onExport }: HeaderProps) {
   return (
     <header className="header">
       <div className="header__left">
@@ -39,10 +41,10 @@ export default function Header({ step, setStep }: HeaderProps) {
       </div>
 
       <div className="header__right">
-        <Button variant="ghost" disabled title="준비 중">
+        <Button variant="ghost" onClick={onSave}>
           <Icon name="download" size={14} /> 저장
         </Button>
-        <Button variant="primary" onClick={() => setStep(3)}>
+        <Button variant="primary" onClick={onExport}>
           <Icon name="export" size={14} /> 출력
         </Button>
       </div>
