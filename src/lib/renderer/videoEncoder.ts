@@ -93,10 +93,12 @@ export async function encodeVideo(input: EncodeVideoInput): Promise<Blob> {
 
       drawFrame({ ...frameInputBase, canvas, frequencyData, currentTrack, currentTrackIndex: trackIdx % tracks.length })
 
-      const videoFrame = new VideoFrame(canvas, {
+      const bitmap = canvas.transferToImageBitmap()
+      const videoFrame = new VideoFrame(bitmap, {
         timestamp: Math.round(timeSec * 1_000_000),
         duration: Math.round((1 / FPS) * 1_000_000),
       })
+      bitmap.close()
       videoEncoder.encode(videoFrame, { keyFrame: fi % 60 === 0 })
       videoFrame.close()
 
