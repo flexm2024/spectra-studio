@@ -56,7 +56,7 @@ async function encode(input: WorkerInput, onProgress: (pct: number) => void): Pr
   // StreamTarget: 청크 단위 쓰기 — 대형 연속 ArrayBuffer 재할당 없음
   const chunks: Uint8Array[] = []
   const target = new StreamTarget({
-    onData(data) { chunks.push(new Uint8Array(data)) },
+    onData(data, _position) { chunks.push(new Uint8Array(data)) },
   })
   const muxer = new Muxer({
     target,
