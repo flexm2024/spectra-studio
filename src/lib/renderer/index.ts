@@ -59,11 +59,12 @@ export async function renderVideo(input: RenderInput, onProgress: (pct: number) 
   const [width, height] = RESOLUTION[input.exportSettings.resolution]
   const themeGradient = THEME_COLORS[input.theme] ?? THEME_COLORS['midnight']
 
-  // getChannelData()는 AudioBuffer 내부 Float32Array 뷰 — 복사 없이 직접 transfer
-  const ch0 = audioResult.audioBuffer.getChannelData(0)
+  // AudioBuffer 내부 뷰를 그대로 transfer하면 Chrome이 데이터를 zeroed으로 전달 →
+  // .slice()로 V8 힙에 독립 ArrayBuffer를 생성해야 Worker에서 실제 PCM 데이터 수신
+  const ch0 = audioResult.audioBuffer.getChannelData(0).slice()
   const ch1 = audioResult.audioBuffer.numberOfChannels >= 2
-    ? audioResult.audioBuffer.getChannelData(1)
-    : audioResult.audioBuffer.getChannelData(0)
+    ? audioResult.audioBuffer.getChannelData(1).slice()
+    : ch0
 
   const blob = await encodeVideo({
     ch0,
