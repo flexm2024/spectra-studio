@@ -43,7 +43,9 @@ export async function encodeVideo(input: EncodeVideoInput): Promise<Blob> {
     const { onProgress: _, ...data } = input
 
     // ImageBitmap + Float32Array 버퍼를 Worker로 소유권 이전 (zero-copy)
-    const transferables: Transferable[] = [input.ch0.buffer, input.ch1.buffer]
+    // 모노 폴백 시 ch0.buffer === ch1.buffer — 중복 transfer 방지
+    const transferables: Transferable[] = [input.ch0.buffer]
+    if (input.ch1.buffer !== input.ch0.buffer) transferables.push(input.ch1.buffer)
     const fib = input.frameInputBase
     if (fib.backgroundImage) transferables.push(fib.backgroundImage)
     if (fib.logoImage) transferables.push(fib.logoImage)
