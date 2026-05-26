@@ -61,7 +61,7 @@ export function computeFrequencyBands(
     // 선형 magnitude는 일반 음악에서 0.01~0.1 수준 → dB 변환으로 시각화 개선
     const raw = count > 0 ? (sum / count) / fftSize : 0
     const db = 20 * Math.log10(Math.max(1e-10, raw))  // linear → dB
-    bands[b] = Math.max(0, Math.min(1, (db + 60) / 60))  // -60dB..0dB → 0..1
+    bands[b] = Math.max(0, Math.min(1, (db + 90) / 90))  // -90dB..0dB → 0..1 (고주파 포함)
   }
   return bands
 }
