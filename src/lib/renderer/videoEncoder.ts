@@ -22,12 +22,12 @@ export async function encodeVideo(input: EncodeVideoInput): Promise<Blob> {
     const worker = new Worker(new URL('./encodeWorker.ts', import.meta.url), { type: 'module' })
 
     worker.onmessage = (e: MessageEvent) => {
-      const msg = e.data as { type: string; pct?: number; buffer?: ArrayBuffer; message?: string }
+      const msg = e.data as { type: string; pct?: number; blob?: Blob; message?: string }
       if (msg.type === 'progress' && msg.pct !== undefined) {
         input.onProgress(msg.pct)
-      } else if (msg.type === 'done' && msg.buffer) {
+      } else if (msg.type === 'done' && msg.blob) {
         worker.terminate()
-        resolve(new Blob([msg.buffer], { type: 'video/mp4' }))
+        resolve(msg.blob)
       } else if (msg.type === 'error') {
         worker.terminate()
         reject(new Error(msg.message ?? 'Worker 인코딩 오류'))

@@ -1,6 +1,6 @@
 // Web Worker: OffscreenCanvas + WebCodecs + mp4-muxer 인코딩 실행 (메인 스레드 분리)
 
-import { Muxer, ArrayBufferTarget } from 'mp4-muxer'
+import { Muxer, StreamTarget } from 'mp4-muxer'
 import { computeFrequencyBands } from './fft'
 import { drawFrame } from './frameRenderer'
 import type { DrawFrameInput } from './frameRenderer'
@@ -42,8 +42,8 @@ interface WorkerInput {
 self.onmessage = async (e: MessageEvent<WorkerInput>) => {
   try {
     const blob = await encode(e.data, pct => self.postMessage({ type: 'progress', pct }))
-    const buffer = await blob.arrayBuffer()
-    self.postMessage({ type: 'done', buffer }, { transfer: [buffer] })
+    // Blob은 structured clone으로 전달 — ArrayBuffer 대형 할당 없음
+    self.postMessage({ type: 'done', blob })
   } catch (err) {
     self.postMessage({ type: 'error', message: err instanceof Error ? err.message : String(err) })
   }
@@ -53,12 +53,16 @@ async function encode(input: WorkerInput, onProgress: (pct: number) => void): Pr
   const { ch0, ch1, sampleRate, audioLength, frameCount, trackBoundaries, frameInputBase, resolution, quality, tracks } = input
   const [width, height] = RESOLUTION[resolution]
 
-  const target = new ArrayBufferTarget()
+  // StreamTarget: 청크 단위 쓰기 — 대형 연속 ArrayBuffer 재할당 없음
+  const chunks: Uint8Array[] = []
+  const target = new StreamTarget({
+    onData(data) { chunks.push(new Uint8Array(data)) },
+  })
   const muxer = new Muxer({
     target,
     video: { codec: 'avc', width, height },
     audio: { codec: 'aac', sampleRate, numberOfChannels: 2 },
-    fastStart: 'in-memory',
+    fastStart: false,  // moov를 파일 끝에 기록 — 다운로드용으로 문제없음
   })
 
   let encoderError: Error | null = null
@@ -154,7 +158,7 @@ async function encode(input: WorkerInput, onProgress: (pct: number) => void): Pr
 
     onProgress(96)
     muxer.finalize()
-    return new Blob([target.buffer], { type: 'video/mp4' })
+    return new Blob(chunks as BlobPart[], { type: 'video/mp4' })
   } finally {
     videoEncoder.close()
     audioEncoder.close()
