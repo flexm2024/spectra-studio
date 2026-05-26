@@ -62,7 +62,7 @@ async function encode(input: WorkerInput, onProgress: (pct: number) => void): Pr
     target,
     video: { codec: 'avc', width, height },
     audio: { codec: 'aac', sampleRate, numberOfChannels: 2 },
-    fastStart: false,  // moov를 파일 끝에 기록 — 다운로드용으로 문제없음
+    fastStart: 'fragmented',  // 순차 쓰기 보장 — position 무시 안전, VLC/Chrome 호환
   })
 
   let encoderError: Error | null = null
