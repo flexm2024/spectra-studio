@@ -59,8 +59,19 @@ export async function renderVideo(input: RenderInput, onProgress: (pct: number) 
   const [width, height] = RESOLUTION[input.exportSettings.resolution]
   const themeGradient = THEME_COLORS[input.theme] ?? THEME_COLORS['midnight']
 
+  // AudioBuffer는 Worker로 이전 불가 → PCM Float32Array로 복사해서 transfer
+  const ch0 = new Float32Array(audioResult.audioBuffer.getChannelData(0))
+  const ch1 = audioResult.audioBuffer.numberOfChannels >= 2
+    ? new Float32Array(audioResult.audioBuffer.getChannelData(1))
+    : new Float32Array(audioResult.audioBuffer.getChannelData(0))
+
   const blob = await encodeVideo({
-    audioResult,
+    ch0,
+    ch1,
+    sampleRate: audioResult.audioBuffer.sampleRate,
+    audioLength: audioResult.audioBuffer.length,
+    frameCount: audioResult.frameCount,
+    trackBoundaries: audioResult.trackBoundaries,
     frameInputBase: {
       width,
       height,
