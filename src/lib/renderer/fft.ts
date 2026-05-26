@@ -58,7 +58,10 @@ export function computeFrequencyBands(
       sum += Math.sqrt(re[j] * re[j] + im[j] * im[j])
       count++
     }
-    bands[b] = count > 0 ? (sum / count) / fftSize : 0
+    // 선형 magnitude는 일반 음악에서 0.01~0.1 수준 → dB 변환으로 시각화 개선
+    const raw = count > 0 ? (sum / count) / fftSize : 0
+    const db = 20 * Math.log10(Math.max(1e-10, raw))  // linear → dB
+    bands[b] = Math.max(0, Math.min(1, (db + 60) / 60))  // -60dB..0dB → 0..1
   }
   return bands
 }

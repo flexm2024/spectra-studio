@@ -66,7 +66,8 @@ export function drawFrame(input: DrawFrameInput): void {
   const titleY = Math.round((typography.titlePosition.y / 100) * height)
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  const titlePx = Math.round(typography.titleSize * (width / 1920))
+  // Step2 스테이지 max-width 640px 기준 스케일링 — CSS fontSize와 일치
+  const titlePx = Math.round(typography.titleSize * (width / 640))
   ctx.font = `700 ${titlePx}px "Inter", sans-serif`
   ctx.strokeStyle = 'rgba(0,0,0,0.5)'
   ctx.lineWidth = Math.max(2, titlePx * 0.06)
@@ -83,7 +84,7 @@ export function drawFrame(input: DrawFrameInput): void {
 
   const subX = Math.round((typography.subPosition.x / 100) * width)
   const subY = Math.round((typography.subPosition.y / 100) * height)
-  const subPx = Math.round(18 * (width / 1920))
+  const subPx = Math.round(18 * (width / 640))
   ctx.font = `400 ${subPx}px "Inter", sans-serif`
   ctx.fillStyle = 'rgba(255,255,255,0.6)'
   const artistPrefix = currentTrack.artist && currentTrack.artist !== 'Unknown' ? `${currentTrack.artist} · ` : ''
