@@ -102,7 +102,12 @@ export async function encodeVideo(input: EncodeVideoInput): Promise<Blob> {
       videoEncoder.encode(videoFrame, { keyFrame: fi % 60 === 0 })
       videoFrame.close()
 
-      // 60프레임마다 progress 업데이트 (재렌더 최소화, 깜빡임 감소)
+      // backpressure: 큐가 너무 크면 인코더가 따라올 때까지 대기 (flush는 마지막에만)
+      while (videoEncoder.encodeQueueSize > 30) {
+        await new Promise(r => setTimeout(r, 0))
+      }
+
+      // 60프레임마다 progress 업데이트 + UI yield
       if (fi % 60 === 0 || fi === frameCount - 1) {
         input.onProgress((fi / frameCount) * 76)
         await new Promise(r => setTimeout(r, 0))
