@@ -50,18 +50,26 @@ export function computeFrequencyBands(
 
   const half = fftSize >> 1
   const bands = new Float32Array(numBands)
+
+  // bin 2(~43Hz)부터 half-1까지 로그 스케일로 균등 분배
+  // Math.pow(half, b/numBands) 방식은 저음 밴드 다수가 bin 1-2에 몰리는 문제가 있음
+  const logMin = Math.log2(2)
+  const logMax = Math.log2(half - 1)
+
   for (let b = 0; b < numBands; b++) {
-    const lo = Math.max(1, Math.round(Math.pow(half, b / numBands)))
-    const hi = Math.max(lo + 1, Math.round(Math.pow(half, (b + 1) / numBands)))
+    const lo = Math.max(2, Math.round(Math.pow(2, logMin + (logMax - logMin) * b / numBands)))
+    const hi = Math.max(lo + 1, Math.round(Math.pow(2, logMin + (logMax - logMin) * (b + 1) / numBands)))
     let sum = 0, count = 0
     for (let j = lo; j < hi && j < half; j++) {
       sum += Math.sqrt(re[j] * re[j] + im[j] * im[j])
       count++
     }
-    // 선형 magnitude는 일반 음악에서 0.01~0.1 수준 → dB 변환으로 시각화 개선
     const raw = count > 0 ? (sum / count) / fftSize : 0
-    const db = 20 * Math.log10(Math.max(1e-10, raw))  // linear → dB
-    bands[b] = Math.max(0, Math.min(1, (db + 90) / 90))  // -90dB..0dB → 0..1 (고주파 포함)
+    const db = 20 * Math.log10(Math.max(1e-10, raw))
+    const norm = Math.max(0, (db + 90) / 90)
+    // 핑크 노이즈 보정: 음악은 저음이 고음보다 ~30dB 강함 → gain 1x(저음)→2x(고음)으로 중·고음역 보강
+    const gain = 1 + (b / (numBands - 1)) * 1.0
+    bands[b] = Math.min(1, Math.pow(norm, 0.7) * gain)
   }
   return bands
 }

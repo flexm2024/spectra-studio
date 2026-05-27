@@ -62,37 +62,46 @@ export function drawFrame(input: DrawFrameInput): void {
   }
 
   // 4. 타이포그래피
-  const titleX = Math.round((typography.titlePosition.x / 100) * width)
-  const titleY = Math.round((typography.titlePosition.y / 100) * height)
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  // Step2 스테이지 max-width 640px 기준 스케일링 — CSS fontSize와 일치
-  const titlePx = Math.round(typography.titleSize * (width / 640))
-  ctx.font = `700 ${titlePx}px "Inter", sans-serif`
-  ctx.strokeStyle = 'rgba(0,0,0,0.5)'
-  ctx.lineWidth = Math.max(2, titlePx * 0.06)
-  ctx.shadowColor = 'rgba(0,0,0,0.6)'
-  ctx.shadowBlur = Math.round(titlePx * 0.25)
-  ctx.shadowOffsetY = Math.round(titlePx * 0.08)
-  ctx.lineJoin = 'round'
-  ctx.strokeText(currentTrack.title, titleX, titleY)
-  ctx.fillStyle = 'rgba(255,255,255,0.9)'
-  ctx.fillText(currentTrack.title, titleX, titleY)
-  ctx.shadowColor = 'transparent'
-  ctx.shadowBlur = 0
-  ctx.shadowOffsetY = 0
 
-  const subX = Math.round((typography.subPosition.x / 100) * width)
-  const subY = Math.round((typography.subPosition.y / 100) * height)
-  const subPx = Math.round(18 * (width / 640))
-  ctx.font = `400 ${subPx}px "Inter", sans-serif`
-  ctx.fillStyle = 'rgba(255,255,255,0.6)'
-  const artistPrefix = currentTrack.artist && currentTrack.artist !== 'Unknown' ? `${currentTrack.artist} · ` : ''
-  ctx.fillText(
-    `${artistPrefix}Track ${String(currentTrackIndex + 1).padStart(2, '0')} / ${totalTracks}`,
-    subX,
-    subY,
-  )
+  if (typography.showTitle) {
+    const titleX = Math.round((typography.titlePosition.x / 100) * width)
+    const titleY = Math.round((typography.titlePosition.y / 100) * height)
+    // Step2 스테이지 max-width 640px 기준 스케일링 — CSS fontSize와 일치
+    const titlePx = Math.round(typography.titleSize * (width / 640))
+    ctx.font = `700 ${titlePx}px "Inter", sans-serif`
+    ;(ctx as any).letterSpacing = `${typography.letterSpacing / 1000}em`
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)'
+    ctx.lineWidth = Math.max(2, titlePx * 0.06)
+    ctx.shadowColor = 'rgba(0,0,0,0.6)'
+    ctx.shadowBlur = Math.round(titlePx * 0.25)
+    ctx.shadowOffsetY = Math.round(titlePx * 0.08)
+    ctx.lineJoin = 'round'
+    ctx.strokeText(currentTrack.title, titleX, titleY)
+    ctx.fillStyle = 'rgba(255,255,255,0.9)'
+    ctx.fillText(currentTrack.title, titleX, titleY)
+    ctx.shadowColor = 'transparent'
+    ctx.shadowBlur = 0
+    ctx.shadowOffsetY = 0
+    ;(ctx as any).letterSpacing = '0px'
+  }
+
+  if (typography.showSub) {
+    const subX = Math.round((typography.subPosition.x / 100) * width)
+    const subY = Math.round((typography.subPosition.y / 100) * height)
+    const subPx = Math.round(typography.subSize * (width / 640))
+    ctx.font = `400 ${subPx}px "Inter", sans-serif`
+    ;(ctx as any).letterSpacing = `${typography.subLetterSpacing / 1000}em`
+    ctx.fillStyle = 'rgba(255,255,255,0.6)'
+    const artistPrefix = currentTrack.artist && currentTrack.artist !== 'Unknown' ? `${currentTrack.artist} · ` : ''
+    ctx.fillText(
+      `${artistPrefix}Track ${String(currentTrackIndex + 1).padStart(2, '0')} / ${totalTracks}`,
+      subX,
+      subY,
+    )
+    ;(ctx as any).letterSpacing = '0px'
+  }
 
   // 5. 로고
   if (input.logoImage) {
@@ -160,18 +169,33 @@ function drawVisualizer(
   if (visualizer.type === 'bars' || visualizer.type === 'particle') {
     const numBars = frequencyData.length
     const barW = visW / numBars
+    const rx = Math.min(barW * 0.35, 4 * (width / 640))
     for (let i = 0; i < numBars; i++) {
       const hue = barHue(i, numBars, visualizer.color)
       const c = `hsl(${hue}, 100%, ${50 + energy * 30}%)`
+      const barH = Math.max(1, frequencyData[i] * intensity * maxH)
+      const x = visX + i * barW + barW * 0.08
+      const w = barW * 0.84
       ctx.shadowBlur = energy * intensity * 40
       ctx.shadowColor = c
       ctx.fillStyle = c
-      const barH = frequencyData[i] * intensity * maxH
-      ctx.fillRect(visX + i * barW, yCenter - barH, barW - 1, barH)
+      ctx.beginPath()
+      ;(ctx as any).roundRect(x, yCenter - barH, w, barH, rx)
+      ctx.fill()
+      // reflection
+      ctx.save()
+      ctx.shadowBlur = 0
+      ctx.shadowColor = 'transparent'
+      ctx.globalAlpha = opacity * 0.18
+      ctx.beginPath()
+      ;(ctx as any).roundRect(x, yCenter + 1, w, barH * 0.36, rx)
+      ctx.fill()
+      ctx.restore()
     }
   } else if (visualizer.type === 'glow') {
     const bins = 28
     const barW = visW / bins
+    const rx = Math.min(barW * 0.18, 4 * (width / 640))
     for (let i = 0; i < bins; i++) {
       const fd = frequencyData[Math.floor(i * frequencyData.length / bins)] ?? 0
       const barH = Math.max(2, fd * intensity * maxH)
@@ -184,24 +208,33 @@ function drawVisualizer(
       grad.addColorStop(0.55, `hsl(${hue}, 90%, 55%)`)
       grad.addColorStop(1, `hsl(${hue}, 80%, 38%)`)
       ctx.fillStyle = grad
-      ctx.fillRect(visX + i * barW + barW * 0.08, yCenter - barH, barW * 0.84, barH)
+      ctx.beginPath()
+      ;(ctx as any).roundRect(visX + i * barW + barW * 0.08, yCenter - barH, barW * 0.84, barH, rx)
+      ctx.fill()
       ctx.restore()
     }
   } else if (visualizer.type === 'peak') {
     const bins = 40
     const barW = visW / bins
-    const lineH = Math.max(2, Math.round(2 * (height / 1080)))
+    const rxPeak = Math.min(barW * 0.15, 3 * (width / 640))
     for (let i = 0; i < bins; i++) {
       const fd = frequencyData[Math.floor(i * frequencyData.length / bins)] ?? 0
       const barH = Math.max(2, fd * intensity * maxH)
       const hue = barHue(i, bins, visualizer.color)
+      const x = visX + i * barW + barW * 0.1
+      const w = barW * 0.8
+      const barTop = yCenter - barH
       ctx.fillStyle = `hsla(${hue}, 70%, 42%, 0.55)`
-      ctx.fillRect(visX + i * barW + barW * 0.1, yCenter - barH, barW * 0.8, barH)
+      ctx.beginPath()
+      ;(ctx as any).roundRect(x, barTop, w, barH, [rxPeak, rxPeak, 0, 0])
+      ctx.fill()
       ctx.save()
-      ctx.shadowColor = `hsl(${hue}, 100%, 70%)`
-      ctx.shadowBlur = 6
+      ctx.shadowColor = `hsl(${hue}, 100%, 75%)`
+      ctx.shadowBlur = 10
       ctx.fillStyle = `hsl(${hue}, 100%, 82%)`
-      ctx.fillRect(visX + i * barW + barW * 0.1, yCenter - barH, barW * 0.8, lineH)
+      ctx.beginPath()
+      ctx.arc(x + w / 2, barTop, w * 0.42, 0, Math.PI * 2)
+      ctx.fill()
       ctx.restore()
     }
   }

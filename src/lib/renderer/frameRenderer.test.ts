@@ -31,6 +31,7 @@ const mockCtx = {
   measureText: vi.fn().mockReturnValue({ width: 100 }),
   closePath: vi.fn(),
   strokeRect: vi.fn(),
+  roundRect: vi.fn(),
 }
 
 const mockCanvas = { getContext: vi.fn().mockReturnValue(mockCtx), width: 1920, height: 1080 }
@@ -52,7 +53,7 @@ const base: DrawFrameInput = {
   stickerImages: [],
   effects: { vis: true, crossfade: false, ducking: false, blur: false },
   visualizer: { type: 'bars', intensity: 70, opacity: 85, y: 75, size: 50, width: 85, color: 'rainbow' },
-  typography: { titleSize: 48, letterSpacing: -15, titlePosition: { x: 50, y: 48 }, subPosition: { x: 50, y: 55 } },
+  typography: { titleSize: 48, letterSpacing: -15, titlePosition: { x: 50, y: 48 }, subPosition: { x: 50, y: 55 }, showTitle: true, showSub: true, subSize: 18, subLetterSpacing: 0 },
   currentTrack: track,
   currentTrackIndex: 0,
   totalTracks: 5,

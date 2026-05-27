@@ -101,7 +101,10 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
   const totalDur = fmt(totalSec)
   const previewWaveData = waveformFor(1, 80)
   const finalDur = fmt(totalSec * loops)
-  const sizeMb = Math.round(totalSec * (exportSettings.resolution === '4k' ? 1.5 : exportSettings.resolution === '1080p' ? 0.42 : 0.22))
+  const VIDEO_BPS = { '720p': 4_000_000, '1080p': 8_000_000, '4k': 25_000_000 } as const
+  const AUDIO_BPS = { '96k': 96_000, '128k': 128_000, '192k': 192_000 } as const
+  const encodedSec = totalSec * loops
+  const sizeMb = Math.round((VIDEO_BPS[exportSettings.resolution] + AUDIO_BPS[quality]) * encodedSec / 8 / 1024 / 1024)
   const themeObj = THEMES.find(t => t.id === theme) ?? THEMES[0]
 
   const startRender = async () => {
@@ -196,15 +199,19 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
             >
               {tracks.length > 0 ? tracks[0].title : '플레이리스트'}
             </h2>
-            <div
-              className="s3-final__sub"
-              style={{
-                left: `${typography.subPosition.x}%`,
-                top: `${typography.subPosition.y}%`,
-              }}
-            >
-              {tracks.length} TRACKS · {totalDur} · {exportSettings.resolution.toUpperCase()}
-            </div>
+            {typography.showSub && (
+              <div
+                className="s3-final__sub"
+                style={{
+                  left: `${typography.subPosition.x}%`,
+                  top: `${typography.subPosition.y}%`,
+                  fontSize: `${typography.subSize}px`,
+                  letterSpacing: `${typography.subLetterSpacing / 1000}em`,
+                }}
+              >
+                {tracks[0]?.artist && tracks[0].artist !== 'Unknown' ? `${tracks[0].artist} · ` : ''}Track 01 / {tracks.length}
+              </div>
+            )}
             {effects.vis && (
               <div
                 className="s3-final__wave"
@@ -378,7 +385,7 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
           )}
           {renderState === 'done' && (
             <div className="render-done">
-              <div className="render-done__msg">✓ 렌더링 완료 — 다운로드가 시작됩니다</div>
+              <div className="render-done__msg">✓ 렌더링 완료 — 다운로드 폴더에서 확인하세요</div>
               <button
                 type="button"
                 className="s3-btn-full"

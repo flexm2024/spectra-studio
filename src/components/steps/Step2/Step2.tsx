@@ -598,28 +598,34 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
             <div className="s2-frame__content">
               {!logo && <div className="s2-frame__logo"><Icon name="logo" size={26} /></div>}
             </div>
-            <h2
-              className="s2-frame__title"
-              style={{
-                fontSize: `${typography.titleSize}px`,
-                letterSpacing: `${typography.letterSpacing / 1000}em`,
-                left: `${typography.titlePosition.x}%`,
-                top: `${typography.titlePosition.y}%`,
-              }}
-              onMouseDown={handleTitleMouseDown}
-            >
-              {playingTrack?.title}
-            </h2>
-            <div
-              className="s2-frame__sub"
-              style={{
-                left: `${typography.subPosition.x}%`,
-                top: `${typography.subPosition.y}%`,
-              }}
-              onMouseDown={handleSubMouseDown}
-            >
-              {playingTrack?.artist && playingTrack.artist !== 'Unknown' ? `${playingTrack.artist} · ` : ''}Track {String(trackIdx + 1).padStart(2, '0')} / {tracks.length}
-            </div>
+            {typography.showTitle && (
+              <h2
+                className="s2-frame__title"
+                style={{
+                  fontSize: `${typography.titleSize}px`,
+                  letterSpacing: `${typography.letterSpacing / 1000}em`,
+                  left: `${typography.titlePosition.x}%`,
+                  top: `${typography.titlePosition.y}%`,
+                }}
+                onMouseDown={handleTitleMouseDown}
+              >
+                {playingTrack?.title}
+              </h2>
+            )}
+            {typography.showSub && (
+              <div
+                className="s2-frame__sub"
+                style={{
+                  left: `${typography.subPosition.x}%`,
+                  top: `${typography.subPosition.y}%`,
+                  fontSize: `${typography.subSize}px`,
+                  letterSpacing: `${typography.subLetterSpacing / 1000}em`,
+                }}
+                onMouseDown={handleSubMouseDown}
+              >
+                {playingTrack?.artist && playingTrack.artist !== 'Unknown' ? `${playingTrack.artist} · ` : ''}Track {String(trackIdx + 1).padStart(2, '0')} / {tracks.length}
+              </div>
+            )}
 
             {effects.vis && (
               <>
@@ -747,22 +753,56 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
 
           <hr className="divider" />
           <div className="s2-section-label">타이포그래피</div>
-          <div className="slider-row">
-            <div className="slider-row__label">제목 크기</div>
-            <input className="slider" type="range" min={20} max={80}
-              value={typography.titleSize}
-              onChange={e => setTypography({ ...typography, titleSize: Number(e.target.value) })}
-            />
-            <div className="slider-row__value">{typography.titleSize}</div>
+
+          <div className="typo-toggle-row">
+            <span className="typo-toggle-row__label">제목</span>
+            <Switch on={typography.showTitle} onChange={() => setTypography({ ...typography, showTitle: !typography.showTitle })} />
           </div>
-          <div className="slider-row">
-            <div className="slider-row__label">자간</div>
-            <input className="slider" type="range" min={-50} max={50}
-              value={typography.letterSpacing}
-              onChange={e => setTypography({ ...typography, letterSpacing: Number(e.target.value) })}
-            />
-            <div className="slider-row__value">{typography.letterSpacing}</div>
+          {typography.showTitle && (
+            <>
+              <div className="slider-row">
+                <div className="slider-row__label">크기</div>
+                <input className="slider" type="range" min={20} max={80}
+                  value={typography.titleSize}
+                  onChange={e => setTypography({ ...typography, titleSize: Number(e.target.value) })}
+                />
+                <div className="slider-row__value">{typography.titleSize}</div>
+              </div>
+              <div className="slider-row">
+                <div className="slider-row__label">자간</div>
+                <input className="slider" type="range" min={-50} max={50}
+                  value={typography.letterSpacing}
+                  onChange={e => setTypography({ ...typography, letterSpacing: Number(e.target.value) })}
+                />
+                <div className="slider-row__value">{typography.letterSpacing}</div>
+              </div>
+            </>
+          )}
+
+          <div className="typo-toggle-row">
+            <span className="typo-toggle-row__label">트랙</span>
+            <Switch on={typography.showSub} onChange={() => setTypography({ ...typography, showSub: !typography.showSub })} />
           </div>
+          {typography.showSub && (
+            <>
+              <div className="slider-row">
+                <div className="slider-row__label">크기</div>
+                <input className="slider" type="range" min={10} max={40}
+                  value={typography.subSize}
+                  onChange={e => setTypography({ ...typography, subSize: Number(e.target.value) })}
+                />
+                <div className="slider-row__value">{typography.subSize}</div>
+              </div>
+              <div className="slider-row">
+                <div className="slider-row__label">자간</div>
+                <input className="slider" type="range" min={-50} max={50}
+                  value={typography.subLetterSpacing}
+                  onChange={e => setTypography({ ...typography, subLetterSpacing: Number(e.target.value) })}
+                />
+                <div className="slider-row__value">{typography.subLetterSpacing}</div>
+              </div>
+            </>
+          )}
 
           {logo && (
             <>

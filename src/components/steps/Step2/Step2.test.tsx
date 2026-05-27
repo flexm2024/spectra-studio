@@ -13,7 +13,7 @@ const base = {
   setEffects: vi.fn(),
   visualizer: { type: 'bars' as const, intensity: 70, opacity: 85, y: 75, size: 50, width: 85, color: 'rainbow' },
   setVisualizer: vi.fn(),
-  typography: { titleSize: 48, letterSpacing: -15, titlePosition: { x: 50, y: 48 }, subPosition: { x: 50, y: 55 } },
+  typography: { titleSize: 48, letterSpacing: -15, titlePosition: { x: 50, y: 48 }, subPosition: { x: 50, y: 55 }, showTitle: true, showSub: true, subSize: 18, subLetterSpacing: 0 },
   setTypography: vi.fn(),
   onBack: vi.fn(),
   onNext: vi.fn(),
@@ -109,13 +109,13 @@ describe('Step2', () => {
   })
 
   it('typography.titleSize가 스테이지 제목 font-size에 반영된다', () => {
-    render(<Step2 {...base} typography={{ titleSize: 60, letterSpacing: -15, titlePosition: { x: 50, y: 48 }, subPosition: { x: 50, y: 55 } }} />)
+    render(<Step2 {...base} typography={{ titleSize: 60, letterSpacing: -15, titlePosition: { x: 50, y: 48 }, subPosition: { x: 50, y: 55 }, showTitle: true, showSub: true, subSize: 18, subLetterSpacing: 0 }} />)
     const title = document.querySelector('.s2-frame__title') as HTMLElement
     expect(title.style.fontSize).toBe('60px')
   })
 
   it('typography.letterSpacing이 스테이지 제목 letter-spacing에 반영된다', () => {
-    render(<Step2 {...base} typography={{ titleSize: 48, letterSpacing: 20, titlePosition: { x: 50, y: 48 }, subPosition: { x: 50, y: 55 } }} />)
+    render(<Step2 {...base} typography={{ titleSize: 48, letterSpacing: 20, titlePosition: { x: 50, y: 48 }, subPosition: { x: 50, y: 55 }, showTitle: true, showSub: true, subSize: 18, subLetterSpacing: 0 }} />)
     const title = document.querySelector('.s2-frame__title') as HTMLElement
     expect(title.style.letterSpacing).toBe('0.02em')
   })

@@ -39,7 +39,7 @@ const base = {
   logoPosition: { x: 85, y: 8 } as LogoPosition,
   logoSize: 52,
   stickers: [] as string[],
-  typography: { titleSize: 48, letterSpacing: -15, titlePosition: { x: 50, y: 48 }, subPosition: { x: 50, y: 55 } } as Typography,
+  typography: { titleSize: 48, letterSpacing: -15, titlePosition: { x: 50, y: 48 }, subPosition: { x: 50, y: 55 }, showTitle: true, showSub: true, subSize: 18, subLetterSpacing: 0 } as Typography,
 }
 
 describe('Step3', () => {

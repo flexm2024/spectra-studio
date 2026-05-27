@@ -69,6 +69,10 @@ export interface Typography {
   letterSpacing: number
   titlePosition: { x: number; y: number }  // 0–100%, 프레임 기준
   subPosition: { x: number; y: number }    // 0–100%, 프레임 기준
+  showTitle: boolean
+  showSub: boolean
+  subSize: number           // 트랙 서브텍스트 폰트 크기 (px, 640px 기준)
+  subLetterSpacing: number  // 트랙 서브텍스트 자간 (milliems)
 }
 
 export interface ExportSettings {

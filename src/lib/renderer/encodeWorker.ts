@@ -91,12 +91,18 @@ async function encode(input: WorkerInput, onProgress: (pct: number) => void): Pr
   })
 
   const canvas = new OffscreenCanvas(width, height)
+  const smoothed = new Float32Array(80)
 
   try {
     for (let fi = 0; fi < frameCount; fi++) {
       const timeSec = fi / FPS
       const sampleOffset = Math.floor(timeSec * sampleRate)
-      const frequencyData = computeFrequencyBands(ch0, sampleOffset, 2048, 80)
+      const raw = computeFrequencyBands(ch0, sampleOffset, 2048, 80)
+      for (let b = 0; b < 80; b++) {
+        const p = smoothed[b], r = raw[b]
+        smoothed[b] = p > r ? p * 0.84 + r * 0.16 : p * 0.25 + r * 0.75
+      }
+      const frequencyData = smoothed
 
       const trackIdx = findTrackIndex(trackBoundaries, timeSec)
       const currentTrack = tracks[trackIdx % tracks.length]
