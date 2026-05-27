@@ -112,7 +112,7 @@ async function encode(input: WorkerInput, onProgress: (pct: number) => void): Pr
       // 30프레임마다 미리보기 스냅샷 — transferToImageBitmap 전에 복사해야 함
       if (fi % 30 === 0) {
         const preview = await createImageBitmap(canvas)
-        self.postMessage({ type: 'preview', bitmap: preview }, [preview as unknown as Transferable])
+        self.postMessage({ type: 'preview', bitmap: preview }, { transfer: [preview as unknown as Transferable] })
       }
 
       const bitmap = canvas.transferToImageBitmap()
