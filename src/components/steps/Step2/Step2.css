@@ -208,7 +208,10 @@
 .s2-nav > * { flex: 1; justify-content: center; }
 
 /* 비주얼라이저 모양 선택 그리드 */
-.vis-shape-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+.vis-shape-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px;
+  max-height: 220px; overflow-y: auto;
+}
 
 /* 비주얼라이저 컬러 스와치 */
 .vis-color-swatches { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 0; }

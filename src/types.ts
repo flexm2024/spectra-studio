@@ -56,6 +56,12 @@ export interface Effects {
 
 export interface Visualizer {
   type: 'bars' | 'glow' | 'peak' | 'particle'
+    | 'classic-bars' | 'mirror-bars' | 'neon-glow' | 'waveform-line'
+    | 'circular-eq' | 'stacked-layers' | 'dot-matrix' | 'spectrum-fire'
+    | '3d-perspective' | 'glitch-shift' | 'spiral-eq' | 'tunnel-rings'
+    | 'frequency-mountain' | 'starburst' | 'block-steps' | 'aurora-curtains'
+    | 'dna-helix' | 'vinyl-grooves' | 'laser-harp' | 'neon-cityscape'
+    | 'prism-split' | 'lightning-bolt' | 'arcade-spectrum' | 'liquid-mercury'
   intensity: number
   opacity: number
   y: number     // 0–100, 스테이지 높이 대비 수직 중심 위치 (%)

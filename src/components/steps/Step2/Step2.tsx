@@ -6,6 +6,14 @@ import Button from '../../shared/Button'
 import Switch from '../../shared/Switch'
 import { waveformFor } from '../../../data/sampleTracks'
 import type { Track, Effects, Visualizer, Typography, Background, LogoPosition } from '../../../types'
+import {
+  makeVisState, VisState,
+  drawClassicBars, drawMirrorBars, drawNeonGlow, drawWaveformLine, drawCircularEQ,
+  drawStackedLayers, drawDotMatrix, drawSpectrumFire, draw3DPerspective, drawGlitchShift,
+  drawSpiralEQ, drawTunnelRings, drawFrequencyMountain, drawStarburst, drawBlockSteps,
+  drawAuroraCurtains, drawDnaHelix, drawVinylGrooves, drawLaserHarp, drawNeonCityscape,
+  drawPrismSplit, drawLightningBolt, drawArcadeSpectrum, drawLiquidMercury,
+} from '../../../lib/visualizer/renderers'
 
 const THEMES = [
   { id: 'midnight', label: 'Midnight',  bg: 'linear-gradient(135deg, #0c1a2e, #050813)' },
@@ -17,11 +25,43 @@ const THEMES = [
 ]
 
 const VIS_SHAPES: { id: Visualizer['type'], label: string }[] = [
-  { id: 'bars',     label: '그라데이션' },
-  { id: 'glow',     label: '글로우'    },
-  { id: 'peak',     label: '피크'      },
-  { id: 'particle', label: '파티클'    },
+  { id: 'bars',              label: '그라데이션'  },
+  { id: 'glow',              label: '글로우'      },
+  { id: 'peak',              label: '피크'        },
+  { id: 'particle',          label: '파티클'      },
+  { id: 'classic-bars',      label: '클래식 바'   },
+  { id: 'mirror-bars',       label: '미러 바'     },
+  { id: 'neon-glow',         label: '네온 글로우' },
+  { id: 'waveform-line',     label: '웨이브폼'    },
+  { id: 'circular-eq',       label: '원형 EQ'     },
+  { id: 'stacked-layers',    label: '스택 레이어' },
+  { id: 'dot-matrix',        label: '도트 매트릭스' },
+  { id: 'spectrum-fire',     label: '불꽃 스펙트럼' },
+  { id: '3d-perspective',    label: '3D 원근'     },
+  { id: 'glitch-shift',      label: '글리치'      },
+  { id: 'spiral-eq',         label: '스파이럴'    },
+  { id: 'tunnel-rings',      label: '터널 링'     },
+  { id: 'frequency-mountain',label: '주파수 산맥' },
+  { id: 'starburst',         label: '스타버스트'  },
+  { id: 'block-steps',       label: '블록 스텝'   },
+  { id: 'aurora-curtains',   label: '오로라 커튼' },
+  { id: 'dna-helix',         label: 'DNA 헬릭스'  },
+  { id: 'vinyl-grooves',     label: '바이닐'      },
+  { id: 'laser-harp',        label: '레이저 하프' },
+  { id: 'neon-cityscape',    label: '네온 야경'   },
+  { id: 'prism-split',       label: '프리즘'      },
+  { id: 'lightning-bolt',    label: '번개'        },
+  { id: 'arcade-spectrum',   label: '아케이드'    },
+  { id: 'liquid-mercury',    label: '한강 물결'   },
 ]
+
+const NEW_VIS_TYPES = new Set<Visualizer['type']>([
+  'classic-bars','mirror-bars','neon-glow','waveform-line','circular-eq',
+  'stacked-layers','dot-matrix','spectrum-fire','3d-perspective','glitch-shift',
+  'spiral-eq','tunnel-rings','frequency-mountain','starburst','block-steps',
+  'aurora-curtains','dna-helix','vinyl-grooves','laser-harp','neon-cityscape',
+  'prism-split','lightning-bolt','arcade-spectrum','liquid-mercury',
+])
 
 
 const VIS_COLORS = [
@@ -175,6 +215,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
   visColorRef.current = visualizer.color
   const smoothedFreqRef = useRef<number[]>([])
   const particlesRef = useRef<{ x: number; y: number; vx: number; vy: number; r: number }[] | null>(null)
+  const newVisStateRef = useRef<VisState | null>(null)
   if (!particlesRef.current) {
     particlesRef.current = Array.from({ length: 220 }, () => ({
       x: Math.random(), y: Math.random(),
@@ -474,6 +515,56 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
     return () => { cancelAnimationFrame(rafId); ctx?.clearRect(0, 0, canvas!.width, canvas!.height) }
   }, [visualizer.type])
 
+  // 새 24종 비주얼라이저 — particleCanvasRef 풀프레임 렌더
+  useEffect(() => {
+    if (!NEW_VIS_TYPES.has(visualizer.type)) return
+    const canvas = particleCanvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    canvas.width = canvas.offsetWidth || 640
+    canvas.height = canvas.offsetHeight || 360
+    newVisStateRef.current = makeVisState()
+    let rafId: number
+    function tick() {
+      const W = canvas!.width, H = canvas!.height
+      const vals = freqDataRef.current.length ? [...freqDataRef.current] : new Array(80).fill(0)
+      const iScale = visIntensityRef.current / 100
+      const color = visColorRef.current
+      const st = newVisStateRef.current!
+      switch (visualizer.type) {
+        case 'classic-bars':       drawClassicBars(ctx!, vals, W, H, color, iScale); break
+        case 'mirror-bars':        drawMirrorBars(ctx!, vals, W, H, color, iScale); break
+        case 'neon-glow':          drawNeonGlow(ctx!, vals, W, H, color, iScale, st); break
+        case 'waveform-line':      drawWaveformLine(ctx!, vals, W, H, color, iScale); break
+        case 'circular-eq':        drawCircularEQ(ctx!, vals, W, H, color, iScale); break
+        case 'stacked-layers':     drawStackedLayers(ctx!, vals, W, H, color, iScale); break
+        case 'dot-matrix':         drawDotMatrix(ctx!, vals, W, H, color, iScale); break
+        case 'spectrum-fire':      drawSpectrumFire(ctx!, vals, W, H, color, iScale, st); break
+        case '3d-perspective':     draw3DPerspective(ctx!, vals, W, H, color, iScale); break
+        case 'glitch-shift':       drawGlitchShift(ctx!, vals, W, H, color, iScale, st); break
+        case 'spiral-eq':          drawSpiralEQ(ctx!, vals, W, H, color, iScale, st); break
+        case 'tunnel-rings':       drawTunnelRings(ctx!, vals, W, H, color, iScale, st); break
+        case 'frequency-mountain': drawFrequencyMountain(ctx!, vals, W, H, color, iScale); break
+        case 'starburst':          drawStarburst(ctx!, vals, W, H, color, iScale, st); break
+        case 'block-steps':        drawBlockSteps(ctx!, vals, W, H, color, iScale, st); break
+        case 'aurora-curtains':    drawAuroraCurtains(ctx!, vals, W, H, color, iScale, st); break
+        case 'dna-helix':          drawDnaHelix(ctx!, vals, W, H, color, iScale, st); break
+        case 'vinyl-grooves':      drawVinylGrooves(ctx!, vals, W, H, color, iScale, st); break
+        case 'laser-harp':         drawLaserHarp(ctx!, vals, W, H, color, iScale); break
+        case 'neon-cityscape':     drawNeonCityscape(ctx!, vals, W, H, color, iScale, st); break
+        case 'prism-split':        drawPrismSplit(ctx!, vals, W, H, color, iScale); break
+        case 'lightning-bolt':     drawLightningBolt(ctx!, vals, W, H, color, iScale); break
+        case 'arcade-spectrum':    drawArcadeSpectrum(ctx!, vals, W, H, color, iScale); break
+        case 'liquid-mercury':     drawLiquidMercury(ctx!, vals, W, H, color, iScale, st); break
+        default: ctx!.clearRect(0, 0, W, H)
+      }
+      rafId = requestAnimationFrame(tick)
+    }
+    rafId = requestAnimationFrame(tick)
+    return () => { cancelAnimationFrame(rafId); ctx?.clearRect(0, 0, canvas!.width, canvas!.height) }
+  }, [visualizer.type])
+
   useEffect(() => {
     const el = timelineRowRef.current
     if (!el) return
@@ -629,8 +720,8 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
 
             {effects.vis && (
               <>
-                {/* Particle — canvas 풀프레임 */}
-                {visualizer.type === 'particle' && (
+                {/* 풀프레임 canvas — particle + 24종 새 타입 */}
+                {(visualizer.type === 'particle' || NEW_VIS_TYPES.has(visualizer.type)) && (
                   <canvas
                     ref={particleCanvasRef}
                     className="s2-frame__particle-canvas"
@@ -639,7 +730,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                 )}
 
                 {/* 막대 타입: bars / glow / peak */}
-                {visualizer.type !== 'particle' && (
+                {visualizer.type !== 'particle' && !NEW_VIS_TYPES.has(visualizer.type) && (
                   <div
                     className="s2-frame__wave"
                     style={{
