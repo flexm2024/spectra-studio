@@ -42,8 +42,8 @@ export async function encodeVideo(input: EncodeVideoInput): Promise<Blob> {
       reject(new Error(e.message))
     }
 
-    // onProgress는 직렬화 불가 → 제외하고 전송
-    const { onProgress: _, ...data } = input
+    // onProgress/onPreview는 직렬화 불가 → 제외하고 전송
+    const { onProgress: _, onPreview: __, ...data } = input
 
     // ImageBitmap + Float32Array 버퍼를 Worker로 소유권 이전 (zero-copy)
     // 모노 폴백 시 ch0.buffer === ch1.buffer — 중복 transfer 방지

@@ -162,7 +162,8 @@ function drawVisualizer(
   const visX = (width - visW) / 2
 
   const energy = frequencyData.reduce((s, v) => s + v, 0) / Math.max(frequencyData.length, 1)
-  const maxH = height * 0.42 * sizeScale
+  // Step2 CSS 기준 역산: containerH = size*0.8 / 360(frame) → 0.09 * sizeScale
+  const maxH = height * 0.09 * sizeScale
 
   ctx.globalAlpha = opacity
 
