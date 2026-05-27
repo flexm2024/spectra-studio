@@ -149,7 +149,7 @@ export default function App() {
         step={step}
         setStep={setStep}
         onSave={handleSave}
-        onExport={() => { setStep(3); setPendingExport(true) }}
+        onExport={() => { onPause(); setStep(3); setPendingExport(true) }}
       />
       <main className="main">
         {step === 1 && (
@@ -194,7 +194,7 @@ export default function App() {
             onSkipNext={onSkipNext}
             onSkipPrev={onSkipPrev}
             onBack={() => setStep(1)}
-            onNext={() => setStep(3)}
+            onNext={() => { onPause(); setStep(3) }}
             background={background}
             logo={logo}
             logoPosition={logoPosition}
