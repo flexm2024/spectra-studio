@@ -157,7 +157,9 @@ function drawVisualizer(
   const opacity = visualizer.opacity / 100
   const intensity = visualizer.intensity / 100
   const sizeScale = visualizer.size / 50
-  const yCenter = height * (visualizer.y / 100)
+  // Step2: 컨테이너 center=y%, SVG 막대 기준선=y+30%*containerH
+  // containerH = size*0.8/360*height → offset = 0.3 * containerH = height*sizeScale/30
+  const yCenter = height * (visualizer.y / 100) + height * sizeScale / 30
   const visW = Math.round(width * (Math.max(10, visualizer.width) / 100))
   const visX = (width - visW) / 2
 
