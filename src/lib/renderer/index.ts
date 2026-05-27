@@ -37,7 +37,7 @@ export interface RenderInput {
   quality: '96k' | '128k' | '192k'
 }
 
-export async function renderVideo(input: RenderInput, onProgress: (pct: number) => void): Promise<Blob> {
+export async function renderVideo(input: RenderInput, onProgress: (pct: number) => void, onPreview?: (bitmap: ImageBitmap) => void): Promise<Blob> {
   onProgress(0)
 
   const audioResult = await processAudio({
@@ -93,6 +93,7 @@ export async function renderVideo(input: RenderInput, onProgress: (pct: number) 
     quality: input.quality,
     tracks: input.tracks,
     onProgress: pct => onProgress(40 + pct * 0.6),
+    onPreview,
   })
 
   onProgress(100)

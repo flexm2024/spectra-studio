@@ -96,6 +96,7 @@ describe('Step3 새 props 수용', () => {
         expect(renderVideo).toHaveBeenCalledWith(
           expect.objectContaining({ tracks: base.tracks }),
           expect.any(Function),
+          expect.any(Function),
         )
       })
     })

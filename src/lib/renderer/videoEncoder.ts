@@ -15,6 +15,7 @@ export interface EncodeVideoInput {
   quality: '96k' | '128k' | '192k'
   tracks: Track[]
   onProgress: (pct: number) => void
+  onPreview?: (bitmap: ImageBitmap) => void
 }
 
 export async function encodeVideo(input: EncodeVideoInput): Promise<Blob> {
@@ -25,6 +26,8 @@ export async function encodeVideo(input: EncodeVideoInput): Promise<Blob> {
       const msg = e.data as { type: string; pct?: number; blob?: Blob; message?: string }
       if (msg.type === 'progress' && msg.pct !== undefined) {
         input.onProgress(msg.pct)
+      } else if (msg.type === 'preview' && msg.bitmap) {
+        input.onPreview?.(msg.bitmap as ImageBitmap)
       } else if (msg.type === 'done' && msg.blob) {
         worker.terminate()
         resolve(msg.blob)

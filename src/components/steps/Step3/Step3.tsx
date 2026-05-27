@@ -1,5 +1,5 @@
 // Step 3 — 영상 출력: 설정 요약, 내보내기 패널, 렌더링 진행 UI
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import './Step3.css'
 import Icon from '../../../icons'
 import Button from '../../shared/Button'
@@ -95,6 +95,16 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
   const [renderState, setRenderState] = useState<RenderState>('idle')
   const [progress, setProgress] = useState(0)
   const [renderError, setRenderError] = useState<string | null>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  const onPreview = useCallback((bitmap: ImageBitmap) => {
+    const canvas = canvasRef.current
+    if (!canvas) { bitmap.close(); return }
+    const ctx = canvas.getContext('2d')
+    if (!ctx) { bitmap.close(); return }
+    ctx.drawImage(bitmap, 0, 0)
+    bitmap.close()
+  }, [])
 
   const totalSec = tracks.reduce((acc, t) => acc + t.durationSec, 0)
   const fmt = (sec: number) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`
@@ -117,6 +127,7 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
       const blob = await renderVideo(
         { tracks, theme, effects, visualizer, typography, background, logo, logoPosition, logoSize, watermark, stickers, exportSettings, loops, quality },
         pct => setProgress(Math.round(pct)),
+        onPreview,
       )
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -183,7 +194,7 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
         </div>
 
         <div className="s3-final">
-          <div className="s3-final__inner" style={{ background: background.src ? undefined : themeObj.bg }}>
+          <div className="s3-final__inner" style={{ background: background.src ? undefined : themeObj.bg }} data-testid="s3-preview">
             {background.src && (
               <img src={background.src} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
             )}
@@ -235,6 +246,14 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
                   <rect x="0" y="80.4" width={previewWaveData.length} height="0.5" fill="rgba(255,255,255,0.09)" />
                 </svg>
               </div>
+            )}
+            {(renderState === 'rendering' || renderState === 'done') && (
+              <canvas
+                ref={canvasRef}
+                className="s3-preview-canvas"
+                width={1920}
+                height={1080}
+              />
             )}
             {!logo && (
               <div className="s3-final__logo" style={{ left: `${logoPosition.x}%`, top: `${logoPosition.y}%` }}>
