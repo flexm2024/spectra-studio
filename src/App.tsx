@@ -35,6 +35,11 @@ export default function App() {
   const [audioCurrentTime, setAudioCurrentTime] = useState(0)
   const [pendingExport, setPendingExport] = useState(false)
 
+  const goToStep = (n: 1 | 2 | 3) => {
+    if (n === 3) onPause()
+    setStep(n)
+  }
+
   const handleSave = () => {
     const data = { theme, effects, visualizer, typography, exportSettings, loops, quality }
     const json = JSON.stringify(data, null, 2)
@@ -144,10 +149,10 @@ export default function App() {
         onEnded={handleTrackEnded}
         onTimeUpdate={e => setAudioCurrentTime(e.currentTarget.currentTime)}
       />
-      <Sidebar step={step} setStep={setStep} tracks={tracks} />
+      <Sidebar step={step} setStep={goToStep} tracks={tracks} />
       <Header
         step={step}
-        setStep={setStep}
+        setStep={goToStep}
         onSave={handleSave}
         onExport={() => { onPause(); setStep(3); setPendingExport(true) }}
       />
