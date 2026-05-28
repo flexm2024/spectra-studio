@@ -1,5 +1,6 @@
 // 프로젝트 관리 모달 — 이름 편집, 목록, 새 프로젝트, 파일 내보내기/불러오기
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import './ProjectModal.css'
 import { listProjects, deleteProject } from '../../lib/projectStorage'
 import type { SavedProject } from '../../types'
@@ -44,7 +45,7 @@ export default function ProjectModal({
     input.click()
   }
 
-  return (
+  return createPortal(
     <div className="pm-backdrop" onClick={onClose}>
       <div className="pm-modal" onClick={e => e.stopPropagation()}>
         <div className="pm-header">
@@ -95,6 +96,7 @@ export default function ProjectModal({
           <button type="button" className="pm-btn-outline" onClick={handleImportClick}>↑ 불러오기 (.spectra…)</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
