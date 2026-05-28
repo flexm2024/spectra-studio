@@ -2,6 +2,7 @@
 .step3 {
   display: grid;
   grid-template-columns: 1fr 360px;
+  align-items: start;
   gap: 20px;
   padding: 20px;
   max-width: 1200px;
@@ -82,7 +83,7 @@
 .s3-form-row__value { color: var(--ink); }
 
 /* 내보내기 패널 */
-.s3-export { display: flex; flex-direction: column; }
+.s3-export { display: flex; flex-direction: column; position: sticky; top: 20px; }
 .s3-filename-hint { font-size: 11px; color: var(--ink-4); font-family: var(--f-mono); margin-top: 6px; }
 
 .input {
