@@ -179,40 +179,48 @@ function drawVisualizer(
 
   ctx.globalAlpha = opacity
 
-  // 24종 새 풀프레임 비주얼라이저
+  // 24종 새 비주얼라이저 — 높이·가로폭·위치 적용
   const vals = Array.from(frequencyData)
   const iScale = intensity
   const color = visualizer.color
-  switch (visualizer.type) {
-    case 'classic-bars':       drawClassicBars(ctx as any, vals, width, height, color, iScale, false); break
-    case 'mirror-bars':        drawMirrorBars(ctx as any, vals, width, height, color, iScale, false); break
-    case 'neon-glow':          drawNeonGlow(ctx as any, vals, width, height, color, iScale, _vis, false); break
-    case 'waveform-line':      drawWaveformLine(ctx as any, vals, width, height, color, iScale, false); break
-    case 'circular-eq':        drawCircularEQ(ctx as any, vals, width, height, color, iScale, false); break
-    case 'stacked-layers':     drawStackedLayers(ctx as any, vals, width, height, color, iScale, false); break
-    case 'dot-matrix':         drawDotMatrix(ctx as any, vals, width, height, color, iScale, false); break
-    case 'spectrum-fire':      drawSpectrumFire(ctx as any, vals, width, height, color, iScale, _vis, false); break
-    case '3d-perspective':     draw3DPerspective(ctx as any, vals, width, height, color, iScale, false); break
-    case 'glitch-shift':       drawGlitchShift(ctx as any, vals, width, height, color, iScale, _vis, false); break
-    case 'spiral-eq':          drawSpiralEQ(ctx as any, vals, width, height, color, iScale, _vis, false); break
-    case 'tunnel-rings':       drawTunnelRings(ctx as any, vals, width, height, color, iScale, _vis, false); break
-    case 'frequency-mountain': drawFrequencyMountain(ctx as any, vals, width, height, color, iScale, false); break
-    case 'starburst':          drawStarburst(ctx as any, vals, width, height, color, iScale, _vis, false); break
-    case 'block-steps':        drawBlockSteps(ctx as any, vals, width, height, color, iScale, _vis, false); break
-    case 'aurora-curtains':    drawAuroraCurtains(ctx as any, vals, width, height, color, iScale, _vis, false); break
-    case 'dna-helix':          drawDnaHelix(ctx as any, vals, width, height, color, iScale, _vis, false); break
-    case 'vinyl-grooves':      drawVinylGrooves(ctx as any, vals, width, height, color, iScale, _vis, false); break
-    case 'laser-harp':         drawLaserHarp(ctx as any, vals, width, height, color, iScale, false); break
-    case 'neon-cityscape':     drawNeonCityscape(ctx as any, vals, width, height, color, iScale, _vis, false); break
-    case 'prism-split':        drawPrismSplit(ctx as any, vals, width, height, color, iScale, false); break
-    case 'lightning-bolt':     drawLightningBolt(ctx as any, vals, width, height, color, iScale, false); break
-    case 'arcade-spectrum':    drawArcadeSpectrum(ctx as any, vals, width, height, color, iScale, false); break
-    case 'liquid-mercury':     drawLiquidMercury(ctx as any, vals, width, height, color, iScale, _vis, false); break
-    default: break
-  }
 
   const NEW_VIS_TYPES = new Set(['classic-bars','mirror-bars','neon-glow','waveform-line','circular-eq','stacked-layers','dot-matrix','spectrum-fire','3d-perspective','glitch-shift','spiral-eq','tunnel-rings','frequency-mountain','starburst','block-steps','aurora-curtains','dna-helix','vinyl-grooves','laser-harp','neon-cityscape','prism-split','lightning-bolt','arcade-spectrum','liquid-mercury'])
   if (NEW_VIS_TYPES.has(visualizer.type)) {
+    const newVisH = Math.round(height * Math.max(0.05, visualizer.size / 100))
+    const newVisTop = Math.round(height * (visualizer.y / 100)) - newVisH / 2
+    ctx.save()
+    ctx.translate(visX, newVisTop)
+    ctx.beginPath()
+    ctx.rect(0, 0, visW, newVisH)
+    ctx.clip()
+    switch (visualizer.type) {
+      case 'classic-bars':       drawClassicBars(ctx as any, vals, visW, newVisH, color, iScale, false); break
+      case 'mirror-bars':        drawMirrorBars(ctx as any, vals, visW, newVisH, color, iScale, false); break
+      case 'neon-glow':          drawNeonGlow(ctx as any, vals, visW, newVisH, color, iScale, _vis, false); break
+      case 'waveform-line':      drawWaveformLine(ctx as any, vals, visW, newVisH, color, iScale, false); break
+      case 'circular-eq':        drawCircularEQ(ctx as any, vals, visW, newVisH, color, iScale, false); break
+      case 'stacked-layers':     drawStackedLayers(ctx as any, vals, visW, newVisH, color, iScale, false); break
+      case 'dot-matrix':         drawDotMatrix(ctx as any, vals, visW, newVisH, color, iScale, false); break
+      case 'spectrum-fire':      drawSpectrumFire(ctx as any, vals, visW, newVisH, color, iScale, _vis, false); break
+      case '3d-perspective':     draw3DPerspective(ctx as any, vals, visW, newVisH, color, iScale, false); break
+      case 'glitch-shift':       drawGlitchShift(ctx as any, vals, visW, newVisH, color, iScale, _vis, false); break
+      case 'spiral-eq':          drawSpiralEQ(ctx as any, vals, visW, newVisH, color, iScale, _vis, false); break
+      case 'tunnel-rings':       drawTunnelRings(ctx as any, vals, visW, newVisH, color, iScale, _vis, false); break
+      case 'frequency-mountain': drawFrequencyMountain(ctx as any, vals, visW, newVisH, color, iScale, false); break
+      case 'starburst':          drawStarburst(ctx as any, vals, visW, newVisH, color, iScale, _vis, false); break
+      case 'block-steps':        drawBlockSteps(ctx as any, vals, visW, newVisH, color, iScale, _vis, false); break
+      case 'aurora-curtains':    drawAuroraCurtains(ctx as any, vals, visW, newVisH, color, iScale, _vis, false); break
+      case 'dna-helix':          drawDnaHelix(ctx as any, vals, visW, newVisH, color, iScale, _vis, false); break
+      case 'vinyl-grooves':      drawVinylGrooves(ctx as any, vals, visW, newVisH, color, iScale, _vis, false); break
+      case 'laser-harp':         drawLaserHarp(ctx as any, vals, visW, newVisH, color, iScale, false); break
+      case 'neon-cityscape':     drawNeonCityscape(ctx as any, vals, visW, newVisH, color, iScale, _vis, false); break
+      case 'prism-split':        drawPrismSplit(ctx as any, vals, visW, newVisH, color, iScale, false); break
+      case 'lightning-bolt':     drawLightningBolt(ctx as any, vals, visW, newVisH, color, iScale, false); break
+      case 'arcade-spectrum':    drawArcadeSpectrum(ctx as any, vals, visW, newVisH, color, iScale, false); break
+      case 'liquid-mercury':     drawLiquidMercury(ctx as any, vals, visW, newVisH, color, iScale, _vis, false); break
+      default: break
+    }
+    ctx.restore()
     ctx.shadowBlur = 0; ctx.shadowColor = 'transparent'; ctx.globalAlpha = 1; return
   }
 

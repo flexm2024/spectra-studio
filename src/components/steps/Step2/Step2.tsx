@@ -527,6 +527,13 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
     newVisStateRef.current = makeVisState()
     let rafId: number
     function tick() {
+      // 높이·가로폭 슬라이더 변경 시 캔버스 해상도를 CSS 크기에 맞게 갱신
+      const cssW = canvas!.offsetWidth
+      const cssH = canvas!.offsetHeight
+      if (cssW > 0 && cssH > 0 && (canvas!.width !== cssW || canvas!.height !== cssH)) {
+        canvas!.width = cssW
+        canvas!.height = cssH
+      }
       const W = canvas!.width, H = canvas!.height
       const vals = freqDataRef.current.length ? [...freqDataRef.current] : new Array(80).fill(0)
       const iScale = visIntensityRef.current / 100
@@ -725,7 +732,21 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                   <canvas
                     ref={particleCanvasRef}
                     className="s2-frame__particle-canvas"
-                    style={{ opacity: visualizer.opacity / 100 }}
+                    style={{
+                      opacity: visualizer.opacity / 100,
+                      ...(NEW_VIS_TYPES.has(visualizer.type) ? {
+                        top: `${visualizer.y}%`,
+                        right: 'auto',
+                        bottom: 'auto',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: `${Math.max(5, visualizer.width)}%`,
+                        height: `${Math.max(5, visualizer.size)}%`,
+                        pointerEvents: 'auto',
+                        cursor: 'ns-resize',
+                      } : {})
+                    }}
+                    onMouseDown={NEW_VIS_TYPES.has(visualizer.type) ? handleVisMouseDown : undefined}
                   />
                 )}
 
