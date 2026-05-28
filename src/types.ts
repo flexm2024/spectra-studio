@@ -90,3 +90,36 @@ export interface LogoPosition {
   x: number  // 스테이지 너비 대비 %, 0–100
   y: number  // 스테이지 높이 대비 %, 0–100
 }
+
+export interface TrackMeta {
+  id: string
+  title: string
+  artist: string
+  duration: string
+  durationSec: number
+  tag: string
+  bpm: number
+  waveform: number[]
+}
+
+export interface ProjectSnapshot {
+  theme: string
+  effects: Effects
+  visualizer: Visualizer
+  typography: Typography
+  exportSettings: ExportSettings
+  loops: 1 | 2 | 3
+  quality: '96k' | '128k' | '192k'
+  background: Background
+  logoPosition: LogoPosition
+  logoSize: number
+  tracks: TrackMeta[]
+}
+
+export interface SavedProject {
+  id: string
+  name: string
+  createdAt: number
+  updatedAt: number
+  snapshot: ProjectSnapshot
+}
