@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import {
   saveProject, listProjects, getProject, deleteProject,
-  getCurrentId, setCurrentId,
+  getCurrentId, setCurrentId, exportSpectraFile, parseSpectraFile,
 } from './projectStorage'
 import type { SavedProject } from '../types'
 
@@ -64,5 +64,37 @@ describe('projectStorage CRUD', () => {
   it('localStorage 손상 시 빈 배열 반환', () => {
     localStorage.setItem('spectra_projects', 'invalid json')
     expect(listProjects()).toEqual([])
+  })
+})
+
+describe('file export/import', () => {
+  it('exportSpectraFile은 JSON Blob을 반환한다', async () => {
+    const blob = exportSpectraFile(sample, [])
+    expect(blob.type).toBe('application/json')
+    const text = await new Promise<string>((resolve) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.readAsText(blob)
+    })
+    const data = JSON.parse(text)
+    expect(data.version).toBe(1)
+    expect(data.project.id).toBe('test-1')
+    expect(Array.isArray(data.audioTracks)).toBe(true)
+  })
+
+  it('parseSpectraFile은 project와 audioUrls Map을 반환한다', async () => {
+    const blob = exportSpectraFile(sample, [{ id: 't1', audioBase64: 'data:audio/mpeg;base64,AA==' }])
+    const file = new File([blob], 'test.spectra', { type: 'application/json' })
+    const result = await parseSpectraFile(file)
+    expect(result.project.id).toBe('test-1')
+    expect(result.audioUrls).toBeInstanceOf(Map)
+    expect(result.audioUrls.get('t1')).toBe('data:audio/mpeg;base64,AA==')
+  })
+
+  it('audioTracks 없을 때 빈 Map 반환', async () => {
+    const blob = exportSpectraFile(sample, [])
+    const file = new File([blob], 'test.spectra', { type: 'application/json' })
+    const result = await parseSpectraFile(file)
+    expect(result.audioUrls.size).toBe(0)
   })
 })
