@@ -54,8 +54,7 @@ export default function Sidebar({ step, setStep, tracks, projectName, lastSaved,
         <span className="rail__pro-badge">PRO</span>
       </div>
 
-      <div className="rail__project" role="button" tabIndex={0} onClick={onOpenProjectModal}
-        onKeyDown={e => e.key === 'Enter' && onOpenProjectModal()}>
+      <button type="button" className="rail__project" onClick={onOpenProjectModal}>
         <div className="rail__project-label">
           <span>현재 프로젝트</span>
           <Icon name="chevronDown" size={11} />
@@ -65,7 +64,7 @@ export default function Sidebar({ step, setStep, tracks, projectName, lastSaved,
           <div className="rail__project-dot" />
           <span>{lastSaved ? `자동 저장 · ${timeSince}` : '저장 안 됨'}</span>
         </div>
-      </div>
+      </button>
 
       <div className="rail__section">워크플로우</div>
       <div className="rail__steps">
