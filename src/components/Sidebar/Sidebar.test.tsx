@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import Sidebar from './Sidebar'
 import { sampleTracks } from '../../data/sampleTracks'
 
-const base = { step: 1 as const, setStep: vi.fn(), tracks: sampleTracks }
+const base = { step: 1 as const, setStep: vi.fn(), tracks: sampleTracks, projectName: '테스트 프로젝트', lastSaved: null, onOpenProjectModal: vi.fn() }
 
 describe('Sidebar', () => {
   it('"Spectra" 워드마크를 렌더링한다', () => {

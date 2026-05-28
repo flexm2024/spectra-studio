@@ -336,7 +336,14 @@ export default function App() {
         onEnded={handleTrackEnded}
         onTimeUpdate={e => setAudioCurrentTime(e.currentTarget.currentTime)}
       />
-      <Sidebar step={step} setStep={goToStep} tracks={tracks} />
+      <Sidebar
+        step={step}
+        setStep={goToStep}
+        tracks={tracks}
+        projectName={projectName}
+        lastSaved={lastSaved}
+        onOpenProjectModal={() => setProjectModalOpen(true)}
+      />
       <Header
         step={step}
         setStep={goToStep}

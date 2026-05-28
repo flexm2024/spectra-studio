@@ -39,7 +39,9 @@
   padding: 14px 16px; margin: 14px;
   border: 1px solid var(--line); background: var(--bg-elev);
   border-radius: 12px; box-shadow: var(--shadow-2); flex-shrink: 0;
+  border-radius: var(--r-m); cursor: pointer; transition: background 120ms;
 }
+.rail__project:hover { background: rgba(0,0,0,0.04); }
 .rail__project-label {
   font-size: 10px; font-weight: 600; letter-spacing: 0.06em;
   text-transform: uppercase; color: var(--ink-4);
