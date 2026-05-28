@@ -9,6 +9,7 @@ import StatusBar from './components/StatusBar/StatusBar'
 import Step1 from './components/steps/Step1/Step1'
 import Step2 from './components/steps/Step2/Step2'
 import Step3 from './components/steps/Step3/Step3'
+import ProjectModal from './components/ProjectModal/ProjectModal'
 
 function loadInitialProject(): { id: string; name: string; snapshot: ProjectSnapshot | null } {
   try {
@@ -432,6 +433,17 @@ export default function App() {
         )}
       </main>
       <StatusBar tracks={tracks} />
+      <ProjectModal
+        open={projectModalOpen}
+        projectId={projectId}
+        projectName={projectName}
+        onClose={() => setProjectModalOpen(false)}
+        onChangeName={setProjectName}
+        onLoadProject={handleLoadProject}
+        onNewProject={handleNewProject}
+        onExportFile={handleExportFile}
+        onImportFile={handleImportFile}
+      />
     </div>
   )
 }
