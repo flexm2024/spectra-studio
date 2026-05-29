@@ -295,6 +295,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
     }))
   }
 
+  const [activeRightTab, setActiveRightTab] = useState<'effects' | 'title'>('effects')
   const [zoom, setZoom] = useState(1.5)
   const zoomRef = useRef(zoom)
   zoomRef.current = zoom
@@ -907,106 +908,118 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
         </div>
       </div>
 
-      {/* 우측 — 효과 & 타이포그래피 */}
+      {/* 우측 — 효과 & 타이틀 */}
       <div className="s2-panel">
-        <div className="s2-panel__head">
-          <span>효과</span>
-          <Button variant="ghost" size="icon"><Icon name="plus" size={14} /></Button>
+        <div className="s2-panel__tabs">
+          <button
+            className={`s2-tab${activeRightTab === 'effects' ? ' s2-tab--active' : ''}`}
+            onClick={() => setActiveRightTab('effects')}
+          >효과</button>
+          <button
+            className={`s2-tab${activeRightTab === 'title' ? ' s2-tab--active' : ''}`}
+            onClick={() => setActiveRightTab('title')}
+          >타이틀</button>
         </div>
         <div className="s2-panel__body">
-          <div className="effect-list">
-            {EFFECT_ITEMS.map(({ key, icon, title, sub }) => (
-              <div
-                key={key}
-                className={`effect-chip${effects[key] ? ' effect-chip--on' : ''}`}
-                onClick={() => setEffects({ ...effects, [key]: !effects[key] })}
-              >
-                <div className="effect-chip__icon"><Icon name={icon} size={16} /></div>
-                <div className="effect-chip__meta">
-                  <div className="effect-chip__title">{title}</div>
-                  <div className="effect-chip__sub">{sub}</div>
-                </div>
-                <div className="effect-chip__toggle" onClick={e => e.stopPropagation()}>
-                  <Switch on={effects[key]} onChange={() => setEffects({ ...effects, [key]: !effects[key] })} />
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <hr className="divider" />
-          <div className="s2-section-label">타이포그래피</div>
-
-          <div className="typo-toggle-row">
-            <span className="typo-toggle-row__label">제목</span>
-            <Switch on={typography.showTitle} onChange={() => setTypography({ ...typography, showTitle: !typography.showTitle })} />
-          </div>
-          {typography.showTitle && (
+          {activeRightTab === 'effects' ? (
             <>
-              <div className="slider-row">
-                <div className="slider-row__label">크기</div>
-                <input className="slider" type="range" min={20} max={80}
-                  value={typography.titleSize}
-                  onChange={e => setTypography({ ...typography, titleSize: Number(e.target.value) })}
-                />
-                <div className="slider-row__value">{typography.titleSize}</div>
+              <div className="effect-list">
+                {EFFECT_ITEMS.map(({ key, icon, title, sub }) => (
+                  <div
+                    key={key}
+                    className={`effect-chip${effects[key] ? ' effect-chip--on' : ''}`}
+                    onClick={() => setEffects({ ...effects, [key]: !effects[key] })}
+                  >
+                    <div className="effect-chip__icon"><Icon name={icon} size={16} /></div>
+                    <div className="effect-chip__meta">
+                      <div className="effect-chip__title">{title}</div>
+                      <div className="effect-chip__sub">{sub}</div>
+                    </div>
+                    <div className="effect-chip__toggle" onClick={e => e.stopPropagation()}>
+                      <Switch on={effects[key]} onChange={() => setEffects({ ...effects, [key]: !effects[key] })} />
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="slider-row">
-                <div className="slider-row__label">자간</div>
-                <input className="slider" type="range" min={-50} max={50}
-                  value={typography.letterSpacing}
-                  onChange={e => setTypography({ ...typography, letterSpacing: Number(e.target.value) })}
-                />
-                <div className="slider-row__value">{typography.letterSpacing}</div>
-              </div>
-            </>
-          )}
 
-          <div className="typo-toggle-row">
-            <span className="typo-toggle-row__label">트랙</span>
-            <Switch on={typography.showSub} onChange={() => setTypography({ ...typography, showSub: !typography.showSub })} />
-          </div>
-          {typography.showSub && (
-            <>
-              <div className="slider-row">
-                <div className="slider-row__label">크기</div>
-                <input className="slider" type="range" min={10} max={40}
-                  value={typography.subSize}
-                  onChange={e => setTypography({ ...typography, subSize: Number(e.target.value) })}
-                />
-                <div className="slider-row__value">{typography.subSize}</div>
-              </div>
-              <div className="slider-row">
-                <div className="slider-row__label">자간</div>
-                <input className="slider" type="range" min={-50} max={50}
-                  value={typography.subLetterSpacing}
-                  onChange={e => setTypography({ ...typography, subLetterSpacing: Number(e.target.value) })}
-                />
-                <div className="slider-row__value">{typography.subLetterSpacing}</div>
-              </div>
-            </>
-          )}
-
-          {logo && (
-            <>
               <hr className="divider" />
-              <div className="s2-section-label">로고</div>
-              <div className="slider-row">
-                <div className="slider-row__label">크기</div>
-                <input className="slider" type="range" min={24} max={120}
-                  value={logoSize}
-                  onChange={e => setLogoSize(Number(e.target.value))}
-                />
-                <div className="slider-row__value">{logoSize}px</div>
-              </div>
-              <div className="s2-hint">위치는 마우스로 조정</div>
-            </>
-          )}
+              <div className="s2-section-label">타이포그래피</div>
 
-          <hr className="divider" />
-          <div className="s2-nav">
-            <Button onClick={onBack}><Icon name="chevronLeft" size={14} /> 이전</Button>
-            <Button variant="primary" onClick={onNext}>다음 <Icon name="arrowRight" size={14} /></Button>
-          </div>
+              <div className="typo-toggle-row">
+                <span className="typo-toggle-row__label">제목</span>
+                <Switch on={typography.showTitle} onChange={() => setTypography({ ...typography, showTitle: !typography.showTitle })} />
+              </div>
+              {typography.showTitle && (
+                <>
+                  <div className="slider-row">
+                    <div className="slider-row__label">크기</div>
+                    <input className="slider" type="range" min={20} max={80}
+                      value={typography.titleSize}
+                      onChange={e => setTypography({ ...typography, titleSize: Number(e.target.value) })}
+                    />
+                    <div className="slider-row__value">{typography.titleSize}</div>
+                  </div>
+                  <div className="slider-row">
+                    <div className="slider-row__label">자간</div>
+                    <input className="slider" type="range" min={-50} max={50}
+                      value={typography.letterSpacing}
+                      onChange={e => setTypography({ ...typography, letterSpacing: Number(e.target.value) })}
+                    />
+                    <div className="slider-row__value">{typography.letterSpacing}</div>
+                  </div>
+                </>
+              )}
+
+              <div className="typo-toggle-row">
+                <span className="typo-toggle-row__label">트랙</span>
+                <Switch on={typography.showSub} onChange={() => setTypography({ ...typography, showSub: !typography.showSub })} />
+              </div>
+              {typography.showSub && (
+                <>
+                  <div className="slider-row">
+                    <div className="slider-row__label">크기</div>
+                    <input className="slider" type="range" min={10} max={40}
+                      value={typography.subSize}
+                      onChange={e => setTypography({ ...typography, subSize: Number(e.target.value) })}
+                    />
+                    <div className="slider-row__value">{typography.subSize}</div>
+                  </div>
+                  <div className="slider-row">
+                    <div className="slider-row__label">자간</div>
+                    <input className="slider" type="range" min={-50} max={50}
+                      value={typography.subLetterSpacing}
+                      onChange={e => setTypography({ ...typography, subLetterSpacing: Number(e.target.value) })}
+                    />
+                    <div className="slider-row__value">{typography.subLetterSpacing}</div>
+                  </div>
+                </>
+              )}
+
+              {logo && (
+                <>
+                  <hr className="divider" />
+                  <div className="s2-section-label">로고</div>
+                  <div className="slider-row">
+                    <div className="slider-row__label">크기</div>
+                    <input className="slider" type="range" min={24} max={120}
+                      value={logoSize}
+                      onChange={e => setLogoSize(Number(e.target.value))}
+                    />
+                    <div className="slider-row__value">{logoSize}px</div>
+                  </div>
+                  <div className="s2-hint">위치는 마우스로 조정</div>
+                </>
+              )}
+
+              <hr className="divider" />
+              <div className="s2-nav">
+                <Button onClick={onBack}><Icon name="chevronLeft" size={14} /> 이전</Button>
+                <Button variant="primary" onClick={onNext}>다음 <Icon name="arrowRight" size={14} /></Button>
+              </div>
+            </>
+          ) : (
+            <div>타이틀 탭</div>
+          )}
         </div>
       </div>
     </div>
