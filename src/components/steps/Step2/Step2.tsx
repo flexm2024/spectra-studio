@@ -5,7 +5,7 @@ import Icon from '../../../icons'
 import Button from '../../shared/Button'
 import Switch from '../../shared/Switch'
 import { waveformFor } from '../../../data/sampleTracks'
-import type { Track, Effects, Visualizer, Typography, Background, LogoPosition } from '../../../types'
+import type { Track, Effects, Visualizer, Typography, Background, LogoPosition, TitleBaseStyle, TitleDecoStyle, TitlePositionPreset } from '../../../types'
 import {
   makeVisState, VisState,
   drawClassicBars, drawMirrorBars, drawNeonGlow, drawWaveformLine, drawCircularEQ,
@@ -76,6 +76,76 @@ const EFFECT_ITEMS = [
   { key: 'ducking'   as const, icon: 'sliders',  title: '자동 레벨',           sub: '트랙별 −14 LUFS 정규화' },
   { key: 'blur'      as const, icon: 'sparkles', title: '배경 블러',           sub: '깊이감 부여 · 24px' },
 ]
+
+const TITLE_BASE_STYLES: { id: TitleBaseStyle; label: string }[] = [
+  { id: 'minimal',   label: '미니멀'   },
+  { id: 'modern',    label: '모던'     },
+  { id: 'bold',      label: '볼드'     },
+  { id: 'underline', label: '언더라인' },
+  { id: 'card',      label: '카드'     },
+  { id: 'neon',      label: '네온'     },
+  { id: 'glitch',    label: '글리치'   },
+  { id: 'outline',   label: '아웃라인' },
+  { id: 'vintage',   label: '빈티지'   },
+]
+
+const TITLE_DECO_STYLES: { id: TitleDecoStyle; label: string }[] = [
+  { id: 'caption',  label: '캡션'    },
+  { id: 'bar-left', label: '바 좌측' },
+  { id: 'frame',    label: '프레임'  },
+  { id: 'divider',  label: '디바이더'},
+  { id: 'bg-word',  label: 'BG 워드' },
+  { id: 'corner',   label: '코너'    },
+  { id: 'wave',     label: '웨이브'  },
+]
+
+const FONT_MAP: Record<string, string> = {
+  inter:           'Inter, sans-serif',
+  playfair:        '"Playfair Display", serif',
+  dm_serif:        '"DM Serif Display", serif',
+  cormorant:       '"Cormorant Garamond", serif',
+  nunito:          'Nunito, sans-serif',
+  barlow:          '"Barlow Condensed", sans-serif',
+  orbitron:        'Orbitron, sans-serif',
+  space_mono:      '"Space Mono", monospace',
+  dancing:         '"Dancing Script", cursive',
+  black_han:       '"Black Han Sans", sans-serif',
+  jua:             'Jua, sans-serif',
+  nanum_gothic:    '"Nanum Gothic", sans-serif',
+  nanum_myeongjo:  '"Nanum Myeongjo", serif',
+  gowun_batang:    '"Gowun Batang", serif',
+  hi_melody:       '"Hi Melody", cursive',
+  poor_story:      '"Poor Story", cursive',
+  noto_sans_kr:    '"Noto Sans KR", sans-serif',
+}
+
+const TITLE_FONTS: { key: string; label: string; sample: string }[] = [
+  { key: 'inter',          label: 'CLEAN',      sample: 'Aa' },
+  { key: 'playfair',       label: 'DISPLAY',    sample: 'Aa' },
+  { key: 'dm_serif',       label: 'EDITORIAL',  sample: 'Aa' },
+  { key: 'cormorant',      label: 'ELEGANT',    sample: 'Aa' },
+  { key: 'nunito',         label: 'ROUNDED',    sample: 'Aa' },
+  { key: 'barlow',         label: 'CONDENSED',  sample: 'Aa' },
+  { key: 'orbitron',       label: 'FUTURISTIC', sample: 'Aa' },
+  { key: 'space_mono',     label: 'MONO',       sample: 'Aa' },
+  { key: 'dancing',        label: 'HAND',       sample: 'Aa' },
+  { key: 'black_han',      label: '검은고딕',    sample: '가나' },
+  { key: 'jua',            label: '주아체',      sample: '가나' },
+  { key: 'nanum_gothic',   label: '나눔고딕',    sample: '가나' },
+  { key: 'nanum_myeongjo', label: '나눔명조',    sample: '가나' },
+  { key: 'gowun_batang',   label: '고운바탕',    sample: '가나' },
+  { key: 'hi_melody',      label: '하이멜로디',  sample: '가나' },
+  { key: 'poor_story',     label: '푸어스토리',  sample: '가나' },
+  { key: 'noto_sans_kr',   label: '나눔젠',      sample: '가나' },
+]
+
+const PRESET_COORDS: Record<TitlePositionPreset, { x: number; y: number }> = {
+  tl: { x: 15, y: 15 }, tc: { x: 50, y: 15 }, tr: { x: 85, y: 15 },
+  ml: { x: 15, y: 50 }, mc: { x: 50, y: 50 }, mr: { x: 85, y: 50 },
+  bl: { x: 15, y: 80 }, bc: { x: 50, y: 80 }, br: { x: 85, y: 80 },
+}
+
+const DECO_CAPTION_KEYS = new Set<TitleDecoStyle>(['caption', 'divider', 'frame', 'bar-left'])
 
 const fmt = (sec: number) => {
   const m = Math.floor(sec / 60)
