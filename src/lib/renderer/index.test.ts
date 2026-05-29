@@ -41,7 +41,7 @@ const base: RenderInput = {
   stickers: [],
   effects: { vis: true, crossfade: false, ducking: false, blur: false },
   visualizer: { type: 'bars', intensity: 70, opacity: 85, y: 75, size: 50, width: 85, color: 'rainbow' },
-  typography: { titleSize: 48, letterSpacing: -15, titlePosition: { x: 50, y: 48 }, subPosition: { x: 50, y: 55 }, showTitle: true, showSub: true, subSize: 18, subLetterSpacing: 0 },
+  typography: { titleSize: 48, letterSpacing: -15, titlePosition: { x: 50, y: 48 }, subPosition: { x: 50, y: 55 }, showTitle: true, showSub: true, subSize: 18, subLetterSpacing: 0, titleStyle: 'minimal' as const, titleDeco: 'none' as const, titleFont: 'inter', titlePositionPreset: 'bc' as const, titleCaptionTop: '', titleCaptionBottom: '', titleSubOffset: 0, titleAlwaysShow: true, titleScale: 100 },
   exportSettings: { filename: 'test', resolution: '1080p' },
   loops: 1,
   quality: '192k' as const,
