@@ -359,12 +359,6 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
           </div>
         </div>
 
-        {onSave && (
-          <button type="button" className="s3-btn-save" onClick={onSave}>
-            <Icon name="download" size={14} /> 프로젝트 저장
-          </button>
-        )}
-
         <div className="s3-render">
           {!canRender && (
             <div className="s3-compat-warn">
@@ -373,7 +367,7 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
             </div>
           )}
           {canRender && tracks.length === 0 && (
-            <div className="s3-compat-warn">
+            <div className="s3-no-tracks">
               트랙이 없습니다. Step 1에서 음원을 추가해 주세요.
             </div>
           )}
@@ -393,6 +387,11 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
                 </div>
               )}
             </>
+          )}
+          {(renderState === 'idle' || renderState === 'error') && onSave && (
+            <button type="button" className="s3-btn-save" onClick={onSave}>
+              <Icon name="download" size={14} /> 프로젝트 저장
+            </button>
           )}
           {renderState === 'rendering' && (
             <div className="render-progress">
