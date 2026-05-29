@@ -70,6 +70,19 @@ export interface Visualizer {
   color: string // 비주얼라이저 색상 hex
 }
 
+export type TitleBaseStyle =
+  | 'minimal' | 'modern' | 'bold' | 'underline' | 'card'
+  | 'neon' | 'glitch' | 'outline' | 'vintage'
+
+export type TitleDecoStyle =
+  | 'none' | 'caption' | 'bar-left' | 'frame' | 'divider'
+  | 'bg-word' | 'corner' | 'wave'
+
+export type TitlePositionPreset =
+  | 'tl' | 'tc' | 'tr'
+  | 'ml' | 'mc' | 'mr'
+  | 'bl' | 'bc' | 'br'
+
 export interface Typography {
   titleSize: number
   letterSpacing: number
@@ -79,6 +92,16 @@ export interface Typography {
   showSub: boolean
   subSize: number           // 트랙 서브텍스트 폰트 크기 (px, 640px 기준)
   subLetterSpacing: number  // 트랙 서브텍스트 자간 (milliems)
+  // 타이틀 탭 신규 필드
+  titleStyle: TitleBaseStyle
+  titleDeco: TitleDecoStyle
+  titleFont: string
+  titlePositionPreset: TitlePositionPreset
+  titleCaptionTop: string
+  titleCaptionBottom: string
+  titleSubOffset: number
+  titleAlwaysShow: boolean
+  titleScale: number
 }
 
 export interface ExportSettings {
