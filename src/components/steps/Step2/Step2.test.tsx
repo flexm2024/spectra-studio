@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import Step2 from './Step2'
 import { sampleTracks } from '../../../data/sampleTracks'
-import type { Background, LogoPosition } from '../../../types'
+import type { Background, LogoPosition, TitleBaseStyle, TitleDecoStyle, TitlePositionPreset } from '../../../types'
 
 const base = {
   tracks: sampleTracks,
@@ -13,7 +13,25 @@ const base = {
   setEffects: vi.fn(),
   visualizer: { type: 'bars' as const, intensity: 70, opacity: 85, y: 75, size: 50, width: 85, color: 'rainbow' },
   setVisualizer: vi.fn(),
-  typography: { titleSize: 48, letterSpacing: -15, titlePosition: { x: 50, y: 48 }, subPosition: { x: 50, y: 55 }, showTitle: true, showSub: true, subSize: 18, subLetterSpacing: 0 },
+  typography: {
+    titleSize: 48,
+    letterSpacing: -15,
+    titlePosition: { x: 50, y: 48 },
+    subPosition: { x: 50, y: 55 },
+    showTitle: true,
+    showSub: true,
+    subSize: 18,
+    subLetterSpacing: 0,
+    titleStyle: 'minimal' as const,
+    titleDeco: 'none' as const,
+    titleFont: 'inter',
+    titlePositionPreset: 'bc' as const,
+    titleCaptionTop: '',
+    titleCaptionBottom: '',
+    titleSubOffset: 0,
+    titleAlwaysShow: true,
+    titleScale: 100,
+  },
   setTypography: vi.fn(),
   onBack: vi.fn(),
   onNext: vi.fn(),
@@ -109,13 +127,13 @@ describe('Step2', () => {
   })
 
   it('typography.titleSize가 스테이지 제목 font-size에 반영된다', () => {
-    render(<Step2 {...base} typography={{ titleSize: 60, letterSpacing: -15, titlePosition: { x: 50, y: 48 }, subPosition: { x: 50, y: 55 }, showTitle: true, showSub: true, subSize: 18, subLetterSpacing: 0 }} />)
+    render(<Step2 {...base} typography={{ ...base.typography, titleSize: 60 }} />)
     const title = document.querySelector('.s2-frame__title') as HTMLElement
     expect(title.style.fontSize).toBe('60px')
   })
 
   it('typography.letterSpacing이 스테이지 제목 letter-spacing에 반영된다', () => {
-    render(<Step2 {...base} typography={{ titleSize: 48, letterSpacing: 20, titlePosition: { x: 50, y: 48 }, subPosition: { x: 50, y: 55 }, showTitle: true, showSub: true, subSize: 18, subLetterSpacing: 0 }} />)
+    render(<Step2 {...base} typography={{ ...base.typography, letterSpacing: 20 }} />)
     const title = document.querySelector('.s2-frame__title') as HTMLElement
     expect(title.style.letterSpacing).toBe('0.02em')
   })
@@ -156,5 +174,101 @@ describe('Step2', () => {
   it('particle 타입 렌더링 시 particle canvas가 렌더링된다', () => {
     render(<Step2 {...base} visualizer={{ type: 'particle', intensity: 70, opacity: 85, y: 75, size: 50, width: 85, color: '#00d4ff' }} />)
     expect(document.querySelector('.s2-frame__particle-canvas')).toBeInTheDocument()
+  })
+
+  // --- 타이틀 탭 테스트 ---
+
+  it('"타이틀" 탭 버튼이 렌더링된다', () => {
+    render(<Step2 {...base} />)
+    expect(screen.getByRole('button', { name: '타이틀' })).toBeInTheDocument()
+  })
+
+  it('"타이틀" 탭 클릭 시 기본 스타일 섹션이 표시된다', () => {
+    render(<Step2 {...base} />)
+    fireEvent.click(screen.getByRole('button', { name: '타이틀' }))
+    expect(screen.getByText('기본 스타일')).toBeInTheDocument()
+  })
+
+  it('"효과" 탭 클릭 시 크로스페이드 효과 칩이 표시된다', () => {
+    render(<Step2 {...base} />)
+    fireEvent.click(screen.getByRole('button', { name: '타이틀' }))
+    fireEvent.click(screen.getByRole('button', { name: '효과' }))
+    expect(screen.getByText('크로스페이드')).toBeInTheDocument()
+  })
+
+  it('기본 스타일 버튼 클릭 시 setTypography가 titleStyle로 호출된다', () => {
+    const setTypography = vi.fn()
+    render(<Step2 {...base} setTypography={setTypography} />)
+    fireEvent.click(screen.getByRole('button', { name: '타이틀' }))
+    fireEvent.click(screen.getByRole('button', { name: '네온' }))
+    expect(setTypography).toHaveBeenCalled()
+    const updater = setTypography.mock.calls[0][0]
+    const result = typeof updater === 'function' ? updater(base.typography) : updater
+    expect(result.titleStyle).toBe('neon')
+  })
+
+  it('이미 선택된 데코 스타일을 다시 클릭하면 titleDeco가 none으로 해제된다', () => {
+    const setTypography = vi.fn()
+    const typo = { ...base.typography, titleDeco: 'divider' as TitleDecoStyle }
+    render(<Step2 {...base} typography={typo} setTypography={setTypography} />)
+    fireEvent.click(screen.getByRole('button', { name: '타이틀' }))
+    fireEvent.click(screen.getByRole('button', { name: '디바이더' }))
+    const updater = setTypography.mock.calls[0][0]
+    const result = typeof updater === 'function' ? updater(typo) : updater
+    expect(result.titleDeco).toBe('none')
+  })
+
+  it('titleDeco가 caption일 때 캡션 입력 필드가 표시된다', () => {
+    const typo = { ...base.typography, titleDeco: 'caption' as TitleDecoStyle }
+    render(<Step2 {...base} typography={typo} />)
+    fireEvent.click(screen.getByRole('button', { name: '타이틀' }))
+    expect(screen.getByPlaceholderText('상단 캡션')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('하단 캡션')).toBeInTheDocument()
+  })
+
+  it('titleDeco가 none일 때 캡션 입력 필드가 표시되지 않는다', () => {
+    render(<Step2 {...base} />)
+    fireEvent.click(screen.getByRole('button', { name: '타이틀' }))
+    expect(screen.queryByPlaceholderText('상단 캡션')).not.toBeInTheDocument()
+  })
+
+  it('폰트 버튼 클릭 시 setTypography가 titleFont로 호출된다', () => {
+    const setTypography = vi.fn()
+    render(<Step2 {...base} setTypography={setTypography} />)
+    fireEvent.click(screen.getByRole('button', { name: '타이틀' }))
+    fireEvent.click(screen.getByRole('button', { name: '주아체' }))
+    const updater = setTypography.mock.calls[0][0]
+    const result = typeof updater === 'function' ? updater(base.typography) : updater
+    expect(result.titleFont).toBe('jua')
+  })
+
+  it('위치 bc 버튼 클릭 시 titlePosition이 {x:50, y:80}으로 설정된다', () => {
+    const setTypography = vi.fn()
+    render(<Step2 {...base} setTypography={setTypography} />)
+    fireEvent.click(screen.getByRole('button', { name: '타이틀' }))
+    fireEvent.click(document.querySelector('.title-pos-btn[data-preset="bc"]')!)
+    const updater = setTypography.mock.calls[0][0]
+    const result = typeof updater === 'function' ? updater(base.typography) : updater
+    expect(result.titlePosition).toEqual({ x: 50, y: 80 })
+    expect(result.titlePositionPreset).toBe('bc')
+  })
+
+  it('titleStyle이 neon일 때 스테이지에 title-style-neon 클래스가 있다', () => {
+    const typo = { ...base.typography, titleStyle: 'neon' as TitleBaseStyle }
+    render(<Step2 {...base} typography={typo} />)
+    expect(document.querySelector('.title-style-neon')).toBeInTheDocument()
+  })
+
+  it('titleDeco가 divider일 때 스테이지에 title-deco-divider 클래스가 있다', () => {
+    const typo = { ...base.typography, titleDeco: 'divider' as TitleDecoStyle }
+    render(<Step2 {...base} typography={typo} />)
+    expect(document.querySelector('.title-deco-divider')).toBeInTheDocument()
+  })
+
+  it('titleScale이 200일 때 s2-frame__title의 font-size가 titleSize * 2가 된다', () => {
+    const typo = { ...base.typography, titleSize: 48, titleScale: 200 }
+    render(<Step2 {...base} typography={typo} />)
+    const title = document.querySelector('.s2-frame__title') as HTMLElement
+    expect(title.style.fontSize).toBe('96px')
   })
 })
