@@ -768,18 +768,33 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
               {!logo && <div className="s2-frame__logo"><Icon name="logo" size={26} /></div>}
             </div>
             {typography.showTitle && (
-              <h2
-                className="s2-frame__title"
+              <div
+                className={`s2-frame__title-block title-style-${typography.titleStyle} title-deco-${typography.titleDeco}`}
                 style={{
-                  fontSize: `${typography.titleSize}px`,
-                  letterSpacing: `${typography.letterSpacing / 1000}em`,
                   left: `${typography.titlePosition.x}%`,
                   top: `${typography.titlePosition.y}%`,
+                  fontFamily: FONT_MAP[typography.titleFont] ?? FONT_MAP.inter,
                 }}
+                data-caption={typography.titleCaptionTop || playingTrack?.title}
                 onMouseDown={handleTitleMouseDown}
               >
-                {playingTrack?.title}
-              </h2>
+                {DECO_CAPTION_KEYS.has(typography.titleDeco) && typography.titleCaptionTop && (
+                  <span className="title-deco__top">{typography.titleCaptionTop}</span>
+                )}
+                <h2
+                  className="s2-frame__title"
+                  data-text={playingTrack?.title}
+                  style={{
+                    fontSize: `${typography.titleSize * (typography.titleScale / 100)}px`,
+                    letterSpacing: `${typography.letterSpacing / 1000}em`,
+                  }}
+                >
+                  {playingTrack?.title}
+                </h2>
+                {DECO_CAPTION_KEYS.has(typography.titleDeco) && typography.titleCaptionBottom && (
+                  <span className="title-deco__bottom">{typography.titleCaptionBottom}</span>
+                )}
+              </div>
             )}
             {typography.showSub && (
               <div
