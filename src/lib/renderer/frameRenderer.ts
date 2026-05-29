@@ -78,23 +78,13 @@ export function drawFrame(input: DrawFrameInput): void {
   if (typography.showTitle) {
     const titleX = Math.round((typography.titlePosition.x / 100) * width)
     const titleY = Math.round((typography.titlePosition.y / 100) * height)
-    // Step2 스테이지 max-width 640px 기준 스케일링 — CSS fontSize와 일치
-    const titlePx = Math.round(typography.titleSize * (width / 640))
-    ctx.font = `700 ${titlePx}px "Inter", sans-serif`
-    ;(ctx as any).letterSpacing = `${typography.letterSpacing / 1000}em`
-    ctx.strokeStyle = 'rgba(0,0,0,0.5)'
-    ctx.lineWidth = Math.max(2, titlePx * 0.06)
-    ctx.shadowColor = 'rgba(0,0,0,0.6)'
-    ctx.shadowBlur = Math.round(titlePx * 0.25)
-    ctx.shadowOffsetY = Math.round(titlePx * 0.08)
-    ctx.lineJoin = 'round'
-    ctx.strokeText(currentTrack.title, titleX, titleY)
-    ctx.fillStyle = 'rgba(255,255,255,0.9)'
-    ctx.fillText(currentTrack.title, titleX, titleY)
-    ctx.shadowColor = 'transparent'
-    ctx.shadowBlur = 0
-    ctx.shadowOffsetY = 0
-    ;(ctx as any).letterSpacing = '0px'
+    const scale = (typography.titleScale ?? 100) / 100
+    const titlePx = Math.round(typography.titleSize * (width / 640) * scale)
+    const fontFamily = RENDERER_FONT_MAP[typography.titleFont ?? 'inter'] ?? '"Inter", sans-serif'
+    drawTitle(ctx, currentTrack.title, titleX, titleY, titlePx, fontFamily,
+      typography.titleStyle ?? 'minimal', typography.titleDeco ?? 'none',
+      typography.titleCaptionTop ?? '', typography.titleCaptionBottom ?? '',
+      typography.letterSpacing, width)
   }
 
   if (typography.showSub) {
@@ -300,6 +290,253 @@ function drawVisualizer(
   ctx.shadowBlur = 0
   ctx.shadowColor = 'transparent'
   ctx.globalAlpha = 1
+}
+
+const RENDERER_FONT_MAP: Record<string, string> = {
+  inter:           '"Inter", sans-serif',
+  playfair:        '"Playfair Display", serif',
+  dm_serif:        '"DM Serif Display", serif',
+  cormorant:       '"Cormorant Garamond", serif',
+  nunito:          'Nunito, sans-serif',
+  barlow:          '"Barlow Condensed", sans-serif',
+  orbitron:        'Orbitron, sans-serif',
+  space_mono:      '"Space Mono", monospace',
+  dancing:         '"Dancing Script", cursive',
+  black_han:       '"Black Han Sans", sans-serif',
+  jua:             'Jua, sans-serif',
+  nanum_gothic:    '"Nanum Gothic", sans-serif',
+  nanum_myeongjo:  '"Nanum Myeongjo", serif',
+  gowun_batang:    '"Gowun Batang", serif',
+  hi_melody:       '"Hi Melody", cursive',
+  poor_story:      '"Poor Story", cursive',
+  noto_sans_kr:    '"Noto Sans KR", sans-serif',
+}
+
+function measureTitleWidth(ctx: OffscreenCanvasRenderingContext2D, text: string, px: number, fontFamily: string): number {
+  ctx.save()
+  ctx.font = `700 ${px}px ${fontFamily}`
+  const w = ctx.measureText(text).width
+  ctx.restore()
+  return w
+}
+
+function drawTitle(
+  ctx: OffscreenCanvasRenderingContext2D,
+  text: string,
+  x: number, y: number,
+  px: number,
+  fontFamily: string,
+  style: string,
+  deco: string,
+  captionTop: string,
+  captionBottom: string,
+  letterSpacing: number,
+  width: number,
+): void {
+  const s = width / 640
+  const textW = measureTitleWidth(ctx, text, px, fontFamily)
+
+  // deco: bg-word (배경에 먼저)
+  if (deco === 'bg-word') {
+    ctx.save()
+    ctx.globalAlpha = 0.04
+    ctx.font = `900 ${px * 4}px ${fontFamily}`
+    ctx.fillStyle = '#ffffff'
+    ctx.textAlign = 'center'
+    ctx.fillText(captionTop || text, x, y)
+    ctx.restore()
+  }
+
+  // style: card (텍스트 아래 배경)
+  if (style === 'card') {
+    const padX = 18 * s, padY = 8 * s
+    ctx.save()
+    ctx.fillStyle = 'rgba(0,0,0,0.45)'
+    ctx.beginPath()
+    ;(ctx as any).roundRect(x - textW / 2 - padX, y - px * 0.6 - padY, textW + padX * 2, px * 1.2 + padY * 2, 6 * s)
+    ctx.fill()
+    ctx.restore()
+  }
+
+  // deco: caption 상단
+  if ((deco === 'caption' || deco === 'divider') && captionTop) {
+    const capPx = Math.round(10 * s)
+    ctx.save()
+    ctx.font = `400 ${capPx}px "Inter", sans-serif`
+    ;(ctx as any).letterSpacing = '0.15em'
+    ctx.fillStyle = 'rgba(255,255,255,0.65)'
+    ctx.textAlign = 'center'
+    ctx.fillText(captionTop.toUpperCase(), x, y - px * 0.8)
+    ctx.restore()
+  }
+
+  // deco: divider 상단 라인
+  if (deco === 'divider') {
+    const lineW = Math.max(160 * s, textW)
+    ctx.save()
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)'
+    ctx.lineWidth = 1
+    ctx.beginPath()
+    ctx.moveTo(x - lineW / 2, y - px * 0.65)
+    ctx.lineTo(x + lineW / 2, y - px * 0.65)
+    ctx.stroke()
+    ctx.restore()
+  }
+
+  // 폰트 굵기/스타일 설정
+  const weight = style === 'modern' ? '300' : style === 'bold' ? '900' : '700'
+  ctx.font = `${weight} ${px}px ${fontFamily}`
+  ;(ctx as any).letterSpacing = style === 'modern' ? '0.12em' : `${letterSpacing / 1000}em`
+  ctx.textAlign = 'center'
+  ctx.lineJoin = 'round'
+
+  // 기본 텍스트 렌더링
+  switch (style) {
+    case 'neon': {
+      ctx.shadowColor = '#00d4ff'
+      ctx.shadowBlur = px * 0.5
+      ctx.strokeStyle = 'rgba(0,212,255,0.3)'
+      ctx.lineWidth = Math.max(1, px * 0.04)
+      ctx.strokeText(text, x, y)
+      ctx.fillStyle = '#00d4ff'
+      ctx.fillText(text, x, y)
+      ctx.shadowBlur = px * 0.25
+      ctx.fillText(text, x, y)
+      break
+    }
+    case 'outline': {
+      ctx.strokeStyle = 'rgba(255,255,255,0.9)'
+      ctx.lineWidth = Math.max(1.5, px * 0.03)
+      ctx.strokeText(text, x, y)
+      break
+    }
+    case 'vintage': {
+      ctx.strokeStyle = 'rgba(0,0,0,0.5)'
+      ctx.lineWidth = Math.max(2, px * 0.06)
+      ctx.shadowColor = 'rgba(0,0,0,0.5)'
+      ctx.shadowBlur = Math.round(px * 0.2)
+      ctx.shadowOffsetY = Math.round(px * 0.06)
+      ctx.strokeText(text, x, y)
+      ctx.fillStyle = '#f0e6c8'
+      ctx.fillText(text, x, y)
+      break
+    }
+    case 'glitch': {
+      ctx.save()
+      ctx.fillStyle = '#ff003c'
+      ctx.globalAlpha = 0.8
+      ctx.fillText(text, x - 3 * s, y - 2 * s)
+      ctx.fillStyle = '#00d4ff'
+      ctx.fillText(text, x + 3 * s, y + 2 * s)
+      ctx.restore()
+      ctx.strokeStyle = 'rgba(0,0,0,0.4)'
+      ctx.lineWidth = Math.max(2, px * 0.06)
+      ctx.strokeText(text, x, y)
+      ctx.fillStyle = 'rgba(255,255,255,0.9)'
+      ctx.fillText(text, x, y)
+      break
+    }
+    default: {
+      ctx.strokeStyle = 'rgba(0,0,0,0.5)'
+      ctx.lineWidth = Math.max(2, px * 0.06)
+      ctx.shadowColor = 'rgba(0,0,0,0.6)'
+      ctx.shadowBlur = Math.round(px * 0.25)
+      ctx.shadowOffsetY = Math.round(px * 0.08)
+      ctx.strokeText(text, x, y)
+      ctx.fillStyle = style === 'modern' ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.9)'
+      ctx.fillText(text, x, y)
+    }
+  }
+
+  // underline
+  if (style === 'underline') {
+    ctx.save()
+    ctx.strokeStyle = 'rgba(255,255,255,0.8)'
+    ctx.lineWidth = 2
+    ctx.beginPath()
+    ctx.moveTo(x - textW / 2, y + px * 0.58)
+    ctx.lineTo(x + textW / 2, y + px * 0.58)
+    ctx.stroke()
+    ctx.restore()
+  }
+
+  ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0
+  ;(ctx as any).letterSpacing = '0px'
+
+  // deco: divider 하단 라인 + 하단 캡션
+  if (deco === 'divider') {
+    const lineW = Math.max(160 * s, textW)
+    ctx.save()
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)'
+    ctx.lineWidth = 1
+    ctx.beginPath()
+    ctx.moveTo(x - lineW / 2, y + px * 0.65)
+    ctx.lineTo(x + lineW / 2, y + px * 0.65)
+    ctx.stroke()
+    ctx.restore()
+  }
+
+  if ((deco === 'caption' || deco === 'divider') && captionBottom) {
+    const capPx = Math.round(10 * s)
+    ctx.save()
+    ctx.font = `400 ${capPx}px "Inter", sans-serif`
+    ;(ctx as any).letterSpacing = '0.15em'
+    ctx.fillStyle = 'rgba(255,255,255,0.65)'
+    ctx.textAlign = 'center'
+    ctx.fillText(captionBottom.toUpperCase(), x, y + px * 0.8)
+    ctx.restore()
+  }
+
+  // deco: frame
+  if (deco === 'frame') {
+    const padX = 12 * s, padY = 8 * s
+    ctx.save()
+    ctx.strokeStyle = 'rgba(255,255,255,0.45)'
+    ctx.lineWidth = 1
+    ctx.strokeRect(x - textW / 2 - padX, y - px * 0.6 - padY, textW + padX * 2, px * 1.2 + padY * 2)
+    ctx.restore()
+  }
+
+  // deco: bar-left
+  if (deco === 'bar-left') {
+    const barX = x - textW / 2 - 16 * s
+    ctx.save()
+    ctx.strokeStyle = '#00d4ff'
+    ctx.lineWidth = 4 * s
+    ctx.beginPath()
+    ctx.moveTo(barX, y - px * 0.6)
+    ctx.lineTo(barX, y + px * 0.6)
+    ctx.stroke()
+    ctx.restore()
+  }
+
+  // deco: corner
+  if (deco === 'corner') {
+    const padX = 14 * s, padY = 8 * s
+    const cs = 12 * s
+    const l = x - textW / 2 - padX, r = x + textW / 2 + padX
+    const t = y - px * 0.6 - padY, b = y + px * 0.6 + padY
+    ctx.save()
+    ctx.strokeStyle = 'rgba(255,255,255,0.6)'
+    ctx.lineWidth = 1.5
+    ctx.beginPath(); ctx.moveTo(l + cs, t); ctx.lineTo(l, t); ctx.lineTo(l, t + cs); ctx.stroke()
+    ctx.beginPath(); ctx.moveTo(r - cs, b); ctx.lineTo(r, b); ctx.lineTo(r, b - cs); ctx.stroke()
+    ctx.restore()
+  }
+
+  // deco: wave
+  if (deco === 'wave') {
+    const wW = textW * 1.2
+    const wY = y + px * 0.8
+    ctx.save()
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)'
+    ctx.lineWidth = 1.5
+    ctx.beginPath()
+    ctx.moveTo(x - wW / 2, wY)
+    ctx.bezierCurveTo(x - wW / 4, wY - 5 * s, x + wW / 4, wY + 5 * s, x + wW / 2, wY)
+    ctx.stroke()
+    ctx.restore()
+  }
 }
 
 export async function loadImageBitmap(url: string): Promise<ImageBitmap> {
