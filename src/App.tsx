@@ -57,7 +57,25 @@ export default function App() {
   const [theme, setTheme] = useState(_init.snapshot?.theme ?? 'midnight')
   const [effects, setEffects] = useState<Effects>(_init.snapshot?.effects ?? { vis: true, crossfade: false, ducking: true, blur: true })
   const [visualizer, setVisualizer] = useState<Visualizer>(_init.snapshot?.visualizer ?? { type: 'bars', intensity: 70, opacity: 85, y: 75, size: 50, width: 100, color: 'rainbow' })
-  const [typography, setTypography] = useState<Typography>(_init.snapshot?.typography ?? { titleSize: 20, letterSpacing: -15, titlePosition: { x: 50, y: 48 }, subPosition: { x: 50, y: 55 }, showTitle: true, showSub: true, subSize: 18, subLetterSpacing: 0 })
+  const [typography, setTypography] = useState<Typography>(_init.snapshot?.typography ?? {
+    titleSize: 20,
+    letterSpacing: -15,
+    titlePosition: { x: 50, y: 48 },
+    subPosition: { x: 50, y: 55 },
+    showTitle: true,
+    showSub: true,
+    subSize: 18,
+    subLetterSpacing: 0,
+    titleStyle: 'minimal',
+    titleDeco: 'none',
+    titleFont: 'inter',
+    titlePositionPreset: 'bc',
+    titleCaptionTop: '',
+    titleCaptionBottom: '',
+    titleSubOffset: 0,
+    titleAlwaysShow: true,
+    titleScale: 100,
+  })
   const [exportSettings, setExportSettings] = useState<ExportSettings>(_init.snapshot?.exportSettings ?? {
     filename: 'my-playlist',
     resolution: '1080p',
