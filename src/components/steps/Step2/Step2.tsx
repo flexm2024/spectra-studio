@@ -1018,7 +1018,136 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
               </div>
             </>
           ) : (
-            <div>타이틀 탭</div>
+            <>
+              {/* 곡 제목 표시 */}
+              <div className="typo-toggle-row">
+                <span className="typo-toggle-row__label">곡 제목 표시</span>
+                <Switch
+                  on={typography.showTitle}
+                  onChange={() => setTypography(prev => ({ ...prev, showTitle: !prev.showTitle }))}
+                />
+              </div>
+
+              {/* 기본 스타일 */}
+              <div className="s2-section-label">기본 스타일</div>
+              <div className="title-style-grid">
+                {TITLE_BASE_STYLES.map(({ id, label }) => (
+                  <button
+                    key={id}
+                    className={`title-style-btn${typography.titleStyle === id ? ' title-style-btn--active' : ''}`}
+                    onClick={() => setTypography(prev => ({ ...prev, titleStyle: id }))}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {/* 데코 스타일 */}
+              <div className="s2-section-label">데코 스타일</div>
+              <div className="title-style-grid">
+                {TITLE_DECO_STYLES.map(({ id, label }) => (
+                  <button
+                    key={id}
+                    className={`title-style-btn${typography.titleDeco === id ? ' title-style-btn--active' : ''}`}
+                    onClick={() => setTypography(prev => ({
+                      ...prev,
+                      titleDeco: prev.titleDeco === id ? 'none' : id,
+                    }))}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {/* 스타일별 입력 — caption/divider/frame/bar-left일 때만 */}
+              {DECO_CAPTION_KEYS.has(typography.titleDeco) && (
+                <>
+                  <div className="s2-section-label">스타일별 입력</div>
+                  <input
+                    className="title-caption-input"
+                    placeholder="상단 캡션"
+                    value={typography.titleCaptionTop}
+                    onChange={e => setTypography(prev => ({ ...prev, titleCaptionTop: e.target.value }))}
+                  />
+                  <input
+                    className="title-caption-input"
+                    placeholder="하단 캡션"
+                    value={typography.titleCaptionBottom}
+                    onChange={e => setTypography(prev => ({ ...prev, titleCaptionBottom: e.target.value }))}
+                  />
+                  <div className="slider-row">
+                    <div className="slider-row__label">보조 위치</div>
+                    <input
+                      className="slider"
+                      type="range"
+                      min={-50}
+                      max={50}
+                      value={typography.titleSubOffset}
+                      onChange={e => setTypography(prev => ({ ...prev, titleSubOffset: Number(e.target.value) }))}
+                    />
+                    <div className="slider-row__value">{typography.titleSubOffset}</div>
+                  </div>
+                </>
+              )}
+
+              {/* 폰트 */}
+              <div className="s2-section-label">폰트</div>
+              <div className="title-font-grid">
+                {TITLE_FONTS.map(({ key, label, sample }) => (
+                  <button
+                    key={key}
+                    className={`title-font-btn${typography.titleFont === key ? ' title-font-btn--active' : ''}`}
+                    style={{ fontFamily: FONT_MAP[key] }}
+                    onClick={() => setTypography(prev => ({ ...prev, titleFont: key }))}
+                  >
+                    <span className="title-font-btn__sample">{sample}</span>
+                    <span className="title-font-btn__label" style={{ fontFamily: 'var(--f-sans)' }}>{label}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* 위치 3x3 그리드 */}
+              <div className="s2-section-label">위치</div>
+              <div className="title-pos-grid">
+                {(Object.keys(PRESET_COORDS) as TitlePositionPreset[]).map(preset => (
+                  <button
+                    key={preset}
+                    className={`title-pos-btn${typography.titlePositionPreset === preset ? ' title-pos-btn--active' : ''}`}
+                    data-preset={preset}
+                    onClick={() => setTypography(prev => ({
+                      ...prev,
+                      titlePositionPreset: preset,
+                      titlePosition: PRESET_COORDS[preset],
+                    }))}
+                  >
+                    <span className={`title-pos-dot${typography.titlePositionPreset === preset ? ' title-pos-dot--active' : ''}`} />
+                  </button>
+                ))}
+              </div>
+
+              {/* 영상 내내 항상 표시 */}
+              <div className="typo-toggle-row">
+                <span className="typo-toggle-row__label">영상 내내 항상 표시</span>
+                <Switch
+                  on={typography.titleAlwaysShow}
+                  onChange={() => setTypography(prev => ({ ...prev, titleAlwaysShow: !prev.titleAlwaysShow }))}
+                />
+              </div>
+
+              {/* 크기 */}
+              <div className="slider-row">
+                <div className="slider-row__label">크기</div>
+                <input
+                  className="slider"
+                  type="range"
+                  min={0}
+                  max={200}
+                  value={typography.titleScale}
+                  onChange={e => setTypography(prev => ({ ...prev, titleScale: Number(e.target.value) }))}
+                />
+                <div className="slider-row__value">{typography.titleScale}%</div>
+              </div>
+            </>
           )}
         </div>
       </div>
