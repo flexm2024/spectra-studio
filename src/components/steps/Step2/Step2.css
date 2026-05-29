@@ -490,3 +490,178 @@
   background: var(--ink-3);
 }
 .title-pos-dot--active { background: var(--bg-elev); }
+
+/* ─── 기본 스타일 (title-style-*) ─── */
+
+/* minimal: 변경 없음 (기본 s2-frame__title 스타일 그대로) */
+
+.title-style-modern .s2-frame__title {
+  font-weight: 300;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase;
+  -webkit-text-stroke: none;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.title-style-bold .s2-frame__title { font-weight: 900; }
+
+.title-style-underline .s2-frame__title {
+  border-bottom: 2px solid rgba(255, 255, 255, 0.8);
+  padding-bottom: 4px;
+}
+
+.title-style-card {
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 6px;
+  padding: 8px 18px;
+  backdrop-filter: blur(6px);
+}
+
+.title-style-neon .s2-frame__title {
+  color: #00d4ff;
+  -webkit-text-stroke: none;
+  text-shadow: 0 0 10px #00d4ff, 0 0 20px rgba(0, 212, 255, 0.5), 0 0 40px rgba(0, 212, 255, 0.25);
+}
+
+.title-style-glitch .s2-frame__title {
+  position: relative;
+  animation: title-glitch 2.5s infinite;
+}
+.title-style-glitch .s2-frame__title::before,
+.title-style-glitch .s2-frame__title::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  overflow: hidden;
+}
+.title-style-glitch .s2-frame__title::before {
+  color: #ff003c;
+  animation: title-glitch-r 2.5s infinite;
+  clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+}
+.title-style-glitch .s2-frame__title::after {
+  color: #00d4ff;
+  animation: title-glitch-b 2.5s infinite;
+  clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
+}
+@keyframes title-glitch {
+  0%, 95%, 100% { transform: none; }
+  96% { transform: skewX(-2deg); }
+  97% { transform: none; }
+  98% { transform: skewX(1deg); }
+}
+@keyframes title-glitch-r {
+  0%, 95%, 100% { transform: none; }
+  96% { transform: translateX(-3px); }
+  97% { transform: none; }
+}
+@keyframes title-glitch-b {
+  0%, 95%, 100% { transform: none; }
+  96% { transform: translateX(3px); }
+  97% { transform: none; }
+}
+
+.title-style-outline .s2-frame__title {
+  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.9);
+  color: transparent;
+  text-shadow: none;
+  paint-order: stroke fill;
+}
+
+.title-style-vintage .s2-frame__title {
+  color: #f0e6c8;
+  filter: sepia(0.3);
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.5);
+  -webkit-text-stroke: none;
+}
+
+/* ─── 데코 스타일 (title-deco-*) ─── */
+
+.title-deco-divider {
+  gap: 8px;
+}
+.title-deco-divider::before,
+.title-deco-divider::after {
+  content: '';
+  display: block;
+  width: 100%;
+  min-width: 160px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.title-deco-bar-left {
+  border-left: 4px solid var(--c);
+  padding-left: 12px;
+  align-items: flex-start;
+}
+
+.title-deco-frame {
+  outline: 1px solid rgba(255, 255, 255, 0.45);
+  outline-offset: 10px;
+}
+
+.title-deco-caption {
+  gap: 6px;
+}
+
+.title-deco-bg-word {
+  position: relative;
+}
+.title-deco-bg-word::before {
+  content: attr(data-caption);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 5em;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.04);
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 0;
+  letter-spacing: 0.05em;
+}
+.title-deco-bg-word .s2-frame__title { position: relative; z-index: 1; }
+
+.title-deco-corner {
+  position: relative;
+  padding: 8px 14px;
+}
+.title-deco-corner::before,
+.title-deco-corner::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-color: rgba(255, 255, 255, 0.6);
+  border-style: solid;
+}
+.title-deco-corner::before {
+  top: 0;
+  left: 0;
+  border-width: 1.5px 0 0 1.5px;
+}
+.title-deco-corner::after {
+  bottom: 0;
+  right: 0;
+  border-width: 0 1.5px 1.5px 0;
+}
+
+.title-deco-wave {
+  padding-bottom: 14px;
+  position: relative;
+}
+.title-deco-wave::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 140%;
+  height: 6px;
+  border-bottom: 1.5px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+}
