@@ -236,7 +236,7 @@ describe('Step2', () => {
     const setTypography = vi.fn()
     render(<Step2 {...base} setTypography={setTypography} />)
     fireEvent.click(screen.getByRole('button', { name: '타이틀' }))
-    fireEvent.click(screen.getByRole('button', { name: '주아체' }))
+    fireEvent.click(screen.getByRole('button', { name: '가나 주아체' }))
     const updater = setTypography.mock.calls[0][0]
     const result = typeof updater === 'function' ? updater(base.typography) : updater
     expect(result.titleFont).toBe('jua')
