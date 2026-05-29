@@ -375,11 +375,11 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
             <>
               <button
                 type="button"
-                className="s3-btn-full"
+                className="s3-btn-render"
                 onClick={startRender}
                 disabled={!canRender || tracks.length === 0}
               >
-                <Icon name="export" size={15} /> 렌더링 시작
+                <Icon name="export" size={16} /> 렌더링 시작
               </button>
               {renderState === 'error' && renderError && (
                 <div className="s3-render-error">
