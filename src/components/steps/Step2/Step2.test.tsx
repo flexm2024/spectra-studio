@@ -73,6 +73,7 @@ describe('Step2', () => {
   it('효과 칩 클릭 시 setEffects가 호출된다', () => {
     const setEffects = vi.fn()
     render(<Step2 {...base} setEffects={setEffects} />)
+    fireEvent.click(screen.getByRole('button', { name: '효과' }))
     fireEvent.click(screen.getByText('크로스페이드').closest('.effect-chip')!)
     expect(setEffects).toHaveBeenCalled()
   })

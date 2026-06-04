@@ -1003,11 +1003,6 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                 </>
               )}
 
-              <hr className="divider" />
-              <div className="s2-nav">
-                <Button onClick={onBack}><Icon name="chevronLeft" size={14} /> 이전</Button>
-                <Button variant="primary" onClick={onNext}>다음 <Icon name="arrowRight" size={14} /></Button>
-              </div>
             </>
           ) : (
             <>
@@ -1144,6 +1139,11 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
 
             </>
           )}
+          <hr className="divider" />
+          <div className="s2-nav">
+            <Button onClick={onBack}><Icon name="chevronLeft" size={14} /> 이전</Button>
+            <Button variant="primary" onClick={onNext}>다음 <Icon name="arrowRight" size={14} /></Button>
+          </div>
         </div>
       </div>
     </div>
