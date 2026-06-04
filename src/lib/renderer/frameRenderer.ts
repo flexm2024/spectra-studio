@@ -78,8 +78,7 @@ export function drawFrame(input: DrawFrameInput): void {
   if (typography.showTitle) {
     const titleX = Math.round((typography.titlePosition.x / 100) * width)
     const titleY = Math.round((typography.titlePosition.y / 100) * height)
-    const scale = (typography.titleScale ?? 100) / 100
-    const titlePx = Math.round(typography.titleSize * (width / 640) * scale)
+    const titlePx = Math.round(typography.titleSize * (width / 640))
     const fontFamily = RENDERER_FONT_MAP[typography.titleFont ?? 'inter'] ?? '"Inter", sans-serif'
     drawTitle(ctx, currentTrack.title, titleX, titleY, titlePx, fontFamily,
       typography.titleStyle ?? 'minimal', typography.titleDeco ?? 'none',

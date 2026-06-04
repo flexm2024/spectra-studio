@@ -101,7 +101,6 @@ export interface Typography {
   titleCaptionBottom: string
   titleSubOffset: number
   titleAlwaysShow: boolean
-  titleScale: number
 }
 
 export interface ExportSettings {

@@ -787,7 +787,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                   className="s2-frame__title"
                   data-text={playingTrack?.title}
                   style={{
-                    fontSize: `${typography.titleSize * (typography.titleScale / 100)}px`,
+                    fontSize: `${typography.titleSize}px`,
                     letterSpacing: `${typography.letterSpacing / 1000}em`,
                   }}
                 >
@@ -963,31 +963,6 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
               <div className="s2-section-label">타이포그래피</div>
 
               <div className="typo-toggle-row">
-                <span className="typo-toggle-row__label">제목</span>
-                <Switch on={typography.showTitle} onChange={() => setTypography({ ...typography, showTitle: !typography.showTitle })} />
-              </div>
-              {typography.showTitle && (
-                <>
-                  <div className="slider-row">
-                    <div className="slider-row__label">크기</div>
-                    <input className="slider" type="range" min={20} max={80}
-                      value={typography.titleSize}
-                      onChange={e => setTypography({ ...typography, titleSize: Number(e.target.value) })}
-                    />
-                    <div className="slider-row__value">{typography.titleSize}</div>
-                  </div>
-                  <div className="slider-row">
-                    <div className="slider-row__label">자간</div>
-                    <input className="slider" type="range" min={-50} max={50}
-                      value={typography.letterSpacing}
-                      onChange={e => setTypography({ ...typography, letterSpacing: Number(e.target.value) })}
-                    />
-                    <div className="slider-row__value">{typography.letterSpacing}</div>
-                  </div>
-                </>
-              )}
-
-              <div className="typo-toggle-row">
                 <span className="typo-toggle-row__label">트랙</span>
                 <Switch on={typography.showSub} onChange={() => setTypography({ ...typography, showSub: !typography.showSub })} />
               </div>
@@ -1151,18 +1126,29 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                 />
               </div>
 
-              {/* 크기 */}
               <div className="slider-row">
                 <div className="slider-row__label">크기</div>
                 <input
                   className="slider"
                   type="range"
-                  min={0}
-                  max={200}
-                  value={typography.titleScale}
-                  onChange={e => setTypography(prev => ({ ...prev, titleScale: Number(e.target.value) }))}
+                  min={20}
+                  max={80}
+                  value={typography.titleSize}
+                  onChange={e => setTypography(prev => ({ ...prev, titleSize: Number(e.target.value) }))}
                 />
-                <div className="slider-row__value">{typography.titleScale}%</div>
+                <div className="slider-row__value">{typography.titleSize}</div>
+              </div>
+              <div className="slider-row">
+                <div className="slider-row__label">자간</div>
+                <input
+                  className="slider"
+                  type="range"
+                  min={-50}
+                  max={50}
+                  value={typography.letterSpacing}
+                  onChange={e => setTypography(prev => ({ ...prev, letterSpacing: Number(e.target.value) }))}
+                />
+                <div className="slider-row__value">{typography.letterSpacing}</div>
               </div>
             </>
           )}

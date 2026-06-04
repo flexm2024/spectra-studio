@@ -30,7 +30,6 @@ const base = {
     titleCaptionBottom: '',
     titleSubOffset: 0,
     titleAlwaysShow: true,
-    titleScale: 100,
   },
   setTypography: vi.fn(),
   onBack: vi.fn(),
@@ -265,10 +264,10 @@ describe('Step2', () => {
     expect(document.querySelector('.title-deco-divider')).toBeInTheDocument()
   })
 
-  it('titleScale이 200일 때 s2-frame__title의 font-size가 titleSize * 2가 된다', () => {
-    const typo = { ...base.typography, titleSize: 48, titleScale: 200 }
+  it('titleSize가 48일 때 s2-frame__title의 font-size가 48px가 된다', () => {
+    const typo = { ...base.typography, titleSize: 48 }
     render(<Step2 {...base} typography={typo} />)
     const title = document.querySelector('.s2-frame__title') as HTMLElement
-    expect(title.style.fontSize).toBe('96px')
+    expect(title.style.fontSize).toBe('48px')
   })
 })
