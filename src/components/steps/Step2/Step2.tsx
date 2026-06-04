@@ -1020,6 +1020,31 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                 />
               </div>
 
+              <div className="slider-row">
+                <div className="slider-row__label">크기</div>
+                <input
+                  className="slider"
+                  type="range"
+                  min={20}
+                  max={80}
+                  value={typography.titleSize}
+                  onChange={e => setTypography(prev => ({ ...prev, titleSize: Number(e.target.value) }))}
+                />
+                <div className="slider-row__value">{typography.titleSize}</div>
+              </div>
+              <div className="slider-row">
+                <div className="slider-row__label">자간</div>
+                <input
+                  className="slider"
+                  type="range"
+                  min={-50}
+                  max={50}
+                  value={typography.letterSpacing}
+                  onChange={e => setTypography(prev => ({ ...prev, letterSpacing: Number(e.target.value) }))}
+                />
+                <div className="slider-row__value">{typography.letterSpacing}</div>
+              </div>
+
               {/* 기본 스타일 */}
               <div className="s2-section-label">기본 스타일</div>
               <div className="title-style-grid">
@@ -1117,39 +1142,6 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                 ))}
               </div>
 
-              {/* 영상 내내 항상 표시 */}
-              <div className="typo-toggle-row">
-                <span className="typo-toggle-row__label">영상 내내 항상 표시</span>
-                <Switch
-                  on={typography.titleAlwaysShow}
-                  onChange={() => setTypography(prev => ({ ...prev, titleAlwaysShow: !prev.titleAlwaysShow }))}
-                />
-              </div>
-
-              <div className="slider-row">
-                <div className="slider-row__label">크기</div>
-                <input
-                  className="slider"
-                  type="range"
-                  min={20}
-                  max={80}
-                  value={typography.titleSize}
-                  onChange={e => setTypography(prev => ({ ...prev, titleSize: Number(e.target.value) }))}
-                />
-                <div className="slider-row__value">{typography.titleSize}</div>
-              </div>
-              <div className="slider-row">
-                <div className="slider-row__label">자간</div>
-                <input
-                  className="slider"
-                  type="range"
-                  min={-50}
-                  max={50}
-                  value={typography.letterSpacing}
-                  onChange={e => setTypography(prev => ({ ...prev, letterSpacing: Number(e.target.value) }))}
-                />
-                <div className="slider-row__value">{typography.letterSpacing}</div>
-              </div>
             </>
           )}
         </div>

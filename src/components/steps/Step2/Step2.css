@@ -467,11 +467,12 @@
 /* 위치 3x3 그리드 */
 .title-pos-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, 32px);
   gap: 4px;
 }
 .title-pos-btn {
-  aspect-ratio: 1;
+  width: 32px;
+  height: 32px;
   background: var(--bg-sunken);
   border: 1px solid var(--line);
   border-radius: var(--r-s);

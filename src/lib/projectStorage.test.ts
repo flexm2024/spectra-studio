@@ -14,7 +14,7 @@ const sample: SavedProject = {
     theme: 'midnight',
     effects: { vis: true, crossfade: false, ducking: true, blur: true },
     visualizer: { type: 'bars', intensity: 70, opacity: 85, y: 75, size: 50, width: 100, color: 'rainbow' },
-    typography: { titleSize: 20, letterSpacing: -15, titlePosition: { x: 50, y: 48 }, subPosition: { x: 50, y: 55 }, showTitle: true, showSub: true, subSize: 18, subLetterSpacing: 0, titleStyle: 'minimal' as const, titleDeco: 'none' as const, titleFont: 'inter', titlePositionPreset: 'bc' as const, titleCaptionTop: '', titleCaptionBottom: '', titleSubOffset: 0, titleAlwaysShow: true },
+    typography: { titleSize: 20, letterSpacing: -15, titlePosition: { x: 50, y: 48 }, subPosition: { x: 50, y: 55 }, showTitle: true, showSub: true, subSize: 18, subLetterSpacing: 0, titleStyle: 'minimal' as const, titleDeco: 'none' as const, titleFont: 'inter', titlePositionPreset: 'bc' as const, titleCaptionTop: '', titleCaptionBottom: '', titleSubOffset: 0 },
     exportSettings: { filename: 'test', resolution: '1080p' },
     loops: 1,
     quality: '192k',

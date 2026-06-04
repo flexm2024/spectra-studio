@@ -29,7 +29,6 @@ const base = {
     titleCaptionTop: '',
     titleCaptionBottom: '',
     titleSubOffset: 0,
-    titleAlwaysShow: true,
   },
   setTypography: vi.fn(),
   onBack: vi.fn(),
