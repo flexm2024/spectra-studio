@@ -76,10 +76,16 @@ export function drawFrame(input: DrawFrameInput): void {
   ctx.textBaseline = 'middle'
 
   if (typography.showTitle) {
-    const titleX = Math.round((typography.titlePosition.x / 100) * width)
+    const anchorX = Math.round((typography.titlePosition.x / 100) * width)
     const titleY = Math.round((typography.titlePosition.y / 100) * height)
     const titlePx = Math.round(typography.titleSize * (width / 640))
     const fontFamily = RENDERER_FONT_MAP[typography.titleFont ?? 'inter'] ?? '"Inter", sans-serif'
+    // 정렬별 앵커 → 중심 x 변환 (geometry는 항상 center 기준)
+    const align = typography.titleAlign ?? 'center'
+    const textW = measureTitleWidth(ctx, currentTrack.title, titlePx, fontFamily)
+    const titleX = align === 'left' ? anchorX + textW / 2
+                 : align === 'right' ? anchorX - textW / 2
+                 : anchorX
     drawTitle(ctx, currentTrack.title, titleX, titleY, titlePx, fontFamily,
       typography.titleStyle ?? 'minimal', typography.titleDeco ?? 'none',
       typography.titleCaptionTop ?? '', typography.titleCaptionBottom ?? '',

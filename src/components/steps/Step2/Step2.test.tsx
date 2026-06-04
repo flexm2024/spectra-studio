@@ -28,7 +28,7 @@ const base = {
     titlePositionPreset: 'bc' as const,
     titleCaptionTop: '',
     titleCaptionBottom: '',
-    titleSubOffset: 0,
+    titleAlign: 'center' as const,
   },
   setTypography: vi.fn(),
   onBack: vi.fn(),

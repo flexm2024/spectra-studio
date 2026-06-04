@@ -99,6 +99,7 @@ export interface Typography {
   titlePositionPreset: TitlePositionPreset
   titleCaptionTop: string
   titleCaptionBottom: string
+  titleAlign: 'left' | 'center' | 'right'
 }
 
 export interface ExportSettings {

@@ -776,6 +776,9 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                   left: `${typography.titlePosition.x}%`,
                   top: `${typography.titlePosition.y}%`,
                   fontFamily: FONT_MAP[typography.titleFont] ?? FONT_MAP.inter,
+                  transform: `translate(${typography.titleAlign === 'left' ? '0' : typography.titleAlign === 'right' ? '-100%' : '-50%'}, -50%)`,
+                  alignItems: typography.titleAlign === 'left' ? 'flex-start' : typography.titleAlign === 'right' ? 'flex-end' : 'center',
+                  textAlign: typography.titleAlign,
                 }}
                 data-caption={typography.titleCaptionTop || playingTrack?.title}
                 onMouseDown={handleTitleMouseDown}
@@ -1113,6 +1116,17 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
               {/* 위치 */}
               <div className="title-section">
                 <div className="s2-section-label">위치</div>
+                <div className="title-align-row">
+                  {(['left', 'center', 'right'] as const).map(a => (
+                    <button
+                      key={a}
+                      className={`title-align-btn${typography.titleAlign === a ? ' title-align-btn--active' : ''}`}
+                      onClick={() => setTypography(prev => ({ ...prev, titleAlign: a }))}
+                    >
+                      {a === 'left' ? '왼쪽' : a === 'center' ? '가운데' : '오른쪽'}
+                    </button>
+                  ))}
+                </div>
                 <div className="title-pos-grid">
                   {(Object.keys(PRESET_COORDS) as TitlePositionPreset[]).map(preset => (
                     <button
