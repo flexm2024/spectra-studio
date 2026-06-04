@@ -1040,6 +1040,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                 <div className="slider-row__value">{typography.letterSpacing}</div>
               </div>
 
+              <hr className="divider" />
               {/* 기본 스타일 */}
               <div className="s2-section-label">기본 스타일</div>
               <div className="title-style-grid">
@@ -1054,6 +1055,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                 ))}
               </div>
 
+              <hr className="divider" />
               {/* 데코 스타일 */}
               <div className="s2-section-label">데코 스타일</div>
               <div className="title-style-grid">
@@ -1091,6 +1093,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                 </>
               )}
 
+              <hr className="divider" />
               {/* 폰트 */}
               <div className="s2-section-label">폰트</div>
               <div className="title-font-grid">
@@ -1107,6 +1110,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                 ))}
               </div>
 
+              <hr className="divider" />
               {/* 위치 3x3 그리드 */}
               <div className="s2-section-label">위치</div>
               <div className="title-pos-grid">
