@@ -1040,94 +1040,95 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                 <div className="slider-row__value">{typography.letterSpacing}</div>
               </div>
 
-              <hr className="divider" />
               {/* 기본 스타일 */}
-              <div className="s2-section-label">기본 스타일</div>
-              <div className="title-style-grid">
-                {TITLE_BASE_STYLES.map(({ id, label }) => (
-                  <button
-                    key={id}
-                    className={`title-style-btn${typography.titleStyle === id ? ' title-style-btn--active' : ''}`}
-                    onClick={() => setTypography(prev => ({ ...prev, titleStyle: id }))}
-                  >
-                    {label}
-                  </button>
-                ))}
+              <div className="title-section">
+                <div className="s2-section-label">기본 스타일</div>
+                <div className="title-style-grid">
+                  {TITLE_BASE_STYLES.map(({ id, label }) => (
+                    <button
+                      key={id}
+                      className={`title-style-btn${typography.titleStyle === id ? ' title-style-btn--active' : ''}`}
+                      onClick={() => setTypography(prev => ({ ...prev, titleStyle: id }))}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              <hr className="divider" />
               {/* 데코 스타일 */}
-              <div className="s2-section-label">데코 스타일</div>
-              <div className="title-style-grid">
-                {TITLE_DECO_STYLES.map(({ id, label }) => (
-                  <button
-                    key={id}
-                    className={`title-style-btn${typography.titleDeco === id ? ' title-style-btn--active' : ''}`}
-                    onClick={() => setTypography(prev => ({
-                      ...prev,
-                      titleDeco: prev.titleDeco === id ? 'none' : id,
-                    }))}
-                  >
-                    {label}
-                  </button>
-                ))}
+              <div className="title-section">
+                <div className="s2-section-label">데코 스타일</div>
+                <div className="title-style-grid">
+                  {TITLE_DECO_STYLES.map(({ id, label }) => (
+                    <button
+                      key={id}
+                      className={`title-style-btn${typography.titleDeco === id ? ' title-style-btn--active' : ''}`}
+                      onClick={() => setTypography(prev => ({
+                        ...prev,
+                        titleDeco: prev.titleDeco === id ? 'none' : id,
+                      }))}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                {/* 스타일별 입력 — caption/divider/frame/bar-left일 때만 */}
+                {DECO_CAPTION_KEYS.has(typography.titleDeco) && (
+                  <>
+                    <input
+                      className="title-caption-input"
+                      placeholder="상단 캡션"
+                      value={typography.titleCaptionTop}
+                      onChange={e => setTypography(prev => ({ ...prev, titleCaptionTop: e.target.value }))}
+                    />
+                    <input
+                      className="title-caption-input"
+                      placeholder="하단 캡션"
+                      value={typography.titleCaptionBottom}
+                      onChange={e => setTypography(prev => ({ ...prev, titleCaptionBottom: e.target.value }))}
+                    />
+                  </>
+                )}
               </div>
 
-              {/* 스타일별 입력 — caption/divider/frame/bar-left일 때만 */}
-              {DECO_CAPTION_KEYS.has(typography.titleDeco) && (
-                <>
-                  <div className="s2-section-label">스타일별 입력</div>
-                  <input
-                    className="title-caption-input"
-                    placeholder="상단 캡션"
-                    value={typography.titleCaptionTop}
-                    onChange={e => setTypography(prev => ({ ...prev, titleCaptionTop: e.target.value }))}
-                  />
-                  <input
-                    className="title-caption-input"
-                    placeholder="하단 캡션"
-                    value={typography.titleCaptionBottom}
-                    onChange={e => setTypography(prev => ({ ...prev, titleCaptionBottom: e.target.value }))}
-                  />
-
-                </>
-              )}
-
-              <hr className="divider" />
               {/* 폰트 */}
-              <div className="s2-section-label">폰트</div>
-              <div className="title-font-grid">
-                {TITLE_FONTS.map(({ key, label, sample }) => (
-                  <button
-                    key={key}
-                    className={`title-font-btn${typography.titleFont === key ? ' title-font-btn--active' : ''}`}
-                    style={{ fontFamily: FONT_MAP[key] }}
-                    onClick={() => setTypography(prev => ({ ...prev, titleFont: key }))}
-                  >
-                    <span className="title-font-btn__sample">{sample}</span>
-                    <span className="title-font-btn__label" style={{ fontFamily: 'var(--f-sans)' }}>{label}</span>
-                  </button>
-                ))}
+              <div className="title-section">
+                <div className="s2-section-label">폰트</div>
+                <div className="title-font-grid">
+                  {TITLE_FONTS.map(({ key, label, sample }) => (
+                    <button
+                      key={key}
+                      className={`title-font-btn${typography.titleFont === key ? ' title-font-btn--active' : ''}`}
+                      style={{ fontFamily: FONT_MAP[key] }}
+                      onClick={() => setTypography(prev => ({ ...prev, titleFont: key }))}
+                    >
+                      <span className="title-font-btn__sample">{sample}</span>
+                      <span className="title-font-btn__label" style={{ fontFamily: 'var(--f-sans)' }}>{label}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              <hr className="divider" />
-              {/* 위치 3x3 그리드 */}
-              <div className="s2-section-label">위치</div>
-              <div className="title-pos-grid">
-                {(Object.keys(PRESET_COORDS) as TitlePositionPreset[]).map(preset => (
-                  <button
-                    key={preset}
-                    className={`title-pos-btn${typography.titlePositionPreset === preset ? ' title-pos-btn--active' : ''}`}
-                    data-preset={preset}
-                    onClick={() => setTypography(prev => ({
-                      ...prev,
-                      titlePositionPreset: preset,
-                      titlePosition: PRESET_COORDS[preset],
-                    }))}
-                  >
-                    <span className={`title-pos-dot${typography.titlePositionPreset === preset ? ' title-pos-dot--active' : ''}`} />
-                  </button>
-                ))}
+              {/* 위치 */}
+              <div className="title-section">
+                <div className="s2-section-label">위치</div>
+                <div className="title-pos-grid">
+                  {(Object.keys(PRESET_COORDS) as TitlePositionPreset[]).map(preset => (
+                    <button
+                      key={preset}
+                      className={`title-pos-btn${typography.titlePositionPreset === preset ? ' title-pos-btn--active' : ''}`}
+                      data-preset={preset}
+                      onClick={() => setTypography(prev => ({
+                        ...prev,
+                        titlePositionPreset: preset,
+                        titlePosition: PRESET_COORDS[preset],
+                      }))}
+                    >
+                      <span className={`title-pos-dot${typography.titlePositionPreset === preset ? ' title-pos-dot--active' : ''}`} />
+                    </button>
+                  ))}
+                </div>
               </div>
 
             </>

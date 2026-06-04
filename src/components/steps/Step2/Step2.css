@@ -27,6 +27,17 @@
   border-left: 2px solid var(--c); padding-left: 7px;
 }
 
+/* 타이틀 탭 섹션 카드 */
+.title-section {
+  border: 1px solid var(--line);
+  border-radius: var(--r-m);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--bg-base);
+}
+
 /* 테마 그리드 */
 .theme-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .theme-card {
