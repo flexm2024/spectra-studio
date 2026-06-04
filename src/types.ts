@@ -99,7 +99,6 @@ export interface Typography {
   titlePositionPreset: TitlePositionPreset
   titleCaptionTop: string
   titleCaptionBottom: string
-  titleSubOffset: number
 }
 
 export interface ExportSettings {

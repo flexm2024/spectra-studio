@@ -1087,18 +1087,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                     value={typography.titleCaptionBottom}
                     onChange={e => setTypography(prev => ({ ...prev, titleCaptionBottom: e.target.value }))}
                   />
-                  <div className="slider-row">
-                    <div className="slider-row__label">보조 위치</div>
-                    <input
-                      className="slider"
-                      type="range"
-                      min={-50}
-                      max={50}
-                      value={typography.titleSubOffset}
-                      onChange={e => setTypography(prev => ({ ...prev, titleSubOffset: Number(e.target.value) }))}
-                    />
-                    <div className="slider-row__value">{typography.titleSubOffset}</div>
-                  </div>
+
                 </>
               )}
 
