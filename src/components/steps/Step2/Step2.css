@@ -476,12 +476,11 @@
 /* 위치 3x3 그리드 */
 .title-pos-grid {
   display: grid;
-  grid-template-columns: repeat(3, 32px);
+  grid-template-columns: repeat(3, 1fr);
   gap: 4px;
 }
 .title-pos-btn {
-  width: 32px;
-  height: 32px;
+  height: 28px;
   background: var(--bg-sunken);
   border: 1px solid var(--line);
   border-radius: var(--r-s);
