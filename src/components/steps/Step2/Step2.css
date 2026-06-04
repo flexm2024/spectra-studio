@@ -500,24 +500,6 @@
 }
 .title-pos-dot--active { background: var(--bg-elev); }
 
-.title-align-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
-}
-.title-align-btn {
-  padding: 5px 0;
-  font-size: 11.5px;
-  border: 1px solid var(--line);
-  border-radius: var(--r-s);
-  background: var(--bg-sunken);
-  color: var(--ink-3);
-  cursor: pointer;
-  transition: all 100ms ease;
-}
-.title-align-btn:hover { border-color: var(--line-strong); color: var(--ink); }
-.title-align-btn--active { background: var(--c); border-color: var(--c); color: #fff; }
-
 /* ─── 기본 스타일 (title-style-*) ─── */
 
 /* minimal: 변경 없음 (기본 s2-frame__title 스타일 그대로) */

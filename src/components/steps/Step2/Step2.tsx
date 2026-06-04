@@ -1116,17 +1116,6 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
               {/* 위치 */}
               <div className="title-section">
                 <div className="s2-section-label">위치</div>
-                <div className="title-align-row">
-                  {(['left', 'center', 'right'] as const).map(a => (
-                    <button
-                      key={a}
-                      className={`title-align-btn${typography.titleAlign === a ? ' title-align-btn--active' : ''}`}
-                      onClick={() => setTypography(prev => ({ ...prev, titleAlign: a }))}
-                    >
-                      {a === 'left' ? '왼쪽' : a === 'center' ? '가운데' : '오른쪽'}
-                    </button>
-                  ))}
-                </div>
                 <div className="title-pos-grid">
                   {(Object.keys(PRESET_COORDS) as TitlePositionPreset[]).map(preset => (
                     <button
@@ -1137,6 +1126,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                         ...prev,
                         titlePositionPreset: preset,
                         titlePosition: PRESET_COORDS[preset],
+                        titleAlign: preset.endsWith('l') ? 'left' : preset.endsWith('r') ? 'right' : 'center',
                       }))}
                     >
                       <span className={`title-pos-dot${typography.titlePositionPreset === preset ? ' title-pos-dot--active' : ''}`} />
