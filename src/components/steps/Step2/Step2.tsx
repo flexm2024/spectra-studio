@@ -117,6 +117,7 @@ const FONT_MAP: Record<string, string> = {
   hi_melody:       '"Hi Melody", cursive',
   poor_story:      '"Poor Story", cursive',
   noto_sans_kr:    '"Noto Sans KR", sans-serif',
+  paperlogy:       '"Paperlogy", sans-serif',
 }
 
 const TITLE_FONTS: { key: string; label: string; sample: string }[] = [
@@ -137,6 +138,7 @@ const TITLE_FONTS: { key: string; label: string; sample: string }[] = [
   { key: 'hi_melody',      label: '하이멜로디',  sample: '가나' },
   { key: 'poor_story',     label: '푸어스토리',  sample: '가나' },
   { key: 'noto_sans_kr',   label: '나눔젠',      sample: '가나' },
+  { key: 'paperlogy',      label: '페이퍼로지',  sample: '가나' },
 ]
 
 const PRESET_COORDS: Record<TitlePositionPreset, { x: number; y: number }> = {

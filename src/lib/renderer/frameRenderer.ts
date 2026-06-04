@@ -310,6 +310,7 @@ const RENDERER_FONT_MAP: Record<string, string> = {
   hi_melody:       '"Hi Melody", cursive',
   poor_story:      '"Poor Story", cursive',
   noto_sans_kr:    '"Noto Sans KR", sans-serif',
+  paperlogy:       '"Paperlogy", sans-serif',
 }
 
 function measureTitleWidth(ctx: OffscreenCanvasRenderingContext2D, text: string, px: number, fontFamily: string): number {
