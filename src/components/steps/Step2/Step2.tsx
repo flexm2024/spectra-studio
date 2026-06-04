@@ -1133,6 +1133,36 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                     </button>
                   ))}
                 </div>
+                <div className="slider-row">
+                  <div className="slider-row__label">가로</div>
+                  <input
+                    className="slider"
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={Math.round(typography.titlePosition.x)}
+                    onChange={e => setTypography(prev => ({
+                      ...prev,
+                      titlePosition: { ...prev.titlePosition, x: Number(e.target.value) },
+                    }))}
+                  />
+                  <div className="slider-row__value">{Math.round(typography.titlePosition.x)}</div>
+                </div>
+                <div className="slider-row">
+                  <div className="slider-row__label">세로</div>
+                  <input
+                    className="slider"
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={Math.round(typography.titlePosition.y)}
+                    onChange={e => setTypography(prev => ({
+                      ...prev,
+                      titlePosition: { ...prev.titlePosition, y: Number(e.target.value) },
+                    }))}
+                  />
+                  <div className="slider-row__value">{Math.round(typography.titlePosition.y)}</div>
+                </div>
               </div>
 
             </>
