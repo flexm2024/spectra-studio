@@ -91,19 +91,30 @@ async function encode(input: WorkerInput, onProgress: (pct: number) => void): Pr
   })
 
   const canvas = new OffscreenCanvas(width, height)
-  const smoothed = new Float32Array(80)
+  let energySmoothed = 0
 
   try {
     for (let fi = 0; fi < frameCount; fi++) {
       const timeSec = fi / FPS
       const sampleOffset = Math.floor(timeSec * sampleRate)
-      const raw = computeFrequencyBands(ch0, sampleOffset, 2048, 80)
+
+      // 오디오 RMS 에너지 — 이퀄 전체 진폭 구동
+      const winEnd = Math.min(sampleOffset + 2048, ch0.length)
+      let sumSq = 0, winN = 0
+      for (let i = sampleOffset; i < winEnd; i++) { sumSq += ch0[i] * ch0[i]; winN++ }
+      const rms = winN > 0 ? Math.sqrt(sumSq / winN) : 0
+      energySmoothed = energySmoothed * 0.85 + rms * 0.15
+      const amp = Math.min(1, energySmoothed * 7 + 0.06)
+
+      // 막대마다 다른 위상·주파수로 독립 동작 (각기 다른 높이)
+      const frequencyData = new Float32Array(80)
       for (let b = 0; b < 80; b++) {
-        const p = smoothed[b], r = raw[b]
-        smoothed[b] = p > r ? p * 0.72 + r * 0.28 : p * 0.22 + r * 0.78
+        const p = b * 0.42
+        const v = Math.abs(Math.sin(timeSec * 3.7 + p)) * 0.45
+                + Math.abs(Math.sin(timeSec * 7.1 + p * 1.5 + 1.1)) * 0.30
+                + Math.abs(Math.sin(timeSec * 2.3 + p * 0.8 + 2.4)) * 0.25
+        frequencyData[b] = Math.min(1, Math.pow(v, 0.7) * amp * 1.3)
       }
-      // 라이브 비주얼라이저와 동일한 power curve로 다이나믹 향상
-      const frequencyData = smoothed.map(v => Math.min(1, Math.pow(v, 2.2) * 2.8))
 
       const trackIdx = findTrackIndex(trackBoundaries, timeSec)
       const currentTrack = tracks[trackIdx % tracks.length]
