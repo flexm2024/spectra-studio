@@ -314,16 +314,18 @@ describe('Step2 — 파티클 섹션', () => {
     expect(screen.getByText('불꽃')).toBeInTheDocument()
   })
 
-  it('토글 클릭 시 setParticleOverlay가 호출된다', () => {
+  it('토글 클릭 시 enabled가 반전된다', () => {
     const setParticleOverlay = vi.fn()
     render(<Step2 {...base} setParticleOverlay={setParticleOverlay} />)
     const row = screen.getByTestId('particle-toggle-row')
     const switchBtn = row.querySelector('[role="switch"]')!
     fireEvent.click(switchBtn)
     expect(setParticleOverlay).toHaveBeenCalled()
+    const updater = setParticleOverlay.mock.calls[0][0] as (prev: typeof base.particleOverlay) => typeof base.particleOverlay
+    expect(updater(base.particleOverlay)).toMatchObject({ enabled: true })
   })
 
-  it('enabled 상태에서 타입 버튼 클릭 시 setParticleOverlay가 호출된다', () => {
+  it('enabled 상태에서 반짝임 버튼 클릭 시 type이 sparkle로 변경된다', () => {
     const setParticleOverlay = vi.fn()
     render(
       <Step2
@@ -334,5 +336,7 @@ describe('Step2 — 파티클 섹션', () => {
     )
     fireEvent.click(screen.getByText('반짝임'))
     expect(setParticleOverlay).toHaveBeenCalled()
+    const updater = setParticleOverlay.mock.calls[0][0] as (prev: typeof base.particleOverlay) => typeof base.particleOverlay
+    expect(updater(base.particleOverlay)).toMatchObject({ type: 'sparkle' })
   })
 })
