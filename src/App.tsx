@@ -280,6 +280,7 @@ export default function App() {
       const ctx = new AudioContext()
       const analyser = ctx.createAnalyser()
       analyser.fftSize = 2048
+      analyser.smoothingTimeConstant = 0.5
       const source = ctx.createMediaElementSource(audioRef.current)
       source.connect(analyser)
       analyser.connect(ctx.destination)

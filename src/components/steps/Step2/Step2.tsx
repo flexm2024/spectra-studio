@@ -414,7 +414,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
         })
         smoothedFreqRef.current = smoothed
         // 파워 커브로 대비 강화: 낮은 값 억제, 높은 값 부각
-        const enhanced = smoothed.map(v => Math.min(1, Math.pow(v, 1.7) * 1.8))
+        const enhanced = smoothed.map(v => Math.min(1, Math.pow(v, 2.2) * 2.8))
         setFreqData(enhanced)
       }
       rafId = requestAnimationFrame(tick)
