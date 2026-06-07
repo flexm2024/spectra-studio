@@ -67,9 +67,9 @@ export function computeFrequencyBands(
     const raw = count > 0 ? (sum / count) / fftSize : 0
     const db = 20 * Math.log10(Math.max(1e-10, raw))
     const norm = Math.max(0, (db + 90) / 90)
-    // 핑크 노이즈 보정: 고음역일수록 gain 강화 (1x→4x), 파워 커브로 대비 강조
+    // 핑크 노이즈 보정: 고음역일수록 gain 강화 (1x→4x), pow 0.7로 약한 신호 부각
     const gain = 1 + (b / (numBands - 1)) * 3.0
-    bands[b] = Math.min(1, Math.pow(norm, 1.5) * gain)
+    bands[b] = Math.min(1, Math.pow(norm, 0.7) * gain)
   }
   return bands
 }
