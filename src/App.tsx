@@ -257,6 +257,7 @@ export default function App() {
       })
       setLogoPosition(snapshot.logoPosition)
       setLogoSize(snapshot.logoSize)
+      setParticleOverlay(snapshot.particleOverlay ?? DEFAULT_PARTICLE_OVERLAY)
       setTracks(snapshot.tracks.map(t => ({
         ...t, src: '',
         audioUrl: audioUrls.has(t.id) ? base64ToBlobUrl(audioUrls.get(t.id)!) : undefined,
