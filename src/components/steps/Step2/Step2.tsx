@@ -894,7 +894,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
 
     rafId = requestAnimationFrame(tick)
     return () => { cancelAnimationFrame(rafId); ctx?.clearRect(0, 0, canvas!.width, canvas!.height) }
-  }, [particleOverlay.enabled, particleOverlay.type])
+  }, [particleOverlay.enabled, particleOverlay.type, particleOverlay.intensity])
 
   useEffect(() => {
     const el = timelineRowRef.current
