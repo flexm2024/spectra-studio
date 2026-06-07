@@ -324,7 +324,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
     }))
   }
 
-  const [activeRightTab, setActiveRightTab] = useState<'effects' | 'title'>('effects')
+  const [activeRightTab, setActiveRightTab] = useState<'effects' | 'title'>('title')
   const [zoom, setZoom] = useState(1.5)
   const zoomRef = useRef(zoom)
   zoomRef.current = zoom
@@ -1256,13 +1256,13 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
       <div className="s2-panel">
         <div className="s2-panel__tabs">
           <button
-            className={`s2-tab${activeRightTab === 'effects' ? ' s2-tab--active' : ''}`}
-            onClick={() => setActiveRightTab('effects')}
-          >효과</button>
-          <button
             className={`s2-tab${activeRightTab === 'title' ? ' s2-tab--active' : ''}`}
             onClick={() => setActiveRightTab('title')}
           >타이틀</button>
+          <button
+            className={`s2-tab${activeRightTab === 'effects' ? ' s2-tab--active' : ''}`}
+            onClick={() => setActiveRightTab('effects')}
+          >효과</button>
         </div>
         <div className="s2-panel__body">
           {activeRightTab === 'effects' ? (
