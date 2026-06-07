@@ -71,10 +71,9 @@ const VIS_COLORS = [
 ]
 
 const EFFECT_ITEMS = [
-  { key: 'vis'       as const, icon: 'waveform', title: '오디오 비주얼라이저', sub: '파형이 음원에 반응' },
-  { key: 'crossfade' as const, icon: 'repeat',   title: '크로스페이드',        sub: '트랙 간 2초 페이드' },
-  { key: 'ducking'   as const, icon: 'sliders',  title: '자동 레벨',           sub: '트랙별 −14 LUFS 정규화' },
-  { key: 'blur'      as const, icon: 'sparkles', title: '배경 블러',           sub: '깊이감 부여 · 24px' },
+  { key: 'crossfade' as const, icon: 'repeat',   title: '크로스페이드',  sub: '트랙 간 2초 페이드' },
+  { key: 'ducking'   as const, icon: 'sliders',  title: '자동 레벨',     sub: '트랙별 −14 LUFS 정규화' },
+  { key: 'blur'      as const, icon: 'sparkles', title: '배경 블러',     sub: '깊이감 부여 · 24px' },
 ]
 
 const TITLE_BASE_STYLES: { id: TitleBaseStyle; label: string }[] = [
@@ -942,60 +941,70 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
           </div>
 
           <hr className="divider" />
-          <div className="s2-section-label">비주얼라이저</div>
-          <div className="vis-shape-grid">
-            {VIS_SHAPES.map(s => (
-              <div
-                key={s.id}
-                className={`vis-shape-card${visualizer.type === s.id ? ' vis-shape-card--active' : ''}`}
-                onClick={() => setVisualizer(prev => ({ ...prev, type: s.id }))}
-              >
-                {s.label}
+          <div className="s2-section-label-row">
+            <span className="s2-section-label">비주얼라이저</span>
+            <Switch
+              on={effects.vis}
+              onChange={() => setEffects(prev => ({ ...prev, vis: !prev.vis }))}
+            />
+          </div>
+          {effects.vis && (
+            <>
+              <div className="vis-shape-grid">
+                {VIS_SHAPES.map(s => (
+                  <div
+                    key={s.id}
+                    className={`vis-shape-card${visualizer.type === s.id ? ' vis-shape-card--active' : ''}`}
+                    onClick={() => setVisualizer(prev => ({ ...prev, type: s.id }))}
+                  >
+                    {s.label}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <div className="vis-color-swatches">
-            {VIS_COLORS.map(hex => (
-              <div
-                key={hex}
-                className={`vis-color-swatch${visualizer.color === hex ? ' vis-color-swatch--active' : ''}${hex === 'rainbow' ? ' vis-color-swatch--rainbow' : ''}`}
-                style={hex === 'rainbow' ? {} : { background: hex === '#ffffff' ? 'rgba(255,255,255,0.9)' : hex }}
-                onClick={() => setVisualizer(prev => ({ ...prev, color: hex }))}
-              />
-            ))}
-          </div>
-          <div className="slider-row">
-            <div className="slider-row__label">높이</div>
-            <input className="slider" type="range" min={0} max={100}
-              value={visualizer.size}
-              onChange={e => setVisualizer(prev => ({ ...prev, size: Number(e.target.value) }))}
-            />
-            <div className="slider-row__value">{visualizer.size}</div>
-          </div>
-          <div className="slider-row">
-            <div className="slider-row__label">가로 폭</div>
-            <input className="slider" type="range" min={10} max={100}
-              value={visualizer.width}
-              onChange={e => setVisualizer(prev => ({ ...prev, width: Number(e.target.value) }))}
-            />
-            <div className="slider-row__value">{visualizer.width}%</div>
-          </div>
-          <div className="slider-row">
-            <div className="slider-row__label">강도</div>
-            <input className="slider" type="range" min={0} max={100}
-              value={visualizer.intensity}
-              onChange={e => setVisualizer(prev => ({ ...prev, intensity: Number(e.target.value) }))}
-            />
-            <div className="slider-row__value">{visualizer.intensity}</div>
-          </div>
-          <div className="slider-row">
-            <div className="slider-row__label">불투명도</div>
-            <input className="slider" type="range" min={0} max={100}
-              value={visualizer.opacity}
-              onChange={e => setVisualizer(prev => ({ ...prev, opacity: Number(e.target.value) }))}
-            />
-            <div className="slider-row__value">{visualizer.opacity}</div>
-          </div>
+              <div className="vis-color-swatches">
+                {VIS_COLORS.map(hex => (
+                  <div
+                    key={hex}
+                    className={`vis-color-swatch${visualizer.color === hex ? ' vis-color-swatch--active' : ''}${hex === 'rainbow' ? ' vis-color-swatch--rainbow' : ''}`}
+                    style={hex === 'rainbow' ? {} : { background: hex === '#ffffff' ? 'rgba(255,255,255,0.9)' : hex }}
+                    onClick={() => setVisualizer(prev => ({ ...prev, color: hex }))}
+                  />
+                ))}
+              </div>
+              <div className="slider-row">
+                <div className="slider-row__label">높이</div>
+                <input className="slider" type="range" min={0} max={100}
+                  value={visualizer.size}
+                  onChange={e => setVisualizer(prev => ({ ...prev, size: Number(e.target.value) }))}
+                />
+                <div className="slider-row__value">{visualizer.size}</div>
+              </div>
+              <div className="slider-row">
+                <div className="slider-row__label">가로 폭</div>
+                <input className="slider" type="range" min={10} max={100}
+                  value={visualizer.width}
+                  onChange={e => setVisualizer(prev => ({ ...prev, width: Number(e.target.value) }))}
+                />
+                <div className="slider-row__value">{visualizer.width}%</div>
+              </div>
+              <div className="slider-row">
+                <div className="slider-row__label">강도</div>
+                <input className="slider" type="range" min={0} max={100}
+                  value={visualizer.intensity}
+                  onChange={e => setVisualizer(prev => ({ ...prev, intensity: Number(e.target.value) }))}
+                />
+                <div className="slider-row__value">{visualizer.intensity}</div>
+              </div>
+              <div className="slider-row">
+                <div className="slider-row__label">불투명도</div>
+                <input className="slider" type="range" min={0} max={100}
+                  value={visualizer.opacity}
+                  onChange={e => setVisualizer(prev => ({ ...prev, opacity: Number(e.target.value) }))}
+                />
+                <div className="slider-row__value">{visualizer.opacity}</div>
+              </div>
+            </>
+          )}
           <hr className="divider" />
           <div data-testid="particle-toggle-row" className="s2-section-label-row">
             <span className="s2-section-label">파티클</span>
