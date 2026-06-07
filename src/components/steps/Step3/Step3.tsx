@@ -109,7 +109,13 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
   const totalSec = tracks.reduce((acc, t) => acc + t.durationSec, 0)
   const fmt = (sec: number) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`
   const totalDur = fmt(totalSec)
-  const previewWaveData = waveformFor(1, 80)
+  // 실제 주파수 스펙트럼 형태: 저음 높고 고음 점진 감소 (waveformFor 종 모양 대신)
+  const previewWaveData = Array.from({ length: 80 }, (_, i) => {
+    const pos = i / 79
+    const base = Math.pow(1 - pos * 0.55, 1.4)
+    const rng = waveformFor(i + 1, 1)[0]
+    return Math.min(1, Math.max(0.15, base * 0.75 + rng * 0.35))
+  })
   const finalDur = fmt(totalSec * loops)
   const VIDEO_BPS = { '720p': 4_000_000, '1080p': 8_000_000, '4k': 25_000_000 } as const
   const AUDIO_BPS = { '96k': 96_000, '128k': 128_000, '192k': 192_000 } as const
