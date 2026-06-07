@@ -409,11 +409,13 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
         const prev = smoothedFreqRef.current
         const smoothed = raw.map((v, i) => {
           const p = prev[i] ?? v
-          // 빠른 상승(0.7), 느린 하강(0.15) — 막대가 올라갈 때 즉각 반응, 내려갈 때 서서히
-          return p > v ? p * 0.85 + v * 0.15 : p * 0.3 + v * 0.7
+          // 상승 빠름(0.75), 하강 중간(0.25) — 더 역동적인 움직임
+          return p > v ? p * 0.72 + v * 0.28 : p * 0.22 + v * 0.78
         })
         smoothedFreqRef.current = smoothed
-        setFreqData(smoothed)
+        // 파워 커브로 대비 강화: 낮은 값 억제, 높은 값 부각
+        const enhanced = smoothed.map(v => Math.min(1, Math.pow(v, 1.7) * 1.8))
+        setFreqData(enhanced)
       }
       rafId = requestAnimationFrame(tick)
     }
