@@ -292,6 +292,7 @@ export default function App() {
 
   const onPlay = (id: string) => {
     ensureAudioContext()
+    audioCtxRef.current?.resume()
     const track = tracks.find(t => t.id === id)
     setPlayingId(id)
     if (track?.audioUrl && audioRef.current) {
@@ -331,6 +332,7 @@ export default function App() {
 
   const onSeek = (playlistTime: number) => {
     ensureAudioContext()
+    audioCtxRef.current?.resume()
     let acc = 0
     for (const track of tracks) {
       const end = acc + track.durationSec
