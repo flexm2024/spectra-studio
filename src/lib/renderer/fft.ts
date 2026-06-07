@@ -59,17 +59,18 @@ export function computeFrequencyBands(
   for (let b = 0; b < numBands; b++) {
     const lo = Math.max(2, Math.round(Math.pow(2, logMin + (logMax - logMin) * b / numBands)))
     const hi = Math.max(lo + 1, Math.round(Math.pow(2, logMin + (logMax - logMin) * (b + 1) / numBands)))
-    let sum = 0, count = 0
+    // 평균 대신 최대값: 고음역 밴드는 bin 수백 개를 평균 내면 에너지가 희석됨
+    let maxMag = 0
     for (let j = lo; j < hi && j < half; j++) {
-      sum += Math.sqrt(re[j] * re[j] + im[j] * im[j])
-      count++
+      const mag = Math.sqrt(re[j] * re[j] + im[j] * im[j])
+      if (mag > maxMag) maxMag = mag
     }
-    const raw = count > 0 ? (sum / count) / fftSize : 0
+    const raw = maxMag / fftSize
     const db = 20 * Math.log10(Math.max(1e-10, raw))
     // AnalyserNode 기본값(minDecibels=-100, maxDecibels=-30)과 동일한 스케일로 정규화
     const norm = Math.max(0, Math.min(1, (db + 100) / 70))
-    // 핑크 노이즈 보정: 고음역일수록 gain 강화 (1x→4.5x)
-    const gain = 1 + (b / (numBands - 1)) * 3.5
+    // 핑크 노이즈 보정: 고음역일수록 gain 강화 (1x→3x), max 전환으로 기존보다 작게
+    const gain = 1 + (b / (numBands - 1)) * 2.5
     bands[b] = Math.min(1, norm * gain)
   }
   return bands
