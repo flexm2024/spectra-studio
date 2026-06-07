@@ -768,11 +768,17 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
           case 'stars': {
             p.opacity = 0.2 + Math.abs(Math.sin(t * (0.5 + p.r * 0.8) + p.r * 3)) * 0.8
             const starR = (p.r * 3 + 0.5) * sz
+            const starAngle = p.angle - Math.PI / 2
             ctx!.save()
             ctx!.globalAlpha = p.opacity * baseOpacity
             ctx!.fillStyle = color === 'rainbow' ? `hsl(${hue},80%,95%)` : `hsl(${hue},60%,90%)`
             ctx!.beginPath()
-            ctx!.arc(p.x * W, p.y * H, starR, 0, Math.PI * 2)
+            for (let pi = 0; pi < 10; pi++) {
+              const ang = (pi / 10) * Math.PI * 2 + starAngle
+              const rad = pi % 2 === 0 ? starR : starR * 0.4
+              ctx!.lineTo(p.x * W + Math.cos(ang) * rad, p.y * H + Math.sin(ang) * rad)
+            }
+            ctx!.closePath()
             ctx!.fill()
             ctx!.restore()
             break

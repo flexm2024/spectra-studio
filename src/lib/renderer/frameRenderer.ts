@@ -263,10 +263,16 @@ function drawParticleOverlayFrame(
       ctx.fill()
       ctx.restore()
     } else if (overlay.type === 'stars') {
-      // 라이브와 동일: 단순 원 (그림자 없음)
+      // 5각형 별 모양
+      const starAngle = s(7) * Math.PI * 2 - Math.PI / 2
       ctx.fillStyle = isRainbow ? `hsl(${hue}, 80%, 95%)` : colorStr
       ctx.beginPath()
-      ctx.arc(cx, cy, pr, 0, Math.PI * 2)
+      for (let p = 0; p < 10; p++) {
+        const ang = (p / 10) * Math.PI * 2 + starAngle
+        const rad = p % 2 === 0 ? pr : pr * 0.4
+        ctx.lineTo(cx + Math.cos(ang) * rad, cy + Math.sin(ang) * rad)
+      }
+      ctx.closePath()
       ctx.fill()
     } else if (overlay.type === 'petals') {
       // 라이브와 동일: 회전 타원
