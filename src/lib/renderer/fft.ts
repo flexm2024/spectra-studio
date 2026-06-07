@@ -66,9 +66,10 @@ export function computeFrequencyBands(
     }
     const raw = count > 0 ? (sum / count) / fftSize : 0
     const db = 20 * Math.log10(Math.max(1e-10, raw))
-    const norm = Math.max(0, (db + 90) / 90)
-    // 핑크 노이즈 보정: 고음역일수록 gain 강화 (1x→5x), power curve는 worker에서 적용
-    const gain = 1 + (b / (numBands - 1)) * 4.0
+    // AnalyserNode 기본값(minDecibels=-100, maxDecibels=-30)과 동일한 스케일로 정규화
+    const norm = Math.max(0, Math.min(1, (db + 100) / 70))
+    // 핑크 노이즈 보정: 고음역일수록 gain 강화 (1x→4.5x)
+    const gain = 1 + (b / (numBands - 1)) * 3.5
     bands[b] = Math.min(1, norm * gain)
   }
   return bands

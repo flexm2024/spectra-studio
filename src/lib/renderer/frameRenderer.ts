@@ -231,7 +231,8 @@ function drawParticleOverlayFrame(
     if (alpha < 0.01) continue
     const cx = px * width, cy = py * height
     const pr = Math.max(1, r)
-    const colorStr = isRainbow ? `hsl(${s(6) * 360}, 100%, 65%)` : overlay.color
+    const hue = s(6) * 360
+    const colorStr = isRainbow ? `hsl(${hue}, 100%, 65%)` : overlay.color
 
     ctx.globalAlpha = Math.min(1, alpha)
 
@@ -248,16 +249,51 @@ function drawParticleOverlayFrame(
       ctx.beginPath()
       ctx.arc(cx, cy, pr, 0, Math.PI * 2)
       ctx.stroke()
-    } else if (overlay.type === 'sparkle' || overlay.type === 'stars') {
+      ctx.globalAlpha = Math.min(1, alpha * 0.2)
       ctx.fillStyle = colorStr
-      ctx.beginPath()
-      for (let p = 0; p < 4; p++) {
-        const ang = (p / 4) * Math.PI * 2
-        ctx.lineTo(cx + Math.cos(ang) * pr, cy + Math.sin(ang) * pr)
-        ctx.lineTo(cx + Math.cos(ang + Math.PI / 4) * pr * 0.35, cy + Math.sin(ang + Math.PI / 4) * pr * 0.35)
-      }
-      ctx.closePath()
       ctx.fill()
+    } else if (overlay.type === 'sparkle') {
+      // 라이브와 동일: 발광 원
+      ctx.save()
+      ctx.shadowColor = isRainbow ? `hsl(${hue}, 100%, 80%)` : colorStr
+      ctx.shadowBlur = pr * 3
+      ctx.fillStyle = isRainbow ? `hsl(${hue}, 100%, 90%)` : colorStr
+      ctx.beginPath()
+      ctx.arc(cx, cy, pr, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.restore()
+    } else if (overlay.type === 'stars') {
+      // 라이브와 동일: 단순 원 (그림자 없음)
+      ctx.fillStyle = isRainbow ? `hsl(${hue}, 80%, 95%)` : colorStr
+      ctx.beginPath()
+      ctx.arc(cx, cy, pr, 0, Math.PI * 2)
+      ctx.fill()
+    } else if (overlay.type === 'petals') {
+      // 라이브와 동일: 회전 타원
+      const angle = s(7) * Math.PI * 2 + timeSec * 0.3 * (0.5 + s(8) * 0.5)
+      ctx.save()
+      ctx.fillStyle = colorStr
+      ctx.translate(cx, cy)
+      ctx.rotate(angle)
+      ctx.beginPath()
+      ctx.ellipse(0, 0, pr * 1.8, pr * 0.6, 0, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.restore()
+    } else if (overlay.type === 'sparks') {
+      // 라이브와 동일: 속도 방향으로 선 (트레일 효과)
+      const period = 1.5 + s(4)
+      const tl = ((timeSec / period + s(5)) % 1)
+      const vx0 = (s(6) - 0.5) * 0.12
+      const vy0 = -(0.35 + s(4) * 0.2) * sp
+      const vyCur = vy0 + 2 * 0.18 * tl
+      const mag = Math.sqrt(vx0 * vx0 + vyCur * vyCur) + 0.001
+      const lineLen = pr * 5
+      ctx.strokeStyle = colorStr
+      ctx.lineWidth = Math.max(1, pr * 0.4)
+      ctx.beginPath()
+      ctx.moveTo(cx, cy)
+      ctx.lineTo(cx - (vx0 / mag) * lineLen, cy - (vyCur / mag) * lineLen)
+      ctx.stroke()
     } else {
       ctx.fillStyle = colorStr
       ctx.beginPath()
