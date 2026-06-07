@@ -945,7 +945,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
             <span className="s2-section-label">비주얼라이저</span>
             <Switch
               on={effects.vis}
-              onChange={() => setEffects(prev => ({ ...prev, vis: !prev.vis }))}
+              onChange={() => setEffects({ ...effects, vis: !effects.vis })}
             />
           </div>
           {effects.vis && (
