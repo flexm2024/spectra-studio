@@ -1,6 +1,6 @@
 // 앱 루트 — 전체 상태 관리 및 레이아웃 조합
 import { useState, useRef, useEffect } from 'react'
-import type { Track, Background, Effects, Visualizer, Typography, ExportSettings, LogoPosition } from './types'
+import type { Track, Background, Effects, Visualizer, Typography, ExportSettings, LogoPosition, ParticleOverlay } from './types'
 import type { ProjectSnapshot, SavedProject } from './types'
 import { saveProject, getProject, getCurrentId, setCurrentId, exportSpectraFile, parseSpectraFile } from './lib/projectStorage'
 import Sidebar from './components/Sidebar/Sidebar'
@@ -10,6 +10,16 @@ import Step1 from './components/steps/Step1/Step1'
 import Step2 from './components/steps/Step2/Step2'
 import Step3 from './components/steps/Step3/Step3'
 import ProjectModal from './components/ProjectModal/ProjectModal'
+
+const DEFAULT_PARTICLE_OVERLAY: ParticleOverlay = {
+  enabled: false,
+  type: 'snow',
+  intensity: 50,
+  speed: 50,
+  size: 50,
+  opacity: 70,
+  color: 'rainbow',
+}
 
 function loadInitialProject(): { id: string; name: string; snapshot: ProjectSnapshot | null } {
   try {
@@ -82,6 +92,9 @@ export default function App() {
   const [logo, setLogo] = useState<string | undefined>(undefined)
   const [logoPosition, setLogoPosition] = useState<LogoPosition>(_init.snapshot?.logoPosition ?? { x: 8, y: 8 })
   const [logoSize, setLogoSize] = useState(_init.snapshot?.logoSize ?? 52)
+  const [particleOverlay, setParticleOverlay] = useState<ParticleOverlay>(
+    _init.snapshot?.particleOverlay ?? DEFAULT_PARTICLE_OVERLAY
+  )
   const [watermark, setWatermark] = useState<string | undefined>(undefined)
   const [stickers, setStickers] = useState<string[]>([])
   const [audioCurrentTime, setAudioCurrentTime] = useState(0)
@@ -94,7 +107,7 @@ export default function App() {
     saveTimerRef.current = setTimeout(() => {
       const snapshot: ProjectSnapshot = {
         theme, effects, visualizer, typography, exportSettings, loops, quality, background,
-        logoPosition, logoSize,
+        logoPosition, logoSize, particleOverlay,
         tracks: tracks.map(({ id, title, artist, duration, durationSec, tag, bpm, waveform }) =>
           ({ id, title, artist, duration, durationSec, tag, bpm, waveform })
         ),
@@ -113,7 +126,7 @@ export default function App() {
       setLastSaved(now)
     }, 1000)
     return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current) }
-  }, [theme, effects, visualizer, typography, exportSettings, loops, quality, background, logoPosition, logoSize, tracks, projectId, projectName])
+  }, [theme, effects, visualizer, typography, exportSettings, loops, quality, background, logoPosition, logoSize, particleOverlay, tracks, projectId, projectName])
 
   const goToStep = (n: 1 | 2 | 3) => {
     if (n === 3) onPause()
@@ -151,6 +164,7 @@ export default function App() {
     setBackground(snapshot.background)
     setLogoPosition(snapshot.logoPosition)
     setLogoSize(snapshot.logoSize)
+    setParticleOverlay(snapshot.particleOverlay ?? DEFAULT_PARTICLE_OVERLAY)
     setTracks(snapshot.tracks.map(t => ({ ...t, src: '', audioUrl: undefined })))
     setLogo(undefined)
     setWatermark(undefined)
@@ -176,6 +190,7 @@ export default function App() {
     setBackground({ type: 'gradient' })
     setLogoPosition({ x: 8, y: 8 })
     setLogoSize(52)
+    setParticleOverlay(DEFAULT_PARTICLE_OVERLAY)
     setTracks([])
     setLogo(undefined)
     setWatermark(undefined)
@@ -419,6 +434,8 @@ export default function App() {
             setLogoSize={setLogoSize}
             currentTime={audioCurrentTime}
             onSeek={onSeek}
+            particleOverlay={particleOverlay}
+            setParticleOverlay={setParticleOverlay}
             analyserRef={analyserRef}
           />
         )}

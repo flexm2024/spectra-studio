@@ -21,6 +21,15 @@ const sample: SavedProject = {
     background: { type: 'gradient' },
     logoPosition: { x: 8, y: 8 },
     logoSize: 52,
+    particleOverlay: {
+      enabled: false,
+      type: 'snow' as const,
+      intensity: 50,
+      speed: 50,
+      size: 50,
+      opacity: 70,
+      color: 'rainbow',
+    },
     tracks: [],
   },
 }
