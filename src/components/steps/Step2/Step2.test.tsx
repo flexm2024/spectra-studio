@@ -1,6 +1,6 @@
 // Step2 컴포넌트 테스트
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, within } from '@testing-library/react'
 import Step2 from './Step2'
 import { sampleTracks } from '../../../data/sampleTracks'
 import type { Background, LogoPosition, TitleBaseStyle, TitleDecoStyle, TitlePositionPreset } from '../../../types'
@@ -48,6 +48,16 @@ const base = {
   currentTime: 0,
   onSeek: vi.fn(),
   analyserRef: { current: null },
+  particleOverlay: {
+    enabled: false,
+    type: 'snow' as const,
+    intensity: 50,
+    speed: 50,
+    size: 50,
+    opacity: 70,
+    color: 'rainbow',
+  },
+  setParticleOverlay: vi.fn(),
 }
 
 describe('Step2', () => {
@@ -269,5 +279,60 @@ describe('Step2', () => {
     render(<Step2 {...base} typography={typo} />)
     const title = document.querySelector('.s2-frame__title') as HTMLElement
     expect(title.style.fontSize).toBe('48px')
+  })
+})
+
+describe('Step2 — 파티클 섹션', () => {
+  it('파티클 섹션 레이블을 렌더링한다', () => {
+    render(<Step2 {...base} />)
+    const row = screen.getByTestId('particle-toggle-row')
+    expect(within(row).getByText('파티클')).toBeInTheDocument()
+  })
+
+  it('ON/OFF 토글이 렌더링된다', () => {
+    render(<Step2 {...base} />)
+    const row = screen.getByTestId('particle-toggle-row')
+    expect(row.querySelector('[role="switch"]')).toBeInTheDocument()
+  })
+
+  it('disabled 상태에서는 타입 그리드가 숨겨진다', () => {
+    render(<Step2 {...base} />)
+    expect(screen.queryByText('눈송이')).not.toBeInTheDocument()
+  })
+
+  it('enabled 상태에서는 타입 그리드가 표시된다', () => {
+    render(<Step2 {...base} particleOverlay={{ ...base.particleOverlay, enabled: true }} />)
+    expect(screen.getByText('눈송이')).toBeInTheDocument()
+    expect(screen.getByText('반짝임')).toBeInTheDocument()
+    expect(screen.getByText('반딧불')).toBeInTheDocument()
+    expect(screen.getByText('별')).toBeInTheDocument()
+    expect(screen.getByText('꽃잎')).toBeInTheDocument()
+    expect(screen.getByText('빛 먼지')).toBeInTheDocument()
+    expect(screen.getByText('연기')).toBeInTheDocument()
+    expect(screen.getByText('버블')).toBeInTheDocument()
+    expect(screen.getByText('빗방울')).toBeInTheDocument()
+    expect(screen.getByText('불꽃')).toBeInTheDocument()
+  })
+
+  it('토글 클릭 시 setParticleOverlay가 호출된다', () => {
+    const setParticleOverlay = vi.fn()
+    render(<Step2 {...base} setParticleOverlay={setParticleOverlay} />)
+    const row = screen.getByTestId('particle-toggle-row')
+    const switchBtn = row.querySelector('[role="switch"]')!
+    fireEvent.click(switchBtn)
+    expect(setParticleOverlay).toHaveBeenCalled()
+  })
+
+  it('enabled 상태에서 타입 버튼 클릭 시 setParticleOverlay가 호출된다', () => {
+    const setParticleOverlay = vi.fn()
+    render(
+      <Step2
+        {...base}
+        particleOverlay={{ ...base.particleOverlay, enabled: true }}
+        setParticleOverlay={setParticleOverlay}
+      />
+    )
+    fireEvent.click(screen.getByText('반짝임'))
+    expect(setParticleOverlay).toHaveBeenCalled()
   })
 })

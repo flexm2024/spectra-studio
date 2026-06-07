@@ -5,7 +5,7 @@ import Icon from '../../../icons'
 import Button from '../../shared/Button'
 import Switch from '../../shared/Switch'
 import { waveformFor } from '../../../data/sampleTracks'
-import type { Track, Effects, Visualizer, Typography, Background, LogoPosition, TitleBaseStyle, TitleDecoStyle, TitlePositionPreset } from '../../../types'
+import type { Track, Effects, Visualizer, Typography, Background, LogoPosition, TitleBaseStyle, TitleDecoStyle, TitlePositionPreset, ParticleOverlay, ParticleType } from '../../../types'
 import {
   makeVisState, VisState,
   drawClassicBars, drawMirrorBars, drawNeonGlow, drawWaveformLine, drawCircularEQ,
@@ -141,6 +141,19 @@ const TITLE_FONTS: { key: string; label: string; sample: string }[] = [
   { key: 'paperlogy',      label: '페이퍼로지',  sample: '가나' },
 ]
 
+const PARTICLE_TYPES: { id: ParticleType; label: string; emoji: string }[] = [
+  { id: 'snow',    label: '눈송이', emoji: '❄️' },
+  { id: 'sparkle', label: '반짝임', emoji: '✨' },
+  { id: 'firefly', label: '반딧불', emoji: '🌟' },
+  { id: 'stars',   label: '별',     emoji: '⭐' },
+  { id: 'petals',  label: '꽃잎',   emoji: '🌸' },
+  { id: 'dust',    label: '빛 먼지',emoji: '💫' },
+  { id: 'smoke',   label: '연기',   emoji: '💨' },
+  { id: 'bubbles', label: '버블',   emoji: '🫧' },
+  { id: 'rain',    label: '빗방울', emoji: '🌧️' },
+  { id: 'sparks',  label: '불꽃',   emoji: '🔥' },
+]
+
 const PRESET_COORDS: Record<TitlePositionPreset, { x: number; y: number }> = {
   tl: { x: 15, y: 15 }, tc: { x: 50, y: 15 }, tr: { x: 85, y: 15 },
   ml: { x: 15, y: 50 }, mc: { x: 50, y: 50 }, mr: { x: 85, y: 50 },
@@ -258,9 +271,11 @@ interface Step2Props {
   currentTime: number
   onSeek: (time: number) => void
   analyserRef: React.RefObject<AnalyserNode | null>
+  particleOverlay: ParticleOverlay
+  setParticleOverlay: React.Dispatch<React.SetStateAction<ParticleOverlay>>
 }
 
-export default function Step2({ tracks, theme, setTheme, effects, setEffects, visualizer, setVisualizer, typography, setTypography, onBack, onNext, playingId, isPlaying, onPlay, onPause, onSkipNext, onSkipPrev, background, logo, logoPosition, setLogoPosition, logoSize, setLogoSize, currentTime, onSeek, analyserRef }: Step2Props) {
+export default function Step2({ tracks, theme, setTheme, effects, setEffects, visualizer, setVisualizer, typography, setTypography, onBack, onNext, playingId, isPlaying, onPlay, onPause, onSkipNext, onSkipPrev, background, logo, logoPosition, setLogoPosition, logoSize, setLogoSize, currentTime, onSeek, analyserRef, particleOverlay, setParticleOverlay }: Step2Props) {
   const themeObj = THEMES.find(t => t.id === theme) ?? THEMES[0]
   const playingTrack = tracks.find(t => t.id === playingId) ?? tracks[0]
   const trackIdx = tracks.findIndex(t => t.id === playingId)
@@ -745,6 +760,72 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
             />
             <div className="slider-row__value">{visualizer.opacity}</div>
           </div>
+          <hr className="divider" />
+          <div data-testid="particle-toggle-row" className="s2-section-label-row">
+            <span className="s2-section-label">파티클</span>
+            <Switch
+              on={particleOverlay.enabled}
+              onChange={() => setParticleOverlay(prev => ({ ...prev, enabled: !prev.enabled }))}
+            />
+          </div>
+          {particleOverlay.enabled && (
+            <>
+              <div className="particle-type-grid">
+                {PARTICLE_TYPES.map(p => (
+                  <button
+                    key={p.id}
+                    className={`particle-type-btn${particleOverlay.type === p.id ? ' particle-type-btn--active' : ''}`}
+                    onClick={() => setParticleOverlay(prev => ({ ...prev, type: p.id }))}
+                  >
+                    <span className="particle-type-btn__emoji">{p.emoji}</span>
+                    <span className="particle-type-btn__label">{p.label}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="slider-row">
+                <div className="slider-row__label">밀도</div>
+                <input className="slider" type="range" min={0} max={100}
+                  value={particleOverlay.intensity}
+                  onChange={e => setParticleOverlay(prev => ({ ...prev, intensity: Number(e.target.value) }))}
+                />
+                <div className="slider-row__value">{particleOverlay.intensity}</div>
+              </div>
+              <div className="slider-row">
+                <div className="slider-row__label">속도</div>
+                <input className="slider" type="range" min={0} max={100}
+                  value={particleOverlay.speed}
+                  onChange={e => setParticleOverlay(prev => ({ ...prev, speed: Number(e.target.value) }))}
+                />
+                <div className="slider-row__value">{particleOverlay.speed}</div>
+              </div>
+              <div className="slider-row">
+                <div className="slider-row__label">크기</div>
+                <input className="slider" type="range" min={0} max={100}
+                  value={particleOverlay.size}
+                  onChange={e => setParticleOverlay(prev => ({ ...prev, size: Number(e.target.value) }))}
+                />
+                <div className="slider-row__value">{particleOverlay.size}</div>
+              </div>
+              <div className="slider-row">
+                <div className="slider-row__label">불투명도</div>
+                <input className="slider" type="range" min={0} max={100}
+                  value={particleOverlay.opacity}
+                  onChange={e => setParticleOverlay(prev => ({ ...prev, opacity: Number(e.target.value) }))}
+                />
+                <div className="slider-row__value">{particleOverlay.opacity}</div>
+              </div>
+              <div className="vis-color-swatches">
+                {VIS_COLORS.map(hex => (
+                  <div
+                    key={hex}
+                    className={`vis-color-swatch${particleOverlay.color === hex ? ' vis-color-swatch--active' : ''}${hex === 'rainbow' ? ' vis-color-swatch--rainbow' : ''}`}
+                    style={hex === 'rainbow' ? {} : { background: hex === '#ffffff' ? 'rgba(255,255,255,0.9)' : hex }}
+                    onClick={() => setParticleOverlay(prev => ({ ...prev, color: hex }))}
+                  />
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
