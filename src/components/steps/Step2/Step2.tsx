@@ -682,11 +682,12 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
     canvas.height = canvas.offsetHeight || 360
 
     const count = Math.round(30 + particleOverlayIntensityRef.current * 1.7)
+    const sp0 = particleOverlaySpeedRef.current / 100
     particleOverlayDataRef.current = Array.from({ length: count }, () => ({
       x: Math.random(),
       y: Math.random(),
-      vx: (Math.random() - 0.5) * 0.004,
-      vy: (Math.random() - 0.5) * 0.004,
+      vx: (Math.random() - 0.5) * 0.004 * sp0,
+      vy: (Math.random() - 0.5) * 0.004 * sp0,
       r: Math.random() * 0.8 + 0.2,
       angle: Math.random() * Math.PI * 2,
       life: Math.random(),
@@ -703,6 +704,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
       const sz = particleOverlaySizeRef.current / 50
       const baseOpacity = particleOverlayOpacityRef.current / 100
       const color = particleOverlayColorRef.current
+      // type은 deps 배열 재실행으로 최신값 보장 (ref 불필요)
       const type = particleOverlay.type
 
       ctx!.clearRect(0, 0, W, H)
@@ -1196,7 +1198,6 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
               <canvas
                 ref={particleOverlayCanvasRef}
                 className="s2-frame__particle-overlay-canvas"
-                style={{ opacity: particleOverlay.opacity / 100 }}
               />
             )}
 
