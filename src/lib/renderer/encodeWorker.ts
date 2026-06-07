@@ -100,9 +100,10 @@ async function encode(input: WorkerInput, onProgress: (pct: number) => void): Pr
       const raw = computeFrequencyBands(ch0, sampleOffset, 2048, 80)
       for (let b = 0; b < 80; b++) {
         const p = smoothed[b], r = raw[b]
-        smoothed[b] = p > r ? p * 0.84 + r * 0.16 : p * 0.25 + r * 0.75
+        smoothed[b] = p > r ? p * 0.72 + r * 0.28 : p * 0.22 + r * 0.78
       }
-      const frequencyData = smoothed
+      // 라이브 비주얼라이저와 동일한 power curve로 다이나믹 향상
+      const frequencyData = smoothed.map(v => Math.min(1, Math.pow(v, 2.2) * 2.8))
 
       const trackIdx = findTrackIndex(trackBoundaries, timeSec)
       const currentTrack = tracks[trackIdx % tracks.length]
