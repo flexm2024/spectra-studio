@@ -83,6 +83,21 @@ export type TitlePositionPreset =
   | 'ml' | 'mc' | 'mr'
   | 'bl' | 'bc' | 'br'
 
+export type ParticleType =
+  | 'snow' | 'sparkle' | 'firefly' | 'stars'
+  | 'petals' | 'dust' | 'smoke' | 'bubbles'
+  | 'rain' | 'sparks'
+
+export interface ParticleOverlay {
+  enabled: boolean
+  type: ParticleType
+  intensity: number   // 밀도 0–100
+  speed: number       // 속도 0–100
+  size: number        // 크기 0–100
+  opacity: number     // 불투명도 0–100
+  color: string       // hex or 'rainbow'
+}
+
 export interface Typography {
   titleSize: number
   letterSpacing: number
@@ -134,6 +149,7 @@ export interface ProjectSnapshot {
   background: Background
   logoPosition: LogoPosition
   logoSize: number
+  particleOverlay: ParticleOverlay
   tracks: TrackMeta[]
 }
 
