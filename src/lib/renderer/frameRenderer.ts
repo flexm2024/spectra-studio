@@ -1,6 +1,6 @@
 // OffscreenCanvas에 영상 한 프레임을 그리는 렌더러
 
-import type { Background, Effects, Visualizer, Typography, Track, LogoPosition } from '../../types'
+import type { Background, Effects, Visualizer, Typography, Track, LogoPosition, ParticleOverlay } from '../../types'
 import {
   makeVisState, VisState,
   drawClassicBars, drawMirrorBars, drawNeonGlow, drawWaveformLine, drawCircularEQ,
@@ -17,6 +17,8 @@ export interface DrawFrameInput {
   width: number
   height: number
   frequencyData: Float32Array  // 80개 밴드
+  timeSec?: number
+  particleOverlay?: ParticleOverlay
   themeGradient: [string, string]
   background: Background
   backgroundImage?: ImageBitmap
@@ -108,7 +110,12 @@ export function drawFrame(input: DrawFrameInput): void {
     ;(ctx as any).letterSpacing = '0px'
   }
 
-  // 5. 로고
+  // 5. 파티클 오버레이
+  if (input.particleOverlay?.enabled) {
+    drawParticleOverlayFrame(ctx, width, height, input.particleOverlay, input.timeSec ?? 0)
+  }
+
+  // 6. 로고
   if (input.logoImage) {
     const canvasLogoSize = Math.round(input.logoSize * (width / 640))
     const lx = Math.round((input.logoPosition.x / 100) * width) - canvasLogoSize / 2
@@ -117,7 +124,7 @@ export function drawFrame(input: DrawFrameInput): void {
     ctx.drawImage(input.logoImage, lx, ly, canvasLogoSize, canvasLogoSize)
   }
 
-  // 6. 워터마크
+  // 7. 워터마크
   if (input.watermarkImage) {
     const wSize = Math.round(80 * (width / 1920))
     ctx.globalAlpha = 0.6
@@ -125,12 +132,141 @@ export function drawFrame(input: DrawFrameInput): void {
     ctx.globalAlpha = 1
   }
 
-  // 7. 스티커
+  // 8. 스티커
   input.stickerImages.forEach((img, i) => {
     const sSize = Math.round(70 * (width / 1920))
     ctx.globalAlpha = 1
     ctx.drawImage(img, width - (i + 1) * (sSize + 12) - 40, 40, sSize, sSize)
   })
+}
+
+// 시드 기반 의사난수 (파티클 초기 조건 결정)
+function sr(seed: number): number {
+  const x = Math.sin(seed + 0.1) * 43758.5453
+  return x - Math.floor(x)
+}
+
+function drawParticleOverlayFrame(
+  ctx: OffscreenCanvasRenderingContext2D,
+  width: number,
+  height: number,
+  overlay: ParticleOverlay,
+  timeSec: number,
+): void {
+  const count = Math.round(30 + overlay.intensity * 1.7)
+  const sp = overlay.speed / 100
+  const sz = (overlay.size / 100) * (Math.min(width, height) / 640) * 18
+  const baseAlpha = overlay.opacity / 100
+  const isRainbow = overlay.color === 'rainbow'
+
+  ctx.save()
+  for (let i = 0; i < count; i++) {
+    const s = (n: number) => sr(i * 17 + n)
+    const x0 = s(0), y0 = s(1), phase = s(2) * Math.PI * 2, rnd = s(3)
+    let px: number, py: number, r: number, alpha: number
+
+    switch (overlay.type) {
+      case 'snow': {
+        const fall = (0.04 + s(4) * 0.06) * sp
+        py = (y0 + fall * timeSec) % 1
+        px = ((x0 + Math.sin(phase + timeSec * (0.3 + s(5) * 0.4)) * 0.015) + 1) % 1
+        r = sz * (0.3 + s(4) * 0.7); alpha = baseAlpha * (0.6 + rnd * 0.4); break
+      }
+      case 'rain': {
+        const fall = (0.4 + s(4) * 0.4) * sp
+        py = (y0 + fall * timeSec) % 1
+        px = ((x0 + fall * timeSec * 0.2) + 1) % 1
+        r = sz * 0.15; alpha = baseAlpha * (0.4 + rnd * 0.4); break
+      }
+      case 'sparkle':
+      case 'stars': {
+        px = x0; py = y0
+        const pulse = 0.4 + 0.6 * Math.abs(Math.sin(phase + timeSec * (2 + rnd * 3)))
+        alpha = baseAlpha * pulse; r = sz * (0.3 + s(4) * 0.5) * pulse; break
+      }
+      case 'firefly': {
+        const freq = 0.2 + s(4) * 0.3
+        px = ((x0 + Math.sin(phase + timeSec * freq) * 0.15) + 1) % 1
+        py = ((y0 + Math.cos(phase * 1.3 + timeSec * freq) * 0.1) + 1) % 1
+        alpha = baseAlpha * (0.4 + 0.6 * Math.abs(Math.sin(timeSec * (1 + s(5)))))
+        r = sz * (0.4 + s(4) * 0.4); break
+      }
+      case 'petals': {
+        const fall = (0.025 + s(4) * 0.025) * sp
+        py = (y0 + fall * timeSec) % 1
+        px = ((x0 + Math.sin(phase + timeSec * 0.6) * 0.06) + 1) % 1
+        r = sz * (0.6 + s(4) * 0.5); alpha = baseAlpha * (0.6 + rnd * 0.4); break
+      }
+      case 'dust': {
+        const rise = (0.01 + s(4) * 0.02) * sp
+        py = ((y0 - rise * timeSec) + 1) % 1
+        px = ((x0 + Math.sin(phase + timeSec * 0.3) * 0.02) + 1) % 1
+        r = sz * (0.2 + s(4) * 0.3); alpha = baseAlpha * (0.3 + rnd * 0.4); break
+      }
+      case 'smoke': {
+        const rise = (0.015 + s(4) * 0.015) * sp
+        const age = ((timeSec * rise + s(5)) % 1)
+        py = (y0 * 0.4 + 0.6 - rise * (timeSec % (1 / rise))) % 1
+        px = ((x0 + (s(6) - 0.5) * 0.04 * timeSec * rise * 20) + 1) % 1
+        r = sz * (0.8 + age * 1.5); alpha = baseAlpha * 0.25 * (1 - age); break
+      }
+      case 'bubbles': {
+        const rise = (0.04 + s(4) * 0.04) * sp
+        py = ((y0 - rise * timeSec) + 1) % 1
+        px = ((x0 + Math.sin(phase + timeSec * 0.4) * 0.025) + 1) % 1
+        r = sz * (0.5 + s(4) * 0.6); alpha = baseAlpha * (0.4 + rnd * 0.4); break
+      }
+      case 'sparks': {
+        const period = 1.5 + s(4)
+        const tl = ((timeSec / period + s(5)) % 1)
+        const vy = -(0.35 + s(4) * 0.2) * sp
+        py = ((y0 * 0.5 + 0.5 + vy * tl + 0.18 * tl * tl) + 1) % 1
+        px = ((x0 + (s(6) - 0.5) * 0.12 * tl) + 1) % 1
+        alpha = baseAlpha * Math.max(0, 1 - tl * 2); r = sz * (0.2 + s(4) * 0.3); break
+      }
+      default:
+        px = x0; py = y0; r = sz * 0.5; alpha = baseAlpha * 0.5
+    }
+
+    if (alpha < 0.01) continue
+    const cx = px * width, cy = py * height
+    const pr = Math.max(1, r)
+    const colorStr = isRainbow ? `hsl(${s(6) * 360}, 100%, 65%)` : overlay.color
+
+    ctx.globalAlpha = Math.min(1, alpha)
+
+    if (overlay.type === 'rain') {
+      ctx.strokeStyle = colorStr
+      ctx.lineWidth = Math.max(1, pr * 0.4)
+      ctx.beginPath()
+      ctx.moveTo(cx, cy)
+      ctx.lineTo(cx + pr * 2, cy + pr * 8)
+      ctx.stroke()
+    } else if (overlay.type === 'bubbles') {
+      ctx.strokeStyle = colorStr
+      ctx.lineWidth = Math.max(1, pr * 0.15)
+      ctx.beginPath()
+      ctx.arc(cx, cy, pr, 0, Math.PI * 2)
+      ctx.stroke()
+    } else if (overlay.type === 'sparkle' || overlay.type === 'stars') {
+      ctx.fillStyle = colorStr
+      ctx.beginPath()
+      for (let p = 0; p < 4; p++) {
+        const ang = (p / 4) * Math.PI * 2
+        ctx.lineTo(cx + Math.cos(ang) * pr, cy + Math.sin(ang) * pr)
+        ctx.lineTo(cx + Math.cos(ang + Math.PI / 4) * pr * 0.35, cy + Math.sin(ang + Math.PI / 4) * pr * 0.35)
+      }
+      ctx.closePath()
+      ctx.fill()
+    } else {
+      ctx.fillStyle = colorStr
+      ctx.beginPath()
+      ctx.arc(cx, cy, pr, 0, Math.PI * 2)
+      ctx.fill()
+    }
+  }
+  ctx.globalAlpha = 1
+  ctx.restore()
 }
 
 function hexHue(hex: string): number {

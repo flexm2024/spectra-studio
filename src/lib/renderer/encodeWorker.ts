@@ -107,7 +107,7 @@ async function encode(input: WorkerInput, onProgress: (pct: number) => void): Pr
       const trackIdx = findTrackIndex(trackBoundaries, timeSec)
       const currentTrack = tracks[trackIdx % tracks.length]
 
-      drawFrame({ ...frameInputBase, canvas, frequencyData, currentTrack, currentTrackIndex: trackIdx % tracks.length })
+      drawFrame({ ...frameInputBase, canvas, frequencyData, currentTrack, currentTrackIndex: trackIdx % tracks.length, timeSec })
 
       // 30프레임마다 미리보기 스냅샷 — transferToImageBitmap 전에 복사해야 함
       if (fi % 30 === 0) {

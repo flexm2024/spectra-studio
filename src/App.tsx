@@ -463,6 +463,7 @@ export default function App() {
             watermark={watermark}
             stickers={stickers}
             typography={typography}
+            particleOverlay={particleOverlay}
             onSave={handleSave}
             autoStart={pendingExport}
             onAutoStartDone={() => setPendingExport(false)}

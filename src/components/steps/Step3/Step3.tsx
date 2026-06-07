@@ -5,7 +5,7 @@ import Icon from '../../../icons'
 import Button from '../../shared/Button'
 import SegmentedControl from '../../shared/SegmentedControl'
 import { waveformFor } from '../../../data/sampleTracks'
-import type { Track, Effects, Visualizer, ExportSettings, Background, LogoPosition, Typography } from '../../../types'
+import type { Track, Effects, Visualizer, ExportSettings, Background, LogoPosition, Typography, ParticleOverlay } from '../../../types'
 import { renderVideo } from '../../../lib/renderer'
 
 const LOOP_OPTIONS = [
@@ -80,6 +80,7 @@ interface Step3Props {
   watermark?: string
   stickers: string[]
   typography: Typography
+  particleOverlay?: ParticleOverlay
   onSave?: () => void
   autoStart?: boolean
   onAutoStartDone?: () => void
@@ -87,7 +88,7 @@ interface Step3Props {
 
 type RenderState = 'idle' | 'rendering' | 'done' | 'error'
 
-export default function Step3({ tracks, theme, effects, visualizer, exportSettings, setExportSettings, loops, setLoops, quality, setQuality, onBack, background, logo, logoPosition, logoSize, watermark, stickers, typography, onSave, autoStart, onAutoStartDone }: Step3Props) {
+export default function Step3({ tracks, theme, effects, visualizer, exportSettings, setExportSettings, loops, setLoops, quality, setQuality, onBack, background, logo, logoPosition, logoSize, watermark, stickers, typography, particleOverlay, onSave, autoStart, onAutoStartDone }: Step3Props) {
   const canRender = typeof VideoEncoder !== 'undefined'
     && typeof AudioEncoder !== 'undefined'
     && typeof OffscreenCanvas !== 'undefined'
@@ -129,7 +130,7 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
     setProgress(0)
     try {
       const blob = await renderVideo(
-        { tracks, theme, effects, visualizer, typography, background, logo, logoPosition, logoSize, watermark, stickers, exportSettings, loops, quality },
+        { tracks, theme, effects, visualizer, typography, background, logo, logoPosition, logoSize, watermark, stickers, exportSettings, loops, quality, particleOverlay },
         pct => setProgress(Math.round(pct)),
         onPreview,
       )

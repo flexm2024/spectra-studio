@@ -1,6 +1,6 @@
 // renderVideo() — 오디오 처리 → 이미지 로딩 → MP4 인코딩 진입점
 
-import type { Track, Background, Effects, Visualizer, Typography, ExportSettings, LogoPosition } from '../../types'
+import type { Track, Background, Effects, Visualizer, Typography, ExportSettings, LogoPosition, ParticleOverlay } from '../../types'
 import { processAudio } from './audioProcessor'
 import { encodeVideo } from './videoEncoder'
 import { loadImageBitmap } from './frameRenderer'
@@ -35,6 +35,7 @@ export interface RenderInput {
   exportSettings: ExportSettings
   loops: 1 | 2 | 3
   quality: '96k' | '128k' | '192k'
+  particleOverlay?: ParticleOverlay
 }
 
 export async function renderVideo(input: RenderInput, onProgress: (pct: number) => void, onPreview?: (bitmap: ImageBitmap) => void): Promise<Blob> {
@@ -88,6 +89,7 @@ export async function renderVideo(input: RenderInput, onProgress: (pct: number) 
       visualizer: input.visualizer,
       typography: input.typography,
       totalTracks: input.tracks.length,
+      particleOverlay: input.particleOverlay,
     },
     resolution: input.exportSettings.resolution,
     quality: input.quality,
