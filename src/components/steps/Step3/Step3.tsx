@@ -4,10 +4,19 @@ import './Step3.css'
 import Icon from '../../../icons'
 import Button from '../../shared/Button'
 import SegmentedControl from '../../shared/SegmentedControl'
-import { waveformFor } from '../../../data/sampleTracks'
 import type { Track, Effects, Visualizer, ExportSettings, Background, LogoPosition, Typography, ParticleOverlay } from '../../../types'
 import { renderVideo } from '../../../lib/renderer'
 import { computeTrackBoundaries } from '../../../lib/renderer/audioProcessor'
+import { drawFrame, loadImageBitmap } from '../../../lib/renderer/frameRenderer'
+
+const THEME_COLORS: Record<string, [string, string]> = {
+  midnight: ['#0c1a2e', '#050813'],
+  cyanwave: ['#042f3f', '#0a647a'],
+  sunset:   ['#2a0f2e', '#6d2c4a'],
+  forest:   ['#0c1e16', '#1f3d2c'],
+  cream:    ['#f3ead8', '#d9c7a3'],
+  mono:     ['#0a0a0a', '#2a2a2a'],
+}
 
 const LOOP_OPTIONS = [
   { value: 1 as const, label: '1회' },
@@ -42,25 +51,6 @@ function logoPositionLabel(pos: LogoPosition): string {
   return `${x}${y}단`
 }
 
-function hexHue(hex: string): number {
-  const r = parseInt(hex.slice(1, 3), 16) / 255
-  const g = parseInt(hex.slice(3, 5), 16) / 255
-  const b = parseInt(hex.slice(5, 7), 16) / 255
-  const max = Math.max(r, g, b), min = Math.min(r, g, b)
-  if (max === min) return 0
-  const d = max - min
-  const h = max === r ? ((g - b) / d + (g < b ? 6 : 0))
-          : max === g ? (b - r) / d + 2
-          : (r - g) / d + 4
-  return h * 60
-}
-
-function previewBarColor(i: number, total: number, color: string): string {
-  const hue = color === 'rainbow'
-    ? (i / Math.max(total - 1, 1)) * 240
-    : hexHue(color) + (i / Math.max(total - 1, 1) - 0.5) * 40
-  return `hsl(${hue}, 100%, 65%)`
-}
 
 interface Step3Props {
   tracks: Track[]
@@ -105,9 +95,41 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
     if (!canvas) { bitmap.close(); return }
     const ctx = canvas.getContext('2d')
     if (!ctx) { bitmap.close(); return }
-    ctx.drawImage(bitmap, 0, 0)
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
     bitmap.close()
   }, [])
+
+  useEffect(() => {
+    if (renderState !== 'idle' && renderState !== 'error') return
+    const canvas = canvasRef.current
+    if (!canvas) return
+    let cancelled = false
+    canvas.width = 640
+    canvas.height = 360
+    ;(async () => {
+      const [bgImage, logoImage] = await Promise.all([
+        background.src ? loadImageBitmap(background.src).catch(() => undefined) : Promise.resolve(undefined),
+        logo ? loadImageBitmap(logo).catch(() => undefined) : Promise.resolve(undefined),
+      ])
+      if (cancelled) { bgImage?.close(); logoImage?.close(); return }
+      const track = tracks[0] ?? { title: '플레이리스트', artist: '', duration: '0:00', durationSec: 0, tag: '', bpm: 0, src: '' }
+      try {
+        drawFrame({
+          canvas: canvas as unknown as OffscreenCanvas,
+          width: 640, height: 360,
+          frequencyData: new Float32Array(80),
+          themeGradient: THEME_COLORS[theme] ?? THEME_COLORS['midnight'],
+          background, backgroundImage: bgImage, logoImage,
+          watermarkImage: undefined, stickerImages: [],
+          effects, visualizer, typography, logoPosition, logoSize,
+          currentTrack: track, currentTrackIndex: 0,
+          totalTracks: tracks.length || 1,
+        })
+      } catch { /* jsdom 등 캔버스 미지원 환경 무시 */ }
+      bgImage?.close(); logoImage?.close()
+    })()
+    return () => { cancelled = true }
+  }, [renderState, theme, background, effects, visualizer, typography, logo, logoPosition, logoSize, tracks])
 
   const totalSec = tracks.reduce((acc, t) => acc + t.durationSec, 0)
   const fmt = (sec: number) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`
@@ -139,11 +161,6 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
       setTimeout(() => setCopied(false), 2000)
     })
   }
-  // 전체 구간에서 충분한 높이 보장: 0.45~1.0 사이에서 랜덤 변동
-  const previewWaveData = Array.from({ length: 80 }, (_, i) => {
-    const rng = waveformFor(i + 1, 1)[0]   // 0.25~0.95
-    return Math.min(1, 0.45 + rng * 0.55)
-  })
   const finalDur = fmt(totalSec * loops)
   const VIDEO_BPS = { '720p': 4_000_000, '1080p': 8_000_000, '4k': 25_000_000 } as const
   const AUDIO_BPS = { '96k': 96_000, '128k': 128_000, '192k': 192_000 } as const
@@ -228,91 +245,8 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
         </div>
 
         <div className="s3-final">
-          <div className="s3-final__inner" style={{ background: background.src ? undefined : themeObj.bg }} data-testid="s3-preview">
-            {background.src && (
-              <img src={background.src} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
-            )}
-            {effects.blur && <div className="s3-final__blur-overlay" />}
-            {typography.showTitle && (
-              <h2
-                className="s3-final__title"
-                style={{
-                  left: `${typography.titlePosition.x}%`,
-                  top: `${typography.titlePosition.y}%`,
-                  fontSize: `${typography.titleSize}px`,
-                  letterSpacing: `${typography.letterSpacing / 1000}em`,
-                }}
-              >
-                {tracks.length > 0 ? tracks[0].title : '플레이리스트'}
-              </h2>
-            )}
-            {typography.showSub && (
-              <div
-                className="s3-final__sub"
-                style={{
-                  left: `${typography.subPosition.x}%`,
-                  top: `${typography.subPosition.y}%`,
-                  fontSize: `${typography.subSize}px`,
-                  letterSpacing: `${typography.subLetterSpacing / 1000}em`,
-                }}
-              >
-                {tracks[0]?.artist && tracks[0].artist !== 'Unknown' ? `${tracks[0].artist} · ` : ''}Track 01 / {tracks.length}
-              </div>
-            )}
-            {effects.vis && (
-              <div
-                className="s3-final__wave"
-                style={{
-                  top: `${visualizer.y}%`,
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  width: `${Math.max(10, visualizer.width)}%`,
-                  height: `${Math.max(10, Math.round(visualizer.size * 0.8))}px`,
-                  opacity: visualizer.opacity / 100,
-                }}
-              >
-                <svg width="100%" height="100%" viewBox={`0 0 ${previewWaveData.length} 100`} preserveAspectRatio="none">
-                  {previewWaveData.map((h, i) => {
-                    const barH = Math.max(1, h * (visualizer.intensity / 100) * 80)
-                    return (
-                      <rect key={i} x={i + 0.08} y={80 - barH} width={0.84} height={barH}
-                        fill={previewBarColor(i, previewWaveData.length, visualizer.color)} opacity="0.95" rx="0.35" />
-                    )
-                  })}
-                  <rect x="0" y="80.4" width={previewWaveData.length} height="0.5" fill="rgba(255,255,255,0.09)" />
-                </svg>
-              </div>
-            )}
-            {(renderState === 'rendering' || renderState === 'done') && (
-              <canvas
-                ref={canvasRef}
-                className="s3-preview-canvas"
-                width={1920}
-                height={1080}
-              />
-            )}
-            {!logo && (
-              <div className="s3-final__logo" style={{ left: `${logoPosition.x}%`, top: `${logoPosition.y}%` }}>
-                <Icon name="logo" size={26} />
-              </div>
-            )}
-            {logo && (
-              <img
-                src={logo}
-                alt=""
-                style={{
-                  position: 'absolute',
-                  left: `${logoPosition.x}%`,
-                  top: `${logoPosition.y}%`,
-                  transform: 'translate(-50%, -50%)',
-                  width: `${logoSize}px`,
-                  height: `${logoSize}px`,
-                  borderRadius: '14px',
-                  objectFit: 'contain',
-                  zIndex: 4,
-                }}
-              />
-            )}
+          <div className="s3-final__inner" data-testid="s3-preview">
+            <canvas ref={canvasRef} className="s3-preview-canvas" width={640} height={360} />
           </div>
         </div>
 

@@ -14,7 +14,7 @@ import {
 let _vis: VisState = makeVisState()
 
 export interface DrawFrameInput {
-  canvas: OffscreenCanvas
+  canvas: OffscreenCanvas | HTMLCanvasElement
   width: number
   height: number
   frequencyData: Float32Array  // 80개 밴드
@@ -38,7 +38,7 @@ export interface DrawFrameInput {
 }
 
 export function drawFrame(input: DrawFrameInput): void {
-  const ctx = input.canvas.getContext('2d') as OffscreenCanvasRenderingContext2D
+  const ctx = input.canvas.getContext('2d') as unknown as OffscreenCanvasRenderingContext2D
   const { width, height, frequencyData, themeGradient, effects, visualizer, typography, currentTrack, currentTrackIndex, totalTracks } = input
 
   // 1. 배경
