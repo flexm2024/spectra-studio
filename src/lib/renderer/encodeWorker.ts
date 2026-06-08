@@ -4,6 +4,8 @@ import { Muxer, StreamTarget } from 'mp4-muxer'
 import { computeFrequencyBands } from './fft'
 import { drawFrame } from './frameRenderer'
 import type { DrawFrameInput } from './frameRenderer'
+import { createParticleOverlayState } from '../visualizer/particleOverlay'
+import type { ParticleOverlayState } from '../visualizer/particleOverlay'
 import type { Track } from '../../types'
 
 const FPS = 30
@@ -33,7 +35,7 @@ interface WorkerInput {
   audioLength: number
   frameCount: number
   trackBoundaries: number[]
-  frameInputBase: Omit<DrawFrameInput, 'canvas' | 'frequencyData' | 'currentTrack' | 'currentTrackIndex'>
+  frameInputBase: Omit<DrawFrameInput, 'canvas' | 'frequencyData' | 'currentTrack' | 'currentTrackIndex' | 'particleOverlayState'>
   resolution: '720p' | '1080p' | '4k'
   quality: '96k' | '128k' | '192k'
   tracks: Track[]
@@ -93,6 +95,10 @@ async function encode(input: WorkerInput, onProgress: (pct: number) => void): Pr
   const canvas = new OffscreenCanvas(width, height)
   let energySmoothed = 0
 
+  const particleState: ParticleOverlayState | null = frameInputBase.particleOverlay?.enabled
+    ? createParticleOverlayState(frameInputBase.particleOverlay)
+    : null
+
   try {
     for (let fi = 0; fi < frameCount; fi++) {
       const timeSec = fi / FPS
@@ -119,7 +125,7 @@ async function encode(input: WorkerInput, onProgress: (pct: number) => void): Pr
       const trackIdx = findTrackIndex(trackBoundaries, timeSec)
       const currentTrack = tracks[trackIdx % tracks.length]
 
-      drawFrame({ ...frameInputBase, canvas, frequencyData, currentTrack, currentTrackIndex: trackIdx % tracks.length, timeSec })
+      drawFrame({ ...frameInputBase, canvas, frequencyData, currentTrack, currentTrackIndex: trackIdx % tracks.length, timeSec, particleOverlayState: particleState ?? undefined })
 
       // 30프레임마다 미리보기 스냅샷 — transferToImageBitmap 전에 복사해야 함
       if (fi % 30 === 0) {

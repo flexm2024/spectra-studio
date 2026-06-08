@@ -10,7 +10,7 @@ export interface EncodeVideoInput {
   audioLength: number
   frameCount: number
   trackBoundaries: number[]
-  frameInputBase: Omit<DrawFrameInput, 'canvas' | 'frequencyData' | 'currentTrack' | 'currentTrackIndex'>
+  frameInputBase: Omit<DrawFrameInput, 'canvas' | 'frequencyData' | 'currentTrack' | 'currentTrackIndex' | 'particleOverlayState'>
   resolution: '720p' | '1080p' | '4k'
   quality: '96k' | '128k' | '192k'
   tracks: Track[]
