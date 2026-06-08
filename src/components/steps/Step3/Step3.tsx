@@ -88,6 +88,7 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
   const [progress, setProgress] = useState(0)
   const [renderError, setRenderError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [savingThumb, setSavingThumb] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   const onPreview = useCallback((bitmap: ImageBitmap) => {
@@ -161,6 +162,38 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
       setTimeout(() => setCopied(false), 2000)
     })
   }
+  const saveThumbnail = async () => {
+    setSavingThumb(true)
+    const canvas = document.createElement('canvas')
+    canvas.width = 1280; canvas.height = 720
+    const [bgImage, logoImage] = await Promise.all([
+      background.src ? loadImageBitmap(background.src).catch(() => undefined) : Promise.resolve(undefined),
+      logo ? loadImageBitmap(logo).catch(() => undefined) : Promise.resolve(undefined),
+    ])
+    const track = tracks[0] ?? { title: '플레이리스트', artist: '', duration: '0:00', durationSec: 0, tag: '', bpm: 0, src: '' }
+    drawFrame({
+      canvas: canvas as unknown as OffscreenCanvas,
+      width: 1280, height: 720,
+      frequencyData: new Float32Array(80),
+      themeGradient: THEME_COLORS[theme] ?? THEME_COLORS['midnight'],
+      background, backgroundImage: bgImage, logoImage,
+      watermarkImage: undefined, stickerImages: [],
+      effects, visualizer, typography, logoPosition, logoSize,
+      currentTrack: track, currentTrackIndex: 0, totalTracks: tracks.length || 1,
+    })
+    bgImage?.close(); logoImage?.close()
+    canvas.toBlob(blob => {
+      if (!blob) { setSavingThumb(false); return }
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${exportSettings.filename}-thumbnail.png`
+      document.body.appendChild(a); a.click(); document.body.removeChild(a)
+      setTimeout(() => URL.revokeObjectURL(url), 5000)
+      setSavingThumb(false)
+    }, 'image/png')
+  }
+
   const finalDur = fmt(totalSec * loops)
   const VIDEO_BPS = { '720p': 4_000_000, '1080p': 8_000_000, '4k': 25_000_000 } as const
   const AUDIO_BPS = { '96k': 96_000, '128k': 128_000, '192k': 192_000 } as const
@@ -247,6 +280,11 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
         <div className="s3-final">
           <div className="s3-final__inner" data-testid="s3-preview">
             <canvas ref={canvasRef} className="s3-preview-canvas" width={640} height={360} />
+          </div>
+          <div className="s3-thumb-row">
+            <button type="button" className="s3-btn-thumb" onClick={saveThumbnail} disabled={savingThumb}>
+              <Icon name="download" size={13} />{savingThumb ? '저장 중...' : '썸네일 PNG 저장'}
+            </button>
           </div>
         </div>
 
