@@ -87,6 +87,7 @@ export type ParticleType =
   | 'snow' | 'sparkle' | 'firefly' | 'stars'
   | 'petals' | 'dust' | 'smoke' | 'bubbles'
   | 'rain' | 'sparks'
+  | 'confetti' | 'bokeh' | 'hearts' | 'ripple' | 'neon' | 'comets'
 
 export interface ParticleOverlay {
   enabled: boolean

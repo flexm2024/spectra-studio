@@ -32,7 +32,8 @@ function hexHue(hex: string): number {
 }
 
 export function createParticleOverlayState(overlay: ParticleOverlay): ParticleOverlayState {
-  const count = Math.round(30 + overlay.intensity * 1.7)
+  const sparkly = ['sparkle', 'firefly', 'stars', 'dust', 'neon'].includes(overlay.type)
+  const count = Math.round((sparkly ? 50 : 30) + overlay.intensity * (sparkly ? 2.5 : 1.7))
   const sp0 = overlay.speed / 100
   const particles: Particle[] = Array.from({ length: count }, (_, i) => ({
     x: sr(i * 17),
@@ -246,6 +247,143 @@ export function tickParticleOverlay(
         ctx.moveTo(p.x * W, p.y * H)
         ctx.lineTo((p.x - p.vx * 8) * W, (p.y - p.vy * 8) * H)
         ctx.stroke()
+        ctx.restore()
+        break
+      }
+      case 'confetti': {
+        p.vy += 0.00008 * sp
+        p.y += p.vy
+        p.x += Math.sin(t * 1.2 + p.r * 5) * 0.001 * sp
+        p.angle += (p.r - 0.5) * 0.1 * sp
+        if (p.y > 1.05) {
+          p.y = -0.05; p.x = Math.random()
+          p.vy = (0.003 + p.r * 0.004) * sp
+          p.angle = Math.random() * Math.PI * 2
+        }
+        const cw = (p.r * 9 + 4) * sz, ch = cw * 0.45
+        ctx.save()
+        ctx.globalAlpha = alpha
+        ctx.translate(p.x * W, p.y * H)
+        ctx.rotate(p.angle)
+        ctx.fillStyle = color === 'rainbow' ? `hsl(${hue},90%,65%)` : `hsl(${hue},80%,60%)`
+        ctx.fillRect(-cw / 2, -ch / 2, cw, ch)
+        ctx.restore()
+        break
+      }
+      case 'bokeh': {
+        p.y -= (0.0004 + p.r * 0.0002) * sp
+        p.x += Math.sin(t * 0.4 + p.r * 3) * 0.0002 * sp
+        if (p.y < -0.2) { p.y = 1.1; p.x = Math.random() }
+        const bokR = (p.r * 55 + 18) * sz
+        ctx.save()
+        ctx.globalAlpha = alpha * 0.18
+        const rg = ctx.createRadialGradient(p.x * W, p.y * H, 0, p.x * W, p.y * H, bokR)
+        rg.addColorStop(0, color === 'rainbow' ? `hsl(${hue},70%,85%)` : `hsl(${hue},55%,80%)`)
+        rg.addColorStop(1, 'transparent')
+        ctx.fillStyle = rg
+        ctx.beginPath()
+        ctx.arc(p.x * W, p.y * H, bokR, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.restore()
+        break
+      }
+      case 'hearts': {
+        p.y -= (0.003 + p.r * 0.002) * sp
+        p.x += Math.sin(t * 1.1 + p.r * 4) * 0.001 * sp
+        p.life += 0.009 * sp
+        if (p.life > 1 || p.y < -0.06) {
+          p.y = 0.88 + Math.random() * 0.15; p.x = Math.random(); p.life = 0
+        }
+        const heartAlpha = Math.sin(Math.min(p.life * Math.PI, Math.PI)) * alpha
+        const hs = (p.r * 9 + 4) * sz
+        ctx.save()
+        ctx.globalAlpha = heartAlpha
+        ctx.fillStyle = color === 'rainbow' ? `hsl(${hue},80%,72%)` : `hsl(${hue},70%,67%)`
+        ctx.translate(p.x * W, p.y * H)
+        ctx.beginPath()
+        ctx.moveTo(0, -hs * 0.35)
+        ctx.bezierCurveTo(-hs * 0.5, -hs * 0.9, -hs, -hs * 0.2, 0, hs * 0.5)
+        ctx.bezierCurveTo(hs, -hs * 0.2, hs * 0.5, -hs * 0.9, 0, -hs * 0.35)
+        ctx.closePath()
+        ctx.fill()
+        ctx.restore()
+        break
+      }
+      case 'ripple': {
+        p.life += 0.012 * sp
+        if (p.life > 1) { p.life = 0; p.x = Math.random(); p.y = Math.random() }
+        const ripR = (p.r * 80 + 20) * p.life * sz
+        const ripAlpha = (1 - p.life) * alpha * 0.7
+        ctx.save()
+        ctx.globalAlpha = ripAlpha
+        ctx.strokeStyle = color === 'rainbow' ? `hsl(${hue},65%,75%)` : `hsl(${hue},50%,70%)`
+        ctx.lineWidth = Math.max(0.5, (1.8 - p.life * 1.5)) * sz
+        ctx.beginPath()
+        ctx.arc(p.x * W, p.y * H, Math.max(1, ripR), 0, Math.PI * 2)
+        ctx.stroke()
+        ctx.restore()
+        break
+      }
+      case 'neon': {
+        p.life += 0.02 * sp
+        if (p.life > 1) {
+          p.life = 0; p.x = Math.random(); p.y = Math.random()
+          p.angle = Math.random() * Math.PI * 2
+        }
+        const nAlpha = Math.sin(p.life * Math.PI) * alpha
+        const lineLen = (p.r * 35 + 12) * sz
+        const dx = Math.cos(p.angle), dy = Math.sin(p.angle)
+        p.x += dx * 0.0008 * sp
+        p.y += dy * 0.0008 * sp
+        ctx.save()
+        ctx.globalAlpha = nAlpha
+        ctx.shadowColor = color === 'rainbow' ? `hsl(${hue},100%,70%)` : `hsl(${hue},90%,65%)`
+        ctx.shadowBlur = 8 * sz
+        ctx.strokeStyle = color === 'rainbow' ? `hsl(${hue},100%,82%)` : `hsl(${hue},90%,77%)`
+        ctx.lineWidth = (1 + p.r * 1.5) * sz
+        ctx.lineCap = 'round'
+        ctx.beginPath()
+        ctx.moveTo(p.x * W - dx * lineLen / 2, p.y * H - dy * lineLen / 2)
+        ctx.lineTo(p.x * W + dx * lineLen / 2, p.y * H + dy * lineLen / 2)
+        ctx.stroke()
+        ctx.restore()
+        break
+      }
+      case 'comets': {
+        if (Math.abs(p.vx) < 0.003) {
+          p.x = -0.05; p.y = Math.random()
+          p.vx = (0.013 + p.r * 0.01) * sp
+          p.vy = (Math.random() - 0.5) * 0.004 * sp
+        }
+        p.x += p.vx; p.y += p.vy
+        if (p.x > 1.1) {
+          p.x = -0.05; p.y = Math.random()
+          p.vx = (0.013 + p.r * 0.01) * sp
+          p.vy = (Math.random() - 0.5) * 0.004 * sp
+        }
+        const tailLen = (p.r * 65 + 30) * sz
+        const spd = Math.sqrt(p.vx ** 2 + p.vy ** 2)
+        const ndx = spd > 0 ? -p.vx / spd : -1
+        const ndy = spd > 0 ? -p.vy / spd : 0
+        const cx2 = p.x * W, cy2 = p.y * H
+        ctx.save()
+        const cg = ctx.createLinearGradient(cx2, cy2, cx2 + ndx * tailLen, cy2 + ndy * tailLen)
+        cg.addColorStop(0, color === 'rainbow' ? `hsl(${hue},100%,95%)` : `hsl(${hue},80%,90%)`)
+        cg.addColorStop(1, color === 'rainbow' ? `hsla(${hue},80%,70%,0)` : `hsla(${hue},60%,65%,0)`)
+        ctx.globalAlpha = alpha
+        ctx.strokeStyle = cg
+        ctx.lineWidth = (1.5 + p.r * 2) * sz
+        ctx.lineCap = 'round'
+        ctx.beginPath()
+        ctx.moveTo(cx2, cy2)
+        ctx.lineTo(cx2 + ndx * tailLen, cy2 + ndy * tailLen)
+        ctx.stroke()
+        ctx.shadowColor = color === 'rainbow' ? `hsl(${hue},100%,90%)` : `hsl(${hue},80%,85%)`
+        ctx.shadowBlur = 10 * sz
+        ctx.fillStyle = 'white'
+        ctx.beginPath()
+        ctx.arc(cx2, cy2, (1.2 + p.r * 1.5) * sz, 0, Math.PI * 2)
+        ctx.fill()
         ctx.restore()
         break
       }

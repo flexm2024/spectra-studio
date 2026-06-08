@@ -143,16 +143,22 @@ const TITLE_FONTS: { key: string; label: string; sample: string }[] = [
 ]
 
 const PARTICLE_TYPES: { id: ParticleType; label: string; emoji: string }[] = [
-  { id: 'snow',    label: '눈송이', emoji: '❄️' },
-  { id: 'sparkle', label: '반짝임', emoji: '✨' },
-  { id: 'firefly', label: '반딧불', emoji: '🌟' },
-  { id: 'stars',   label: '별',     emoji: '⭐' },
-  { id: 'petals',  label: '꽃잎',   emoji: '🌸' },
-  { id: 'dust',    label: '빛 먼지',emoji: '💫' },
-  { id: 'smoke',   label: '연기',   emoji: '💨' },
-  { id: 'bubbles', label: '버블',   emoji: '🫧' },
-  { id: 'rain',    label: '빗방울', emoji: '🌧️' },
-  { id: 'sparks',  label: '불꽃',   emoji: '🔥' },
+  { id: 'snow',     label: '눈송이',  emoji: '❄️' },
+  { id: 'sparkle',  label: '반짝임',  emoji: '✨' },
+  { id: 'firefly',  label: '반딧불',  emoji: '🌟' },
+  { id: 'stars',    label: '별',      emoji: '⭐' },
+  { id: 'petals',   label: '꽃잎',    emoji: '🌸' },
+  { id: 'dust',     label: '빛 먼지', emoji: '💫' },
+  { id: 'smoke',    label: '연기',    emoji: '💨' },
+  { id: 'bubbles',  label: '버블',    emoji: '🫧' },
+  { id: 'rain',     label: '빗방울',  emoji: '🌧️' },
+  { id: 'sparks',   label: '불꽃',    emoji: '🔥' },
+  { id: 'confetti', label: '컨페티',  emoji: '🎊' },
+  { id: 'bokeh',    label: '보케',    emoji: '🔮' },
+  { id: 'hearts',   label: '하트',    emoji: '💖' },
+  { id: 'ripple',   label: '파문',    emoji: '〰️' },
+  { id: 'neon',     label: '네온',    emoji: '⚡' },
+  { id: 'comets',   label: '혜성',    emoji: '☄️' },
 ]
 
 const PRESET_COORDS: Record<TitlePositionPreset, { x: number; y: number }> = {
