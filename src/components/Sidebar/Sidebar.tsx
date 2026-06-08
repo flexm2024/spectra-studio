@@ -45,7 +45,7 @@ export default function Sidebar({ step, setStep, tracks, projectName, lastSaved,
 
   return (
     <aside className="rail">
-      <div className="rail__brand">
+      <div className="rail__brand" onClick={() => window.location.reload()} style={{ cursor: 'pointer' }}>
         <div className="rail__logo"><Icon name="logo" size={22} /></div>
         <div className="rail__brand-text">
           <div className="rail__wordmark">Spectra</div>
