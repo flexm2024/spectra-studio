@@ -93,16 +93,6 @@ export default function Sidebar({ step, setStep, tracks, projectName, lastSaved,
         })}
       </div>
 
-      <div className="rail__spacer" />
-
-      <div className="rail__user">
-        <div className="rail__avatar">하</div>
-        <div className="rail__user-info">
-          <div className="rail__user-name">하나 크리에이터</div>
-          <div className="rail__user-plan">Pro · 12.4 / 50 GB</div>
-        </div>
-        <div className="rail__user-menu"><Icon name="more" size={16} /></div>
-      </div>
     </aside>
   )
 }
