@@ -233,17 +233,19 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
               <img src={background.src} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
             )}
             {effects.blur && <div className="s3-final__blur-overlay" />}
-            <h2
-              className="s3-final__title"
-              style={{
-                left: `${typography.titlePosition.x}%`,
-                top: `${typography.titlePosition.y}%`,
-                fontSize: `${typography.titleSize}px`,
-                letterSpacing: `${typography.letterSpacing / 1000}em`,
-              }}
-            >
-              {tracks.length > 0 ? tracks[0].title : '플레이리스트'}
-            </h2>
+            {typography.showTitle && (
+              <h2
+                className="s3-final__title"
+                style={{
+                  left: `${typography.titlePosition.x}%`,
+                  top: `${typography.titlePosition.y}%`,
+                  fontSize: `${typography.titleSize}px`,
+                  letterSpacing: `${typography.letterSpacing / 1000}em`,
+                }}
+              >
+                {tracks.length > 0 ? tracks[0].title : '플레이리스트'}
+              </h2>
+            )}
             {typography.showSub && (
               <div
                 className="s3-final__sub"
