@@ -173,25 +173,36 @@
   padding: 10px 12px; line-height: 1.5; font-family: var(--f-mono); word-break: break-all;
 }
 
-.s3-btn-copy {
-  font-size: 12px; font-weight: 500; color: var(--ink-3);
-  background: var(--bg-elev); border: 1px solid var(--line);
-  border-radius: var(--r-m); padding: 5px 12px;
-  cursor: pointer; transition: background 120ms, color 120ms;
+.s3-chapters-panel {
+  padding: 10px 16px 8px;
+  border-bottom: 1px solid var(--line-faint);
 }
-.s3-btn-copy:hover { background: var(--bg-hover); color: var(--ink); }
+.s3-chapters-head {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
+}
+.s3-chapters-title {
+  font-size: 11px; font-weight: 600; color: var(--ink-4);
+  letter-spacing: 0.04em; text-transform: uppercase;
+}
+
+.s3-btn-copy {
+  font-size: 11.5px; font-weight: 500; color: var(--c);
+  background: transparent; border: 1px solid var(--c-softer);
+  border-radius: var(--r-s); padding: 3px 10px;
+  cursor: pointer; transition: background 120ms;
+}
+.s3-btn-copy:hover { background: var(--c-softer); }
 
 .s3-chapters {
-  display: flex; flex-direction: column; gap: 4px;
-  max-height: 200px; overflow-y: auto;
-  padding: 4px 0;
+  display: flex; flex-direction: column; gap: 2px;
+  max-height: 160px; overflow-y: auto;
 }
 .s3-chapter-row {
-  display: flex; align-items: center; gap: 12px;
-  padding: 3px 0; font-size: 12px;
+  display: flex; align-items: center; gap: 10px;
+  padding: 2px 0; font-size: 11.5px;
 }
 .s3-chapter-time {
-  font-family: var(--f-mono); color: var(--ink-3); min-width: 42px;
+  font-family: var(--f-mono); color: var(--ink-3); min-width: 38px; flex-shrink: 0;
   font-size: 11px; letter-spacing: 0.03em;
 }
 .s3-chapter-label {

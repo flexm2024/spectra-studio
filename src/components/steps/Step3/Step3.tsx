@@ -343,24 +343,6 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
           </div>
         </div>
 
-        {chapters.length > 0 && (
-          <div className="card" style={{ marginTop: 16 }}>
-            <div className="card__head">
-              <div className="card__title" style={{ fontSize: 13 }}>트랙 타임코드</div>
-              <button type="button" className="s3-btn-copy" onClick={copyChapters}>
-                {copied ? '✓ 복사됨' : '유튜브 챕터 복사'}
-              </button>
-            </div>
-            <div className="s3-chapters">
-              {chapters.map((c, i) => (
-                <div key={i} className="s3-chapter-row">
-                  <span className="s3-chapter-time">{c.time}</span>
-                  <span className="s3-chapter-label">{c.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* 우측 — 내보내기 패널 */}
@@ -411,6 +393,25 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
             <span className="s3-estimate__val">≈ {sizeMb} MB</span>
           </div>
         </div>
+
+        {tracks.length > 0 && (
+          <div className="s3-chapters-panel">
+            <div className="s3-chapters-head">
+              <span className="s3-chapters-title">트랙 타임코드</span>
+              <button type="button" className="s3-btn-copy" onClick={copyChapters}>
+                {copied ? '✓ 복사됨' : '유튜브 챕터 복사'}
+              </button>
+            </div>
+            <div className="s3-chapters">
+              {chapters.map((c, i) => (
+                <div key={i} className="s3-chapter-row">
+                  <span className="s3-chapter-time">{c.time}</span>
+                  <span className="s3-chapter-label">{c.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="s3-render">
           {!canRender && (
