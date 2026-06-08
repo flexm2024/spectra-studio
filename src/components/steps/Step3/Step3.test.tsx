@@ -53,7 +53,7 @@ describe('Step3', () => {
   })
   it('총 길이를 계산해 분:초 형식으로 표시한다', () => {
     render(<Step3 {...base} />)
-    expect(screen.getByText(/^\d+:\d{2}$/)).toBeInTheDocument()
+    expect(screen.getByText(/^\d+:\d{2}$/, { selector: '.s3-stat__value' })).toBeInTheDocument()
   })
   it('"렌더링 시작" 클릭 시 렌더링 진행 UI가 표시된다', () => {
     render(<Step3 {...base} />)

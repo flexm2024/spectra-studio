@@ -170,16 +170,21 @@ function drawVisualizer(
 ): void {
   const opacity = visualizer.opacity / 100
   const intensity = visualizer.intensity / 100
-  const sizeScale = visualizer.size / 50
-  // Step2: 컨테이너 center=y%, SVG 막대 기준선=y+30%*containerH
-  // containerH = size*0.8/360*height → offset = 0.3 * containerH = height*sizeScale/30
-  const yCenter = height * (visualizer.y / 100) + height * sizeScale / 30
+  // 프리뷰(Step2) 컨테이너 높이 기준: size*0.8px at 360px frame
+  const containerH = height * (visualizer.size * 0.8) / 360
+  // bars: SVG y=80 라인 = 컨테이너 상단 + 0.8*containerH → center + 0.3*containerH
+  const yCenter = height * (visualizer.y / 100) + containerH * 0.3
+  // glow/peak: 막대가 캔버스 하단(컨테이너 bottom)에서 위로 자람
+  const yBaseGP = height * (visualizer.y / 100) + containerH * 0.5
   const visW = Math.round(width * (Math.max(10, visualizer.width) / 100))
   const visX = (width - visW) / 2
 
   const energy = frequencyData.reduce((s, v) => s + v, 0) / Math.max(frequencyData.length, 1)
-  // Step2 CSS 기준 역산: containerH = size*0.8 / 360(frame) → 0.09 * sizeScale
-  const maxH = height * 0.09 * sizeScale
+  // bars: SVG 막대 최대 80% of containerH (preserveAspectRatio="none")
+  const maxH = containerH * 0.8
+  // glow/peak: 프리뷰 캔버스 H = containerH, 실제 막대 높이 비율 맞춤
+  const maxHGlow = containerH * 0.94
+  const maxHPeak = containerH * 0.90
 
   ctx.globalAlpha = opacity
 
@@ -260,18 +265,18 @@ function drawVisualizer(
     const rx = Math.min(barW * 0.18, 4 * (width / 640))
     for (let i = 0; i < bins; i++) {
       const fd = frequencyData[Math.floor(i * frequencyData.length / bins)] ?? 0
-      const barH = Math.max(2, fd * intensity * maxH)
+      const barH = Math.max(2, fd * intensity * maxHGlow)
       const hue = barHue(i, bins, visualizer.color)
       ctx.save()
       ctx.shadowColor = `hsl(${hue}, 100%, 65%)`
       ctx.shadowBlur = fd * intensity * 40 + 5
-      const grad = ctx.createLinearGradient(0, yCenter - barH, 0, yCenter)
+      const grad = ctx.createLinearGradient(0, yBaseGP - barH, 0, yBaseGP)
       grad.addColorStop(0, `hsl(${hue}, 100%, 78%)`)
       grad.addColorStop(0.55, `hsl(${hue}, 90%, 55%)`)
       grad.addColorStop(1, `hsl(${hue}, 80%, 38%)`)
       ctx.fillStyle = grad
       ctx.beginPath()
-      ;(ctx as any).roundRect(visX + i * barW + barW * 0.08, yCenter - barH, barW * 0.84, barH, rx)
+      ;(ctx as any).roundRect(visX + i * barW + barW * 0.08, yBaseGP - barH, barW * 0.84, barH, rx)
       ctx.fill()
       ctx.restore()
     }
@@ -281,11 +286,11 @@ function drawVisualizer(
     const rxPeak = Math.min(barW * 0.15, 3 * (width / 640))
     for (let i = 0; i < bins; i++) {
       const fd = frequencyData[Math.floor(i * frequencyData.length / bins)] ?? 0
-      const barH = Math.max(2, fd * intensity * maxH)
+      const barH = Math.max(2, fd * intensity * maxHPeak)
       const hue = barHue(i, bins, visualizer.color)
       const x = visX + i * barW + barW * 0.1
       const w = barW * 0.8
-      const barTop = yCenter - barH
+      const barTop = yBaseGP - barH
       ctx.fillStyle = `hsla(${hue}, 70%, 42%, 0.55)`
       ctx.beginPath()
       ;(ctx as any).roundRect(x, barTop, w, barH, [rxPeak, rxPeak, 0, 0])

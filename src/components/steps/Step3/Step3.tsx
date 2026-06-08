@@ -7,6 +7,7 @@ import SegmentedControl from '../../shared/SegmentedControl'
 import { waveformFor } from '../../../data/sampleTracks'
 import type { Track, Effects, Visualizer, ExportSettings, Background, LogoPosition, Typography, ParticleOverlay } from '../../../types'
 import { renderVideo } from '../../../lib/renderer'
+import { computeTrackBoundaries } from '../../../lib/renderer/audioProcessor'
 
 const LOOP_OPTIONS = [
   { value: 1 as const, label: '1회' },
@@ -96,6 +97,7 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
   const [renderState, setRenderState] = useState<RenderState>('idle')
   const [progress, setProgress] = useState(0)
   const [renderError, setRenderError] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   const onPreview = useCallback((bitmap: ImageBitmap) => {
@@ -109,7 +111,34 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
 
   const totalSec = tracks.reduce((acc, t) => acc + t.durationSec, 0)
   const fmt = (sec: number) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`
+  const fmtTimecode = (sec: number) => {
+    const s = Math.floor(sec)
+    return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
+  }
   const totalDur = fmt(totalSec)
+
+  const chapters = tracks.length > 0
+    ? (() => {
+        const { boundaries } = computeTrackBoundaries(
+          tracks.map(t => t.durationSec),
+          loops,
+          effects.crossfade,
+        )
+        return boundaries.map((startSec, i) => {
+          const track = tracks[i % tracks.length]
+          const num = String((i % tracks.length) + 1).padStart(2, '0')
+          return { time: fmtTimecode(startSec), label: `Track ${num} - ${track.title}` }
+        })
+      })()
+    : []
+
+  const copyChapters = () => {
+    const text = chapters.map(c => `${c.time} ${c.label}`).join('\n')
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
   // 전체 구간에서 충분한 높이 보장: 0.45~1.0 사이에서 랜덤 변동
   const previewWaveData = Array.from({ length: 80 }, (_, i) => {
     const rng = waveformFor(i + 1, 1)[0]   // 0.25~0.95
@@ -313,6 +342,25 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
             </div>
           </div>
         </div>
+
+        {chapters.length > 0 && (
+          <div className="card" style={{ marginTop: 16 }}>
+            <div className="card__head">
+              <div className="card__title" style={{ fontSize: 13 }}>트랙 타임코드</div>
+              <button type="button" className="s3-btn-copy" onClick={copyChapters}>
+                {copied ? '✓ 복사됨' : '유튜브 챕터 복사'}
+              </button>
+            </div>
+            <div className="s3-chapters">
+              {chapters.map((c, i) => (
+                <div key={i} className="s3-chapter-row">
+                  <span className="s3-chapter-time">{c.time}</span>
+                  <span className="s3-chapter-label">{c.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 우측 — 내보내기 패널 */}
