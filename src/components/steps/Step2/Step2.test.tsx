@@ -311,7 +311,7 @@ describe('Step2 — 파티클 섹션', () => {
     expect(screen.getByText('연기')).toBeInTheDocument()
     expect(screen.getByText('버블')).toBeInTheDocument()
     expect(screen.getByText('빗방울')).toBeInTheDocument()
-    expect(screen.getByText('불꽃')).toBeInTheDocument()
+    expect(screen.getByText('빛별')).toBeInTheDocument()
   })
 
   it('토글 클릭 시 enabled가 반전된다', () => {

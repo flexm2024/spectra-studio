@@ -32,7 +32,7 @@ function hexHue(hex: string): number {
 }
 
 export function createParticleOverlayState(overlay: ParticleOverlay): ParticleOverlayState {
-  const sparkly = ['sparkle', 'firefly', 'stars', 'dust', 'neon', 'glitter'].includes(overlay.type)
+  const sparkly = ['sparkle', 'firefly', 'stars', 'dust', 'neon', 'glitter', 'nova'].includes(overlay.type)
   const count = Math.round((sparkly ? 50 : 30) + overlay.intensity * (sparkly ? 2.5 : 1.7))
   const sp0 = overlay.speed / 100
   const particles: Particle[] = Array.from({ length: count }, (_, i) => ({
@@ -226,27 +226,57 @@ export function tickParticleOverlay(
         ctx.restore()
         break
       }
-      case 'sparks': {
-        p.vy += 0.0003 * sp
-        p.y += p.vy
-        p.x += p.vx
-        p.life -= 0.02 * sp
-        if (p.life <= 0) {
-          p.x = 0.3 + Math.random() * 0.4
-          p.y = 0.6 + Math.random() * 0.3
-          p.vx = (Math.random() - 0.5) * 0.012 * sp
-          p.vy = -(Math.random() * 0.015 + 0.005) * sp
-          p.life = 0.5 + Math.random() * 0.5
+      case 'nova': {
+        // 빛나는 별 — 렌즈플레어형 4방향 십자 팔 + 방사 글로우, 페이드인/아웃 펄스
+        p.life += (0.025 + p.r * 0.015) * sp
+        if (p.life > 1) {
+          p.life = 0
+          p.x = Math.random()
+          p.y = Math.random()
         }
-        const sparkAlpha = p.life * alpha
+        const pulse = Math.sin(p.life * Math.PI)
+        const novaAlpha = pulse * alpha
+        const novaR = (1.5 + p.r * 3.5) * sz
+        const nx = p.x * W, ny = p.y * H
+        const novaCol = color === 'rainbow' ? `hsl(${hue},100%,92%)` : `hsl(${hue},70%,92%)`
         ctx.save()
-        ctx.globalAlpha = sparkAlpha
-        ctx.strokeStyle = color === 'rainbow' ? `hsl(${hue},100%,80%)` : `hsl(${hue},90%,75%)`
-        ctx.lineWidth = (1 + p.r) * sz
+        // 방사 글로우
+        const grad = ctx.createRadialGradient(nx, ny, 0, nx, ny, novaR * 5)
+        grad.addColorStop(0, color === 'rainbow' ? `hsla(${hue},100%,95%,0.7)` : `hsla(${hue},60%,95%,0.6)`)
+        grad.addColorStop(1, 'transparent')
+        ctx.globalAlpha = novaAlpha * 0.55
+        ctx.fillStyle = grad
         ctx.beginPath()
-        ctx.moveTo(p.x * W, p.y * H)
-        ctx.lineTo((p.x - p.vx * 8) * W, (p.y - p.vy * 8) * H)
+        ctx.arc(nx, ny, novaR * 5, 0, Math.PI * 2)
+        ctx.fill()
+        // 4방향 긴 팔 (수평·수직)
+        ctx.globalAlpha = novaAlpha
+        ctx.strokeStyle = novaCol
+        ctx.lineWidth = (0.6 + p.r * 0.5) * sz
+        const longArm = novaR * 4
+        const shortArm = novaR * 2
+        ctx.beginPath()
+        ctx.moveTo(nx - longArm, ny); ctx.lineTo(nx + longArm, ny)
         ctx.stroke()
+        ctx.beginPath()
+        ctx.moveTo(nx, ny - longArm); ctx.lineTo(nx, ny + longArm)
+        ctx.stroke()
+        // 4방향 짧은 팔 (대각선)
+        ctx.lineWidth = (0.4 + p.r * 0.3) * sz
+        ctx.globalAlpha = novaAlpha * 0.6
+        const d = shortArm * 0.707
+        ctx.beginPath()
+        ctx.moveTo(nx - d, ny - d); ctx.lineTo(nx + d, ny + d)
+        ctx.stroke()
+        ctx.beginPath()
+        ctx.moveTo(nx + d, ny - d); ctx.lineTo(nx - d, ny + d)
+        ctx.stroke()
+        // 중심 밝은 점
+        ctx.globalAlpha = novaAlpha
+        ctx.fillStyle = '#ffffff'
+        ctx.beginPath()
+        ctx.arc(nx, ny, novaR * 0.7, 0, Math.PI * 2)
+        ctx.fill()
         ctx.restore()
         break
       }

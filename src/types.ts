@@ -86,7 +86,7 @@ export type TitlePositionPreset =
 export type ParticleType =
   | 'snow' | 'sparkle' | 'firefly' | 'stars'
   | 'petals' | 'dust' | 'smoke' | 'bubbles'
-  | 'rain' | 'sparks'
+  | 'rain' | 'nova'
   | 'confetti' | 'aurora' | 'hearts' | 'ripple' | 'neon' | 'glitter'
 
 export interface ParticleOverlay {

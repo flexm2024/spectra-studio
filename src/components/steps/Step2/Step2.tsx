@@ -152,7 +152,7 @@ const PARTICLE_TYPES: { id: ParticleType; label: string; emoji: string }[] = [
   { id: 'smoke',    label: '연기',    emoji: '💨' },
   { id: 'bubbles',  label: '버블',    emoji: '🫧' },
   { id: 'rain',     label: '빗방울',  emoji: '🌧️' },
-  { id: 'sparks',   label: '불꽃',    emoji: '🔥' },
+  { id: 'nova',     label: '빛별',    emoji: '✦' },
   { id: 'confetti', label: '컨페티',  emoji: '🎊' },
   { id: 'aurora',   label: '오로라',  emoji: '🌌' },
   { id: 'hearts',   label: '하트',    emoji: '💖' },
