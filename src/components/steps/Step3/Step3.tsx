@@ -307,12 +307,38 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
           <div className="s3-final__inner" data-testid="s3-preview">
             <canvas ref={canvasRef} className="s3-preview-canvas" width={640} height={360} />
           </div>
-          <div className="s3-thumb-row">
-            <button type="button" className="s3-btn-thumb" onClick={saveThumbnail} disabled={savingThumb}>
-              <Icon name="download" size={13} />{savingThumb ? '저장 중...' : '썸네일 PNG 저장'}
-            </button>
-          </div>
         </div>
+
+        {tracks.length > 0 && (
+          <div className="s3-timeline-card card">
+            <div className="card__head">
+              <div className="card__title" style={{ fontSize: 13 }}>재생 타임라인</div>
+              <span className="s3-timeline-total">{loops}회 반복 · {fmt(encodedSec)}</span>
+            </div>
+            <div className="s3-tl-bar">
+              {timelineSegments.map((seg, i) => (
+                <div
+                  key={i}
+                  className="s3-tl-seg"
+                  style={{
+                    width: `${seg.widthPct}%`,
+                    background: trackColors[seg.trackIdx],
+                    opacity: Math.floor(i / tracks.length) > 0 ? 0.55 : 1,
+                  }}
+                  title={`${seg.time}  ${seg.label}`}
+                />
+              ))}
+            </div>
+            <div className="s3-tl-legend">
+              {tracks.map((t, idx) => (
+                <div key={t.id} className="s3-tl-legend-item">
+                  <span className="s3-tl-dot" style={{ background: trackColors[idx] }} />
+                  <span className="s3-tl-legend-label">{t.title}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="card" style={{ marginTop: 16 }}>
           <div className="card__head">
@@ -428,6 +454,11 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
               <Icon name="download" size={14} /> 프로젝트 저장
             </button>
           )}
+          {(renderState === 'idle' || renderState === 'error') && (
+            <button type="button" className="s3-btn-thumb" onClick={saveThumbnail} disabled={savingThumb}>
+              <Icon name="download" size={13} />{savingThumb ? '저장 중...' : '썸네일 PNG 저장'}
+            </button>
+          )}
           {renderState === 'rendering' && (
             <div className="render-progress">
               <div className="render-progress__bar">
@@ -483,36 +514,6 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
         </div>
       )}
 
-      {tracks.length > 0 && (
-        <div className="s3-timeline-card card">
-          <div className="card__head">
-            <div className="card__title" style={{ fontSize: 13 }}>재생 타임라인</div>
-            <span className="s3-timeline-total">{loops}회 반복 · {fmt(encodedSec)}</span>
-          </div>
-          <div className="s3-tl-bar">
-            {timelineSegments.map((seg, i) => (
-              <div
-                key={i}
-                className="s3-tl-seg"
-                style={{
-                  width: `${seg.widthPct}%`,
-                  background: trackColors[seg.trackIdx],
-                  opacity: Math.floor(i / tracks.length) > 0 ? 0.55 : 1,
-                }}
-                title={`${seg.time}  ${seg.label}`}
-              />
-            ))}
-          </div>
-          <div className="s3-tl-legend">
-            {tracks.map((t, idx) => (
-              <div key={t.id} className="s3-tl-legend-item">
-                <span className="s3-tl-dot" style={{ background: trackColors[idx] }} />
-                <span className="s3-tl-legend-label">{t.title}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   )
 }
