@@ -89,6 +89,8 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
   const [renderError, setRenderError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [savingThumb, setSavingThumb] = useState(false)
+  const [copyFormat, setCopyFormat] = useState<'youtube' | 'srt'>('youtube')
+  const [labelFormat, setLabelFormat] = useState<'numbered' | 'title'>('numbered')
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   const onPreview = useCallback((bitmap: ImageBitmap) => {
@@ -150,13 +152,31 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
         return boundaries.map((startSec, i) => {
           const track = tracks[i % tracks.length]
           const num = String((i % tracks.length) + 1).padStart(2, '0')
-          return { time: fmtTimecode(startSec), label: `Track ${num} - ${track.title}` }
+          const label = labelFormat === 'numbered'
+            ? `Track ${num} - ${track.title}`
+            : track.title
+          return { time: fmtTimecode(startSec), label, startSec, trackIdx: i % tracks.length }
         })
       })()
     : []
 
   const copyChapters = () => {
-    const text = chapters.map(c => `${c.time} ${c.label}`).join('\n')
+    const totalRenderedSec = totalSec * loops
+    let text: string
+    if (copyFormat === 'srt') {
+      const toSrt = (s: number) => {
+        const h = Math.floor(s / 3600)
+        const m = Math.floor((s % 3600) / 60)
+        const sec = Math.floor(s % 60)
+        return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')},000`
+      }
+      text = chapters.map((c, i) => {
+        const endSec = chapters[i + 1]?.startSec ?? totalRenderedSec
+        return `${i + 1}\n${toSrt(c.startSec)} --> ${toSrt(endSec)}\n${c.label}`
+      }).join('\n\n')
+    } else {
+      text = chapters.map(c => `${c.time} ${c.label}`).join('\n')
+    }
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
@@ -198,6 +218,12 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
   const VIDEO_BPS = { '720p': 4_000_000, '1080p': 8_000_000, '4k': 25_000_000 } as const
   const AUDIO_BPS = { '96k': 96_000, '128k': 128_000, '192k': 192_000 } as const
   const encodedSec = totalSec * loops
+  const timelineSegments = chapters.map((c, i) => {
+    const endSec = chapters[i + 1]?.startSec ?? encodedSec
+    return { ...c, widthPct: ((endSec - c.startSec) / Math.max(encodedSec, 1)) * 100 }
+  })
+  const trackColors = tracks.map((_, idx) =>
+    `hsl(${Math.round((idx / Math.max(tracks.length - 1, 1)) * 240)}, 65%, 55%)`)
   const sizeMb = Math.round((VIDEO_BPS[exportSettings.resolution] + AUDIO_BPS[quality]) * encodedSec / 8 / 1024 / 1024)
   const themeObj = THEMES.find(t => t.id === theme) ?? THEMES[0]
 
@@ -430,14 +456,58 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
           <div className="card__head">
             <div className="card__title" style={{ fontSize: 13 }}>트랙 타임코드</div>
             <button type="button" className="s3-btn-copy" onClick={copyChapters}>
-              {copied ? '✓ 복사됨' : '유튜브 챕터 복사'}
+              {copied ? '✓ 복사됨' : '복사'}
             </button>
+          </div>
+          <div className="s3-chapters-controls">
+            <div className="s3-fmt-group">
+              <button type="button" className={`s3-fmt-btn${copyFormat === 'youtube' ? ' s3-fmt-btn--active' : ''}`} onClick={() => setCopyFormat('youtube')}>유튜브 챕터</button>
+              <button type="button" className={`s3-fmt-btn${copyFormat === 'srt' ? ' s3-fmt-btn--active' : ''}`} onClick={() => setCopyFormat('srt')}>SRT 자막</button>
+            </div>
+            <div className="s3-fmt-group">
+              <button type="button" className={`s3-fmt-btn${labelFormat === 'numbered' ? ' s3-fmt-btn--active' : ''}`} onClick={() => setLabelFormat('numbered')}>번호 포함</button>
+              <button type="button" className={`s3-fmt-btn${labelFormat === 'title' ? ' s3-fmt-btn--active' : ''}`} onClick={() => setLabelFormat('title')}>제목만</button>
+            </div>
           </div>
           <div className="s3-chapters">
             {chapters.map((c, i) => (
               <div key={i} className="s3-chapter-row">
                 <span className="s3-chapter-time">{c.time}</span>
                 <span className="s3-chapter-label">{c.label}</span>
+              </div>
+            ))}
+          </div>
+          <div className="s3-chapters-footer">
+            총 영상 길이 <span className="s3-chapters-footer__val">{fmt(encodedSec)}</span>
+          </div>
+        </div>
+      )}
+
+      {tracks.length > 0 && (
+        <div className="s3-timeline-card card">
+          <div className="card__head">
+            <div className="card__title" style={{ fontSize: 13 }}>재생 타임라인</div>
+            <span className="s3-timeline-total">{loops}회 반복 · {fmt(encodedSec)}</span>
+          </div>
+          <div className="s3-tl-bar">
+            {timelineSegments.map((seg, i) => (
+              <div
+                key={i}
+                className="s3-tl-seg"
+                style={{
+                  width: `${seg.widthPct}%`,
+                  background: trackColors[seg.trackIdx],
+                  opacity: Math.floor(i / tracks.length) > 0 ? 0.55 : 1,
+                }}
+                title={`${seg.time}  ${seg.label}`}
+              />
+            ))}
+          </div>
+          <div className="s3-tl-legend">
+            {tracks.map((t, idx) => (
+              <div key={t.id} className="s3-tl-legend-item">
+                <span className="s3-tl-dot" style={{ background: trackColors[idx] }} />
+                <span className="s3-tl-legend-label">{t.title}</span>
               </div>
             ))}
           </div>
