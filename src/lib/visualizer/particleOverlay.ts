@@ -32,7 +32,7 @@ function hexHue(hex: string): number {
 }
 
 export function createParticleOverlayState(overlay: ParticleOverlay): ParticleOverlayState {
-  const sparkly = ['sparkle', 'firefly', 'stars', 'dust', 'neon'].includes(overlay.type)
+  const sparkly = ['sparkle', 'firefly', 'stars', 'dust', 'neon', 'glitter'].includes(overlay.type)
   const count = Math.round((sparkly ? 50 : 30) + overlay.intensity * (sparkly ? 2.5 : 1.7))
   const sp0 = overlay.speed / 100
   const particles: Particle[] = Array.from({ length: count }, (_, i) => ({
@@ -66,7 +66,7 @@ export function tickParticleOverlay(
   const color = overlay.color
   const type = overlay.type
 
-  state.particles.forEach(p => {
+  state.particles.forEach((p, i) => {
     const hue = color === 'rainbow'
       ? (p.x * 300 + t * 20) % 360
       : hexHue(color)
@@ -270,19 +270,37 @@ export function tickParticleOverlay(
         ctx.restore()
         break
       }
-      case 'bokeh': {
-        p.y -= (0.0004 + p.r * 0.0002) * sp
-        p.x += Math.sin(t * 0.4 + p.r * 3) * 0.0002 * sp
-        if (p.y < -0.2) { p.y = 1.1; p.x = Math.random() }
-        const bokR = (p.r * 55 + 18) * sz
+      case 'aurora': {
+        if (i >= 7) return
+        const bandY = (p.y * 0.38 + 0.02) * H
+        const freq = 1.5 + p.r * 2.5
+        const amp = (18 + p.r * 35) * sz
+        const phase = p.angle + t * (0.25 + p.r * 0.35) * sp
+        const bandH = (20 + p.r * 35) * sz
+        const h1 = color === 'rainbow' ? (hue + i * 40) % 360 : hue
+        const h2 = (h1 + 50) % 360
         ctx.save()
-        ctx.globalAlpha = alpha * 0.18
-        const rg = ctx.createRadialGradient(p.x * W, p.y * H, 0, p.x * W, p.y * H, bokR)
-        rg.addColorStop(0, color === 'rainbow' ? `hsl(${hue},70%,85%)` : `hsl(${hue},55%,80%)`)
-        rg.addColorStop(1, 'transparent')
-        ctx.fillStyle = rg
+        ctx.globalAlpha = (0.07 + p.r * 0.10) * baseOpacity
         ctx.beginPath()
-        ctx.arc(p.x * W, p.y * H, bokR, 0, Math.PI * 2)
+        const steps = Math.ceil(W / 3)
+        for (let xi = 0; xi <= steps; xi++) {
+          const xp = (xi / steps) * W
+          const yo = Math.sin(xp / W * freq * Math.PI * 2 + phase) * amp
+          if (xi === 0) ctx.moveTo(xp, bandY + yo)
+          else ctx.lineTo(xp, bandY + yo)
+        }
+        for (let xi = steps; xi >= 0; xi--) {
+          const xp = (xi / steps) * W
+          const yo = Math.sin(xp / W * freq * Math.PI * 2 + phase) * amp
+          ctx.lineTo(xp, bandY + yo + bandH)
+        }
+        ctx.closePath()
+        const ag = ctx.createLinearGradient(0, bandY - amp, 0, bandY + bandH + amp)
+        ag.addColorStop(0, `hsla(${h1},85%,72%,0)`)
+        ag.addColorStop(0.45, `hsla(${h1},90%,78%,1)`)
+        ag.addColorStop(0.55, `hsla(${h2},85%,73%,1)`)
+        ag.addColorStop(1, `hsla(${h2},80%,68%,0)`)
+        ctx.fillStyle = ag
         ctx.fill()
         ctx.restore()
         break
@@ -349,40 +367,18 @@ export function tickParticleOverlay(
         ctx.restore()
         break
       }
-      case 'comets': {
-        if (Math.abs(p.vx) < 0.003) {
-          p.x = -0.05; p.y = Math.random()
-          p.vx = (0.013 + p.r * 0.01) * sp
-          p.vy = (Math.random() - 0.5) * 0.004 * sp
-        }
-        p.x += p.vx; p.y += p.vy
-        if (p.x > 1.1) {
-          p.x = -0.05; p.y = Math.random()
-          p.vx = (0.013 + p.r * 0.01) * sp
-          p.vy = (Math.random() - 0.5) * 0.004 * sp
-        }
-        const tailLen = (p.r * 65 + 30) * sz
-        const spd = Math.sqrt(p.vx ** 2 + p.vy ** 2)
-        const ndx = spd > 0 ? -p.vx / spd : -1
-        const ndy = spd > 0 ? -p.vy / spd : 0
-        const cx2 = p.x * W, cy2 = p.y * H
+      case 'glitter': {
+        p.life += (0.07 + p.r * 0.05) * sp
+        if (p.life > 1) { p.life = 0; p.x = Math.random(); p.y = Math.random() }
+        const glAlpha = Math.sin(p.life * Math.PI) * alpha * 1.3
+        const glR = (0.4 + p.r * 1.4) * sz
         ctx.save()
-        const cg = ctx.createLinearGradient(cx2, cy2, cx2 + ndx * tailLen, cy2 + ndy * tailLen)
-        cg.addColorStop(0, color === 'rainbow' ? `hsl(${hue},100%,95%)` : `hsl(${hue},80%,90%)`)
-        cg.addColorStop(1, color === 'rainbow' ? `hsla(${hue},80%,70%,0)` : `hsla(${hue},60%,65%,0)`)
-        ctx.globalAlpha = alpha
-        ctx.strokeStyle = cg
-        ctx.lineWidth = (1.5 + p.r * 2) * sz
-        ctx.lineCap = 'round'
+        ctx.globalAlpha = Math.min(1, glAlpha)
+        ctx.shadowColor = color === 'rainbow' ? `hsl(${hue},100%,92%)` : `hsl(${hue},90%,87%)`
+        ctx.shadowBlur = glR * 5
+        ctx.fillStyle = color === 'rainbow' ? `hsl(${hue},100%,96%)` : 'white'
         ctx.beginPath()
-        ctx.moveTo(cx2, cy2)
-        ctx.lineTo(cx2 + ndx * tailLen, cy2 + ndy * tailLen)
-        ctx.stroke()
-        ctx.shadowColor = color === 'rainbow' ? `hsl(${hue},100%,90%)` : `hsl(${hue},80%,85%)`
-        ctx.shadowBlur = 10 * sz
-        ctx.fillStyle = 'white'
-        ctx.beginPath()
-        ctx.arc(cx2, cy2, (1.2 + p.r * 1.5) * sz, 0, Math.PI * 2)
+        ctx.arc(p.x * W, p.y * H, glR, 0, Math.PI * 2)
         ctx.fill()
         ctx.restore()
         break

@@ -154,11 +154,11 @@ const PARTICLE_TYPES: { id: ParticleType; label: string; emoji: string }[] = [
   { id: 'rain',     label: '빗방울',  emoji: '🌧️' },
   { id: 'sparks',   label: '불꽃',    emoji: '🔥' },
   { id: 'confetti', label: '컨페티',  emoji: '🎊' },
-  { id: 'bokeh',    label: '보케',    emoji: '🔮' },
+  { id: 'aurora',   label: '오로라',  emoji: '🌌' },
   { id: 'hearts',   label: '하트',    emoji: '💖' },
   { id: 'ripple',   label: '파문',    emoji: '〰️' },
   { id: 'neon',     label: '네온',    emoji: '⚡' },
-  { id: 'comets',   label: '혜성',    emoji: '☄️' },
+  { id: 'glitter',  label: '글리터',  emoji: '🪩' },
 ]
 
 const PRESET_COORDS: Record<TitlePositionPreset, { x: number; y: number }> = {
