@@ -31,11 +31,6 @@ export default function StatusBar({ tracks }: StatusBarProps) {
         <Icon name="settings" size={13} />
         <span>192 kbps · AAC</span>
       </div>
-      <div className="status__spacer" />
-      <div className="status__group">
-        <span>다음 단계</span>
-        <span className="kbd">⌘</span><span className="kbd">→</span>
-      </div>
     </footer>
   )
 }

@@ -95,19 +95,6 @@ export default function Sidebar({ step, setStep, tracks, projectName, lastSaved,
 
       <div className="rail__spacer" />
 
-      <div className="rail__util">
-        <button type="button" className="rail__util-row">
-          <Icon name="help" size={15} /><span className="util-label">사용자 가이드</span>
-        </button>
-        <button type="button" className="rail__util-row">
-          <Icon name="keyboard" size={15} /><span className="util-label">키보드 단축키</span>
-          <span className="kbd">?</span>
-        </button>
-        <button type="button" className="rail__util-row">
-          <Icon name="settings" size={15} /><span className="util-label">설정</span>
-        </button>
-      </div>
-
       <div className="rail__user">
         <div className="rail__avatar">하</div>
         <div className="rail__user-info">

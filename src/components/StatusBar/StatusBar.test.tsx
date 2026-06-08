@@ -13,8 +13,4 @@ describe('StatusBar', () => {
     render(<StatusBar tracks={sampleTracks} />)
     expect(screen.getByText(/^\d+:\d{2}$/)).toBeInTheDocument()
   })
-  it('"다음 단계" 힌트를 표시한다', () => {
-    render(<StatusBar tracks={sampleTracks} />)
-    expect(screen.getByText('다음 단계')).toBeInTheDocument()
-  })
 })
