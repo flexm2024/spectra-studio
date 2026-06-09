@@ -66,20 +66,9 @@ describe('Step2', () => {
     render(<Step2 {...base} />)
     expect(screen.getByText('테마 & 비주얼')).toBeInTheDocument()
   })
-  it('테마 카드 6개를 표시한다', () => {
+  it('"테마 & 비주얼" 패널에 비주얼라이저 토글이 있다', () => {
     render(<Step2 {...base} />)
-    expect(screen.getByText('Midnight')).toBeInTheDocument()
-    expect(screen.getByText('Cyan Wave')).toBeInTheDocument()
-    expect(screen.getByText('Sunset')).toBeInTheDocument()
-    expect(screen.getByText('Forest')).toBeInTheDocument()
-    expect(screen.getByText('Cream')).toBeInTheDocument()
-    expect(screen.getByText('Mono')).toBeInTheDocument()
-  })
-  it('테마 카드 클릭 시 setTheme이 해당 id로 호출된다', () => {
-    const setTheme = vi.fn()
-    render(<Step2 {...base} setTheme={setTheme} />)
-    fireEvent.click(screen.getByText('Sunset').closest('.theme-card')!)
-    expect(setTheme).toHaveBeenCalledWith('sunset')
+    expect(screen.getByText('비주얼라이저')).toBeInTheDocument()
   })
   it('효과 칩 클릭 시 setEffects가 호출된다', () => {
     const setEffects = vi.fn()

@@ -688,20 +688,6 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
           <Button variant="ghost" size="icon"><Icon name="plus" size={14} /></Button>
         </div>
         <div className="s2-panel__body">
-          <div className="theme-grid">
-            {THEMES.map(t => (
-              <div
-                key={t.id}
-                className={`theme-card${theme === t.id ? ' theme-card--active' : ''}`}
-                style={{ background: t.bg }}
-                onClick={() => setTheme(t.id)}
-              >
-                <div className="theme-card__label">{t.label}</div>
-              </div>
-            ))}
-          </div>
-
-          <hr className="divider" />
           <div className="s2-section-label-row">
             <span className="s2-section-label">비주얼라이저</span>
             <Switch
