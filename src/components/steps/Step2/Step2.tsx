@@ -289,7 +289,10 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
   const [activeRightTab, setActiveRightTab] = useState<'effects' | 'title'>('title')
   const [viewportZoom, setViewportZoom] = useState(1)
   const viewportRef = useRef<HTMLDivElement>(null)
+  const tlBarRef = useRef<HTMLDivElement>(null)
+  const tlBarIsDragging = useRef(false)
   const onSeekRef = useRef(onSeek)
+  const totalSecRef = useRef(0)
   onSeekRef.current = onSeek
 
   const [freqData, setFreqData] = useState<number[]>([])
@@ -405,12 +408,19 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
         const y = Math.max(5, Math.min(95, ((e.clientY - rect.top - subDragOffset.current.y) / rect.height) * 100))
         setTypography(prev => ({ ...prev, subPosition: { x, y } }))
       }
+      if (tlBarIsDragging.current && tlBarRef.current) {
+        const bar = tlBarRef.current
+        const barRect = bar.getBoundingClientRect()
+        const pct = Math.max(0, Math.min(1, (e.clientX - barRect.left) / barRect.width))
+        onSeekRef.current(pct * totalSecRef.current)
+      }
     }
     function onMouseUp() {
       isDragging.current = false
       visIsDragging.current = false
       titleIsDragging.current = false
       subIsDragging.current = false
+      tlBarIsDragging.current = false
     }
     document.addEventListener('mousemove', onMouseMove)
     document.addEventListener('mouseup', onMouseUp)
@@ -667,6 +677,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
   const accTime = tracks.slice(0, Math.max(0, trackIdx)).reduce((s, t) => s + t.durationSec, 0)
   const playlistCurrentTime = accTime + Math.min(currentTime, tracks[Math.max(0, trackIdx)]?.durationSec ?? 0)
   const playheadPct = totalSec > 0 ? (playlistCurrentTime / totalSec) * 100 : 0
+  totalSecRef.current = totalSec
 
   return (
     <div className="step2">
@@ -991,12 +1002,13 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
             <span>타임라인</span>
             <span>{fmt(totalSec)}</span>
           </div>
-          <div className="s2-tl-bar"
-            onClick={e => {
+          <div className="s2-tl-bar" ref={tlBarRef}
+            onMouseDown={e => {
               if (!tracks.length) return
               const rect = e.currentTarget.getBoundingClientRect()
               const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
               onSeekRef.current(pct * totalSec)
+              tlBarIsDragging.current = true
             }}
           >
             {tracks.map((t, i) => (
