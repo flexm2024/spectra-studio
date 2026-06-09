@@ -41,10 +41,13 @@ export function drawFrame(input: DrawFrameInput): void {
   const ctx = input.canvas.getContext('2d') as unknown as OffscreenCanvasRenderingContext2D
   const { width, height, frequencyData, themeGradient, effects, visualizer, typography, currentTrack, currentTrackIndex, totalTracks } = input
 
-  // 1. 배경 (object-fit: cover 방식)
-  if (input.backgroundImage) {
+  // 1. 배경
+  // 이미지 + blur ON: 선명본 스킵 (blur 단계에서 단독 렌더) — CSS backdrop-filter와 동일하게
+  // 이미지 + blur OFF: 선명 cover 렌더
+  // 그라데이션: 항상 렌더 (blur 여부 무관)
+  if (input.backgroundImage && !effects.blur) {
     drawImageCover(ctx, input.backgroundImage, width, height)
-  } else {
+  } else if (!input.backgroundImage) {
     const grad = ctx.createLinearGradient(0, 0, width, height)
     grad.addColorStop(0, themeGradient[0])
     grad.addColorStop(1, themeGradient[1])
@@ -52,19 +55,19 @@ export function drawFrame(input: DrawFrameInput): void {
     ctx.fillRect(0, 0, width, height)
   }
 
-  // 2. blur overlay — CSS backdrop-filter: blur(24px)과 동일하게 고불투명도로 덮음
+  // 2. blur — CSS backdrop-filter: blur(24px) 동등: 완전 불투명 블러본으로 교체
   if (effects.blur) {
     ctx.save()
     ctx.filter = 'blur(24px)'
-    ctx.globalAlpha = 0.88
+    ctx.globalAlpha = 1.0
     if (input.backgroundImage) {
-      drawImageCover(ctx, input.backgroundImage, width, height, 60)
+      drawImageCover(ctx, input.backgroundImage, width, height, 64)
     } else {
       const grad = ctx.createLinearGradient(0, 0, width, height)
       grad.addColorStop(0, themeGradient[0])
       grad.addColorStop(1, themeGradient[1])
       ctx.fillStyle = grad
-      ctx.fillRect(-60, -60, width + 120, height + 120)
+      ctx.fillRect(-64, -64, width + 128, height + 128)
     }
     ctx.restore()
   }
