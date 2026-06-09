@@ -129,9 +129,20 @@ export default function App() {
     return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current) }
   }, [theme, effects, visualizer, typography, exportSettings, loops, quality, background, logoPosition, logoSize, particleOverlay, tracks, projectId, projectName])
 
+  const isRenderingRef = useRef(false)
+
+  function guardStep(go: () => void) {
+    if (step === 3 && isRenderingRef.current) {
+      if (!window.confirm('렌더링이 진행 중입니다.\n이동하면 렌더링이 취소됩니다. 계속하시겠습니까?')) return
+    }
+    go()
+  }
+
   const goToStep = (n: 1 | 2 | 3) => {
-    if (n === 3) onPause()
-    setStep(n)
+    guardStep(() => {
+      if (n === 3) onPause()
+      setStep(n)
+    })
   }
 
   const handleSave = () => {
@@ -173,7 +184,7 @@ export default function App() {
     setCurrentId(id)
     setLastSaved(project.updatedAt)
     setProjectModalOpen(false)
-    setStep(1)
+    guardStep(() => setStep(1))
   }
 
   function handleNewProject() {
@@ -199,7 +210,7 @@ export default function App() {
     setCurrentId(newId)
     setLastSaved(null)
     setProjectModalOpen(false)
-    setStep(1)
+    guardStep(() => setStep(1))
   }
 
   async function handleExportFile() {
@@ -456,7 +467,8 @@ export default function App() {
             setLoops={setLoops}
             quality={quality}
             setQuality={setQuality}
-            onBack={() => setStep(2)}
+            onBack={() => guardStep(() => setStep(2))}
+            onRenderStateChange={(v) => { isRenderingRef.current = v }}
             background={background}
             logo={logo}
             logoPosition={logoPosition}

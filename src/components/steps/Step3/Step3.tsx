@@ -75,11 +75,12 @@ interface Step3Props {
   onSave?: () => void
   autoStart?: boolean
   onAutoStartDone?: () => void
+  onRenderStateChange?: (rendering: boolean) => void
 }
 
 type RenderState = 'idle' | 'rendering' | 'done' | 'error'
 
-export default function Step3({ tracks, theme, effects, visualizer, exportSettings, setExportSettings, loops, setLoops, quality, setQuality, onBack, background, logo, logoPosition, logoSize, watermark, stickers, typography, particleOverlay, onSave, autoStart, onAutoStartDone }: Step3Props) {
+export default function Step3({ tracks, theme, effects, visualizer, exportSettings, setExportSettings, loops, setLoops, quality, setQuality, onBack, background, logo, logoPosition, logoSize, watermark, stickers, typography, particleOverlay, onSave, autoStart, onAutoStartDone, onRenderStateChange }: Step3Props) {
   const canRender = typeof VideoEncoder !== 'undefined'
     && typeof AudioEncoder !== 'undefined'
     && typeof OffscreenCanvas !== 'undefined'
@@ -87,6 +88,10 @@ export default function Step3({ tracks, theme, effects, visualizer, exportSettin
   const [renderState, setRenderState] = useState<RenderState>('idle')
   const [progress, setProgress] = useState(0)
   const [renderError, setRenderError] = useState<string | null>(null)
+
+  useEffect(() => {
+    onRenderStateChange?.(renderState === 'rendering')
+  }, [renderState])
   const [copied, setCopied] = useState(false)
   const [savingThumb, setSavingThumb] = useState(false)
   const [copyFormat, setCopyFormat] = useState<'youtube' | 'srt'>('youtube')
