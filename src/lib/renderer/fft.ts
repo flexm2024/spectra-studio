@@ -33,6 +33,45 @@ function fftInPlace(re: Float64Array, im: Float64Array): void {
   }
 }
 
+// Step2 AnalyserNode와 완전 동일한 파이프라인 — encodeWorker에서 사용
+export function computeStep2Bands(
+  pcmData: Float32Array,
+  sampleOffset: number,
+  sampleRate: number,
+  numBands = 80,
+  fftSize = 2048,
+): Float32Array {
+  const re = new Float64Array(fftSize)
+  const im = new Float64Array(fftSize)
+  for (let i = 0; i < fftSize; i++) {
+    const idx = sampleOffset + i
+    const hann = 0.5 * (1 - Math.cos((2 * Math.PI * i) / (fftSize - 1)))
+    re[i] = (idx >= 0 && idx < pcmData.length ? pcmData[idx] : 0) * hann
+  }
+  fftInPlace(re, im)
+
+  const bins = fftSize >> 1
+  const nyq = sampleRate / 2
+  const fMin = 30
+  const fMax = Math.min(18000, nyq)
+
+  const bands = new Float32Array(numBands)
+  for (let b = 0; b < numBands; b++) {
+    const lo = Math.max(0, Math.floor(fMin * Math.pow(fMax / fMin, b / numBands) / nyq * bins))
+    const hi = Math.min(bins - 1, Math.ceil(fMin * Math.pow(fMax / fMin, (b + 1) / numBands) / nyq * bins))
+    let s = 0, n = 0
+    for (let j = lo; j <= hi; j++) {
+      const mag = Math.sqrt(re[j] * re[j] + im[j] * im[j]) / fftSize
+      const db = 20 * Math.log10(Math.max(1e-10, mag))
+      // AnalyserNode 기본값(minDecibels=-100, maxDecibels=-30)과 동일 스케일
+      s += Math.max(0, Math.min(1, (db + 100) / 70))
+      n++
+    }
+    bands[b] = n > 0 ? s / n : 0
+  }
+  return bands
+}
+
 export function computeFrequencyBands(
   pcmData: Float32Array,
   sampleOffset: number,
