@@ -101,9 +101,9 @@ export function drawFrame(input: DrawFrameInput): void {
     const subX = Math.round((typography.subPosition.x / 100) * width)
     const subY = Math.round((typography.subPosition.y / 100) * height)
     const subPx = Math.round(typography.subSize * (width / 640))
-    ctx.font = `400 ${subPx}px "Inter", sans-serif`
+    ctx.font = `400 ${subPx}px "JetBrains Mono", monospace`
     ;(ctx as any).letterSpacing = `${typography.subLetterSpacing / 1000}em`
-    ctx.fillStyle = 'rgba(255,255,255,0.6)'
+    ctx.fillStyle = 'rgba(255,255,255,0.7)'
     const artistPrefix = currentTrack.artist && currentTrack.artist !== 'Unknown' ? `${currentTrack.artist} · ` : ''
     ctx.fillText(
       `${artistPrefix}Track ${String(currentTrackIndex + 1).padStart(2, '0')} / ${totalTracks}`,
@@ -356,7 +356,8 @@ function drawTitle(
   titleStroke: { enabled: boolean; width: number; color: string },
 ): void {
   const s = width / 640
-  const textW = measureTitleWidth(ctx, text, px, fontFamily)
+  const displayText = style === 'modern' ? text.toUpperCase() : text
+  const textW = measureTitleWidth(ctx, displayText, px, fontFamily)
 
   // deco: bg-word (배경에 먼저)
   if (deco === 'bg-word') {
@@ -365,7 +366,7 @@ function drawTitle(
     ctx.font = `900 ${px * 4}px ${fontFamily}`
     ctx.fillStyle = '#ffffff'
     ctx.textAlign = 'center'
-    ctx.fillText(captionTop || text, x, y)
+    ctx.fillText(captionTop || displayText, x, y)
     ctx.restore()
   }
 
@@ -422,19 +423,19 @@ function drawTitle(
       if (titleStroke.enabled) {
         ctx.strokeStyle = titleStroke.color
         ctx.lineWidth = strokeW
-        ctx.strokeText(text, x, y)
+        ctx.strokeText(displayText, x, y)
       }
       ctx.fillStyle = '#00d4ff'
-      ctx.fillText(text, x, y)
+      ctx.fillText(displayText, x, y)
       ctx.shadowBlur = px * 0.25
-      ctx.fillText(text, x, y)
+      ctx.fillText(displayText, x, y)
       break
     }
     case 'outline': {
       if (titleStroke.enabled) {
         ctx.strokeStyle = titleStroke.color
         ctx.lineWidth = strokeW
-        ctx.strokeText(text, x, y)
+        ctx.strokeText(displayText, x, y)
       }
       break
     }
@@ -445,27 +446,43 @@ function drawTitle(
       if (titleStroke.enabled) {
         ctx.strokeStyle = titleStroke.color
         ctx.lineWidth = strokeW
-        ctx.strokeText(text, x, y)
+        ctx.strokeText(displayText, x, y)
       }
       ctx.fillStyle = '#f0e6c8'
-      ctx.fillText(text, x, y)
+      ctx.fillText(displayText, x, y)
       break
     }
     case 'glitch': {
       ctx.save()
       ctx.fillStyle = '#ff003c'
       ctx.globalAlpha = 0.8
-      ctx.fillText(text, x - 3 * s, y - 2 * s)
+      ctx.fillText(displayText, x - 3 * s, y - 2 * s)
       ctx.fillStyle = '#00d4ff'
-      ctx.fillText(text, x + 3 * s, y + 2 * s)
+      ctx.fillText(displayText, x + 3 * s, y + 2 * s)
       ctx.restore()
+      ctx.shadowColor = 'rgba(0,0,0,0.6)'
+      ctx.shadowBlur = Math.round(px * 0.25)
+      ctx.shadowOffsetY = Math.round(px * 0.08)
       if (titleStroke.enabled) {
         ctx.strokeStyle = titleStroke.color
         ctx.lineWidth = strokeW
-        ctx.strokeText(text, x, y)
+        ctx.strokeText(displayText, x, y)
       }
       ctx.fillStyle = 'rgba(255,255,255,0.9)'
-      ctx.fillText(text, x, y)
+      ctx.fillText(displayText, x, y)
+      break
+    }
+    case 'modern': {
+      ctx.shadowColor = 'rgba(0,0,0,0.5)'
+      ctx.shadowBlur = Math.round(px * 0.167)
+      ctx.shadowOffsetY = Math.round(px * 0.042)
+      if (titleStroke.enabled) {
+        ctx.strokeStyle = titleStroke.color
+        ctx.lineWidth = strokeW
+        ctx.strokeText(displayText, x, y)
+      }
+      ctx.fillStyle = 'rgba(255,255,255,1)'
+      ctx.fillText(displayText, x, y)
       break
     }
     default: {
@@ -475,10 +492,10 @@ function drawTitle(
       if (titleStroke.enabled) {
         ctx.strokeStyle = titleStroke.color
         ctx.lineWidth = strokeW
-        ctx.strokeText(text, x, y)
+        ctx.strokeText(displayText, x, y)
       }
-      ctx.fillStyle = style === 'modern' ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.9)'
-      ctx.fillText(text, x, y)
+      ctx.fillStyle = 'rgba(255,255,255,0.9)'
+      ctx.fillText(displayText, x, y)
     }
   }
 
