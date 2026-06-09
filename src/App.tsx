@@ -83,6 +83,7 @@ export default function App() {
     titleCaptionTop: '',
     titleCaptionBottom: '',
     titleAlign: 'center' as const,
+    titleStroke: { enabled: true, width: 2, color: '#000000' },
   })
   const [exportSettings, setExportSettings] = useState<ExportSettings>(_init.snapshot?.exportSettings ?? {
     filename: 'my-playlist',
@@ -183,7 +184,7 @@ export default function App() {
     setTheme('midnight')
     setEffects({ vis: true, crossfade: false, ducking: true, blur: true })
     setVisualizer({ type: 'bars', intensity: 70, opacity: 85, y: 75, size: 50, width: 100, color: 'rainbow' })
-    setTypography({ titleSize: 20, letterSpacing: -15, titlePosition: { x: 50, y: 48 }, subPosition: { x: 50, y: 55 }, showTitle: true, showSub: true, subSize: 18, subLetterSpacing: 0, titleStyle: 'minimal', titleDeco: 'none', titleFont: 'inter', titlePositionPreset: 'bc', titleCaptionTop: '', titleCaptionBottom: '', titleAlign: 'center' as const, })
+    setTypography({ titleSize: 20, letterSpacing: -15, titlePosition: { x: 50, y: 48 }, subPosition: { x: 50, y: 55 }, showTitle: true, showSub: true, subSize: 18, subLetterSpacing: 0, titleStyle: 'minimal', titleDeco: 'none', titleFont: 'inter', titlePositionPreset: 'bc', titleCaptionTop: '', titleCaptionBottom: '', titleAlign: 'center' as const, titleStroke: { enabled: true, width: 2, color: '#000000' } })
     setExportSettings({ filename: 'my-playlist', resolution: '1080p' })
     setLoops(1)
     setQuality('192k')

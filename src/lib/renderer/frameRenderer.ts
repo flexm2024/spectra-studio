@@ -93,7 +93,8 @@ export function drawFrame(input: DrawFrameInput): void {
     drawTitle(ctx, currentTrack.title, titleX, titleY, titlePx, fontFamily,
       typography.titleStyle ?? 'minimal', typography.titleDeco ?? 'none',
       typography.titleCaptionTop ?? '', typography.titleCaptionBottom ?? '',
-      typography.letterSpacing, width)
+      typography.letterSpacing, width,
+      typography.titleStroke ?? { enabled: true, width: 2, color: '#000000' })
   }
 
   if (typography.showSub) {
@@ -352,6 +353,7 @@ function drawTitle(
   captionBottom: string,
   letterSpacing: number,
   width: number,
+  titleStroke: { enabled: boolean; width: number; color: string },
 ): void {
   const s = width / 640
   const textW = measureTitleWidth(ctx, text, px, fontFamily)
@@ -410,14 +412,18 @@ function drawTitle(
   ctx.textAlign = 'center'
   ctx.lineJoin = 'round'
 
+  const strokeW = titleStroke.enabled ? Math.max(0.5, titleStroke.width * (width / 640)) : 0
+
   // 기본 텍스트 렌더링
   switch (style) {
     case 'neon': {
       ctx.shadowColor = '#00d4ff'
       ctx.shadowBlur = px * 0.5
-      ctx.strokeStyle = 'rgba(0,212,255,0.3)'
-      ctx.lineWidth = Math.max(1, px * 0.04)
-      ctx.strokeText(text, x, y)
+      if (titleStroke.enabled) {
+        ctx.strokeStyle = titleStroke.color
+        ctx.lineWidth = strokeW
+        ctx.strokeText(text, x, y)
+      }
       ctx.fillStyle = '#00d4ff'
       ctx.fillText(text, x, y)
       ctx.shadowBlur = px * 0.25
@@ -425,18 +431,22 @@ function drawTitle(
       break
     }
     case 'outline': {
-      ctx.strokeStyle = 'rgba(255,255,255,0.9)'
-      ctx.lineWidth = Math.max(1.5, px * 0.03)
-      ctx.strokeText(text, x, y)
+      if (titleStroke.enabled) {
+        ctx.strokeStyle = titleStroke.color
+        ctx.lineWidth = strokeW
+        ctx.strokeText(text, x, y)
+      }
       break
     }
     case 'vintage': {
-      ctx.strokeStyle = 'rgba(0,0,0,0.5)'
-      ctx.lineWidth = Math.max(2, px * 0.06)
       ctx.shadowColor = 'rgba(0,0,0,0.5)'
       ctx.shadowBlur = Math.round(px * 0.2)
       ctx.shadowOffsetY = Math.round(px * 0.06)
-      ctx.strokeText(text, x, y)
+      if (titleStroke.enabled) {
+        ctx.strokeStyle = titleStroke.color
+        ctx.lineWidth = strokeW
+        ctx.strokeText(text, x, y)
+      }
       ctx.fillStyle = '#f0e6c8'
       ctx.fillText(text, x, y)
       break
@@ -449,20 +459,24 @@ function drawTitle(
       ctx.fillStyle = '#00d4ff'
       ctx.fillText(text, x + 3 * s, y + 2 * s)
       ctx.restore()
-      ctx.strokeStyle = 'rgba(0,0,0,0.4)'
-      ctx.lineWidth = Math.max(2, px * 0.06)
-      ctx.strokeText(text, x, y)
+      if (titleStroke.enabled) {
+        ctx.strokeStyle = titleStroke.color
+        ctx.lineWidth = strokeW
+        ctx.strokeText(text, x, y)
+      }
       ctx.fillStyle = 'rgba(255,255,255,0.9)'
       ctx.fillText(text, x, y)
       break
     }
     default: {
-      ctx.strokeStyle = 'rgba(0,0,0,0.5)'
-      ctx.lineWidth = Math.max(2, px * 0.06)
       ctx.shadowColor = 'rgba(0,0,0,0.6)'
       ctx.shadowBlur = Math.round(px * 0.25)
       ctx.shadowOffsetY = Math.round(px * 0.08)
-      ctx.strokeText(text, x, y)
+      if (titleStroke.enabled) {
+        ctx.strokeStyle = titleStroke.color
+        ctx.lineWidth = strokeW
+        ctx.strokeText(text, x, y)
+      }
       ctx.fillStyle = style === 'modern' ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.9)'
       ctx.fillText(text, x, y)
     }

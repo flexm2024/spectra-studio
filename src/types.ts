@@ -116,6 +116,7 @@ export interface Typography {
   titleCaptionTop: string
   titleCaptionBottom: string
   titleAlign: 'left' | 'center' | 'right'
+  titleStroke: { enabled: boolean; width: number; color: string }
 }
 
 export interface ExportSettings {

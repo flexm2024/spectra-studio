@@ -918,6 +918,9 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                   style={{
                     fontSize: `${typography.titleSize}px`,
                     letterSpacing: `${typography.letterSpacing / 1000}em`,
+                    WebkitTextStroke: (typography.titleStroke?.enabled)
+                      ? `${typography.titleStroke.width}px ${typography.titleStroke.color}`
+                      : '0',
                   }}
                 >
                   {playingTrack?.title}
@@ -1192,6 +1195,49 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* 텍스트 테두리 */}
+              <div className="title-section">
+                <div className="s2-section-label-row">
+                  <span className="s2-section-label">텍스트 테두리</span>
+                  <Switch
+                    on={typography.titleStroke?.enabled ?? true}
+                    onChange={() => setTypography(prev => ({
+                      ...prev,
+                      titleStroke: { ...(prev.titleStroke ?? { width: 2, color: '#000000' }), enabled: !(prev.titleStroke?.enabled ?? true) },
+                    }))}
+                  />
+                </div>
+                {(typography.titleStroke?.enabled ?? true) && (
+                  <>
+                    <div className="slider-row">
+                      <div className="slider-row__label">두께</div>
+                      <input
+                        type="range" min={0.5} max={8} step={0.5}
+                        value={typography.titleStroke?.width ?? 2}
+                        onChange={e => setTypography(prev => ({
+                          ...prev,
+                          titleStroke: { ...(prev.titleStroke ?? { enabled: true, color: '#000000' }), width: Number(e.target.value) },
+                        }))}
+                        className="slider"
+                      />
+                      <div className="slider-row__value">{typography.titleStroke?.width ?? 2}px</div>
+                    </div>
+                    <div className="slider-row">
+                      <div className="slider-row__label">색상</div>
+                      <input
+                        type="color"
+                        value={typography.titleStroke?.color ?? '#000000'}
+                        onChange={e => setTypography(prev => ({
+                          ...prev,
+                          titleStroke: { ...(prev.titleStroke ?? { enabled: true, width: 2 }), color: e.target.value },
+                        }))}
+                        className="title-stroke-color-picker"
+                      />
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* 데코 스타일 */}

@@ -29,6 +29,7 @@ const base = {
     titleCaptionTop: '',
     titleCaptionBottom: '',
     titleAlign: 'center' as const,
+    titleStroke: { enabled: true, width: 2, color: '#000000' },
   },
   setTypography: vi.fn(),
   onBack: vi.fn(),
