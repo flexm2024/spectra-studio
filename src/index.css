@@ -106,3 +106,34 @@ input, textarea { font-family: inherit; }
 .form-section:first-child { border-top: none; }
 .form-section__label { font-size: 12px; font-weight: 600; color: var(--ink-2); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; white-space: nowrap; gap: 8px; }
 .form-section__hint { font-size: 11px; font-weight: 400; color: var(--ink-4); font-family: var(--f-mono); }
+
+/* 렌더링 중단 경고 다이얼로그 */
+.confirm-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+}
+.confirm-dialog {
+  background: var(--bg-elev); border: 1px solid var(--line);
+  border-radius: 12px; padding: 24px 28px; min-width: 320px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.24);
+  display: flex; flex-direction: column; gap: 20px;
+}
+.confirm-dialog__msg {
+  font-size: 14px; line-height: 1.6; color: var(--ink);
+  white-space: pre-line;
+}
+.confirm-dialog__btns {
+  display: flex; gap: 8px; justify-content: flex-end;
+}
+.confirm-dialog__btns button {
+  padding: 7px 18px; border-radius: 7px; font-size: 13px;
+  font-weight: 500; cursor: pointer; border: 1px solid var(--line);
+}
+.confirm-dialog__btns .btn-cancel {
+  background: var(--bg-sunken); color: var(--ink-2);
+}
+.confirm-dialog__btns .btn-ok {
+  background: #3b82f6; color: #fff; border-color: #3b82f6;
+}
+.confirm-dialog__btns .btn-ok:hover { background: #2563eb; }

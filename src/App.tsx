@@ -130,10 +130,12 @@ export default function App() {
   }, [theme, effects, visualizer, typography, exportSettings, loops, quality, background, logoPosition, logoSize, particleOverlay, tracks, projectId, projectName])
 
   const isRenderingRef = useRef(false)
+  const [confirmPending, setConfirmPending] = useState<(() => void) | null>(null)
 
   function guardStep(go: () => void) {
     if (step === 3 && isRenderingRef.current) {
-      if (!window.confirm('렌더링이 진행 중입니다.\n이동하면 렌더링이 취소됩니다. 계속하시겠습니까?')) return
+      setConfirmPending(() => go)
+      return
     }
     go()
   }
@@ -495,6 +497,17 @@ export default function App() {
         onExportFile={handleExportFile}
         onImportFile={handleImportFile}
       />
+      {confirmPending && (
+        <div className="confirm-overlay" onClick={() => setConfirmPending(null)}>
+          <div className="confirm-dialog" onClick={e => e.stopPropagation()}>
+            <p className="confirm-dialog__msg">{'렌더링이 진행 중입니다.\n이동하면 렌더링이 취소됩니다. 계속하시겠습니까?'}</p>
+            <div className="confirm-dialog__btns">
+              <button className="btn-cancel" onClick={() => setConfirmPending(null)}>취소</button>
+              <button className="btn-ok" onClick={() => { confirmPending(); setConfirmPending(null) }}>확인</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
