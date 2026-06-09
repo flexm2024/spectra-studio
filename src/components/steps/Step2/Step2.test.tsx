@@ -95,11 +95,11 @@ describe('Step2', () => {
     expect(onNext).toHaveBeenCalledTimes(1)
   })
 
-  it('타임라인 클립 클릭 시 onPlay가 해당 트랙 id로 호출된다', () => {
+  it('타임라인 세그먼트 클릭 시 onPlay가 해당 트랙 id로 호출된다', () => {
     const onPlay = vi.fn()
     render(<Step2 {...base} onPlay={onPlay} />)
-    const clips = document.querySelectorAll('.s2-clip')
-    fireEvent.click(clips[1])
+    const segs = document.querySelectorAll('.s2-tl-seg')
+    fireEvent.click(segs[1])
     expect(onPlay).toHaveBeenCalledWith(sampleTracks[1].id)
   })
 

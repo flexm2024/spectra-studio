@@ -211,45 +211,8 @@ function energyColor(energy: number): string {
   return `hsl(${energy * 240}, 100%, ${50 + energy * 30}%)`
 }
 
-const CLIP_GAP = 4
-
-function clipW(t: Track, zoom: number): number {
-  return Math.max(24, t.durationSec * zoom)
-}
-
-function clipPxFromTime(time: number, tracks: Track[], zoom: number): number {
-  const shown = tracks.slice(0, 8)
-  let acc = 0, px = 0
-  for (let i = 0; i < shown.length; i++) {
-    const t = shown[i]
-    const w = clipW(t, zoom)
-    if (i > 0) px += CLIP_GAP
-    if (time <= acc + t.durationSec || i === shown.length - 1) {
-      const r = t.durationSec > 0 ? Math.max(0, Math.min(1, (time - acc) / t.durationSec)) : 0
-      return px + r * w
-    }
-    px += w
-    acc += t.durationSec
-  }
-  return px
-}
-
-function pxToTime(px: number, tracks: Track[], zoom: number): number {
-  const shown = tracks.slice(0, 8)
-  let acc = 0, p = 0
-  for (let i = 0; i < shown.length; i++) {
-    const t = shown[i]
-    const w = clipW(t, zoom)
-    if (i > 0) p += CLIP_GAP
-    if (px <= p + w || i === shown.length - 1) {
-      const r = w > 0 ? Math.max(0, Math.min(1, (px - p) / w)) : 0
-      return acc + r * t.durationSec
-    }
-    p += w
-    acc += t.durationSec
-  }
-  return acc
-}
+const TRACK_COLORS = (idx: number, total: number) =>
+  `hsl(${Math.round((idx / Math.max(total - 1, 1)) * 240)}, 65%, 55%)`
 
 interface Step2Props {
   tracks: Track[]
@@ -324,15 +287,10 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
   }
 
   const [activeRightTab, setActiveRightTab] = useState<'effects' | 'title'>('title')
-  const [zoom, setZoom] = useState(1.5)
-  const zoomRef = useRef(zoom)
-  zoomRef.current = zoom
-  const timelineRowRef = useRef<HTMLDivElement>(null)
-  const clipHeadIsDragging = useRef(false)
+  const [viewportZoom, setViewportZoom] = useState(1)
+  const viewportRef = useRef<HTMLDivElement>(null)
   const onSeekRef = useRef(onSeek)
   onSeekRef.current = onSeek
-  const tracksRef = useRef(tracks)
-  tracksRef.current = tracks
 
   const [freqData, setFreqData] = useState<number[]>([])
 
@@ -447,19 +405,12 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
         const y = Math.max(5, Math.min(95, ((e.clientY - rect.top - subDragOffset.current.y) / rect.height) * 100))
         setTypography(prev => ({ ...prev, subPosition: { x, y } }))
       }
-      if (clipHeadIsDragging.current && timelineRowRef.current) {
-        const row = timelineRowRef.current
-        const rect = row.getBoundingClientRect()
-        const px = Math.max(0, e.clientX - rect.left + row.scrollLeft - 14)
-        onSeekRef.current(pxToTime(px, tracksRef.current, zoomRef.current))
-      }
     }
     function onMouseUp() {
       isDragging.current = false
       visIsDragging.current = false
       titleIsDragging.current = false
       subIsDragging.current = false
-      clipHeadIsDragging.current = false
     }
     document.addEventListener('mousemove', onMouseMove)
     document.addEventListener('mouseup', onMouseUp)
@@ -696,11 +647,11 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
   }, [particleOverlay.enabled, particleOverlay.type, particleOverlay.intensity])
 
   useEffect(() => {
-    const el = timelineRowRef.current
+    const el = viewportRef.current
     if (!el) return
     function onWheel(e: WheelEvent) {
       e.preventDefault()
-      setZoom(prev => Math.max(0.3, Math.min(20, prev * (e.deltaY < 0 ? 1.15 : 0.87))))
+      setViewportZoom(prev => Math.max(0.5, Math.min(3, prev * (e.deltaY < 0 ? 1.1 : 0.91))))
     }
     el.addEventListener('wheel', onWheel, { passive: false })
     return () => el.removeEventListener('wheel', onWheel)
@@ -715,7 +666,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
 
   const accTime = tracks.slice(0, Math.max(0, trackIdx)).reduce((s, t) => s + t.durationSec, 0)
   const playlistCurrentTime = accTime + Math.min(currentTime, tracks[Math.max(0, trackIdx)]?.durationSec ?? 0)
-  const playheadPx = clipPxFromTime(playlistCurrentTime, tracks, zoom)
+  const playheadPct = totalSec > 0 ? (playlistCurrentTime / totalSec) * 100 : 0
 
   return (
     <div className="step2">
@@ -882,13 +833,18 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
             <span className="legend__item">1920×1080</span>
             <span className="legend__item">30 fps</span>
             <span className="legend__item">H.264</span>
+            {viewportZoom !== 1 && (
+              <button className="legend__item legend__item--btn" onClick={() => setViewportZoom(1)}>
+                {Math.round(viewportZoom * 100)}% ✕
+              </button>
+            )}
           </div>
         </div>
-        <div className="s2-stage__viewport">
+        <div className="s2-stage__viewport" ref={viewportRef}>
           <div
             className="s2-stage__frame"
             ref={frameRef}
-            style={{ background: background.src ? undefined : themeObj.bg }}
+            style={{ background: background.src ? undefined : themeObj.bg, transform: `scale(${viewportZoom})`, transformOrigin: 'center center' }}
           >
             {background.src && <img className="s2-frame__bg-img" src={background.src} alt="" />}
             {effects.blur && <div className="s2-frame__blur-overlay" />}
@@ -1033,32 +989,31 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
         <div className="s2-timeline">
           <div className="s2-timeline__head">
             <span>타임라인</span>
-            <span>줌 {Math.round(zoom / 1.5 * 100)}%</span>
+            <span>{fmt(totalSec)}</span>
           </div>
-          <div className="s2-timeline__row" ref={timelineRowRef} style={{ position: 'relative' }}
-            onMouseDown={e => {
-              const row = timelineRowRef.current!
-              const rect = row.getBoundingClientRect()
-              const px = Math.max(0, e.clientX - rect.left + row.scrollLeft - 14)
-              onSeekRef.current(pxToTime(px, tracksRef.current, zoomRef.current))
-              clipHeadIsDragging.current = true
+          <div className="s2-tl-bar"
+            onClick={e => {
+              if (!tracks.length) return
+              const rect = e.currentTarget.getBoundingClientRect()
+              const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+              onSeekRef.current(pct * totalSec)
             }}
           >
-            {tracks.slice(0, 8).map((t, i) => (
+            {tracks.map((t, i) => (
               <div
                 key={t.id}
-                className={`s2-clip${playingId === t.id ? ' s2-clip--active' : ''}`}
-                style={{ width: clipW(t, zoom) }}
-                onClick={() => onPlay(t.id)}
-              >
-                {String(i + 1).padStart(2, '0')} · {t.title}
-              </div>
+                className="s2-tl-seg"
+                style={{
+                  width: `${totalSec > 0 ? (t.durationSec / totalSec) * 100 : 0}%`,
+                  background: TRACK_COLORS(i, tracks.length),
+                  opacity: playingId === t.id ? 1 : 0.55,
+                }}
+                title={`${String(i + 1).padStart(2, '0')} · ${t.title}`}
+                onClick={e => { e.stopPropagation(); onPlay(t.id) }}
+              />
             ))}
             {tracks.length > 0 && (
-              <div
-                className="s2-timeline__clip-playhead"
-                style={{ left: `${14 + playheadPx}px` }}
-              />
+              <div className="s2-tl-playhead" style={{ left: `${playheadPct}%` }} />
             )}
           </div>
         </div>
