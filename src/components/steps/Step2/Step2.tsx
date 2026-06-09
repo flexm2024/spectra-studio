@@ -688,7 +688,6 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
           <Button variant="ghost" size="icon"><Icon name="plus" size={14} /></Button>
         </div>
         <div className="s2-panel__body">
-          <div className="s2-section-label">프리셋</div>
           <div className="theme-grid">
             {THEMES.map(t => (
               <div
