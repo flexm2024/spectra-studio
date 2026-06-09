@@ -370,12 +370,16 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
         const prev = smoothedFreqRef.current
         const smoothed = raw.map((v, i) => {
           const p = prev[i] ?? v
-          // 상승 빠름(0.75), 하강 중간(0.25) — 더 역동적인 움직임
-          return p > v ? p * 0.72 + v * 0.28 : p * 0.22 + v * 0.78
+          // 상승 빠름, 하강 적당히 — 역동적 움직임
+          return p > v ? p * 0.62 + v * 0.38 : p * 0.2 + v * 0.8
         })
         smoothedFreqRef.current = smoothed
-        // 파워 커브로 대비 강화: 낮은 값 억제, 높은 값 부각
-        const enhanced = smoothed.map(v => Math.min(1, Math.pow(v, 2.2) * 2.8))
+        // 주파수 대역별 게인 셰이핑 — 저주파 포화 방지, 역동적 대비
+        const enhanced = smoothed.map((v, i) => {
+          const t = i / 79
+          const freqGain = 0.42 + t * 0.58  // 저주파 42%, 고주파 100%
+          return Math.min(1, Math.pow(v * freqGain, 1.85) * 2.4)
+        })
         setFreqData(enhanced)
       }
       rafId = requestAnimationFrame(tick)
