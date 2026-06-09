@@ -500,7 +500,9 @@ export default function App() {
       {confirmPending && (
         <div className="confirm-overlay" onClick={() => setConfirmPending(null)}>
           <div className="confirm-dialog" onClick={e => e.stopPropagation()}>
-            <p className="confirm-dialog__msg">{'렌더링이 진행 중입니다.\n이동하면 렌더링이 취소됩니다. 계속하시겠습니까?'}</p>
+            <div className="confirm-dialog__icon">⚠️</div>
+            <p className="confirm-dialog__title">렌더링 중단</p>
+            <p className="confirm-dialog__msg">{'렌더링이 진행 중입니다.\n이동하면 렌더링이 취소됩니다.\n계속하시겠습니까?'}</p>
             <div className="confirm-dialog__btns">
               <button className="btn-cancel" onClick={() => setConfirmPending(null)}>취소</button>
               <button className="btn-ok" onClick={() => { confirmPending(); setConfirmPending(null) }}>확인</button>

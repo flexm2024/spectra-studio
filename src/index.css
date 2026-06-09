@@ -110,30 +110,58 @@ input, textarea { font-family: inherit; }
 /* 렌더링 중단 경고 다이얼로그 */
 .confirm-overlay {
   position: fixed; inset: 0; z-index: 9999;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(4px);
   display: flex; align-items: center; justify-content: center;
+  animation: confirm-fade-in 150ms ease;
+}
+@keyframes confirm-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 .confirm-dialog {
-  background: var(--bg-elev); border: 1px solid var(--line);
-  border-radius: 12px; padding: 24px 28px; min-width: 320px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.24);
-  display: flex; flex-direction: column; gap: 20px;
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 32px 32px 28px;
+  width: 360px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  display: flex; flex-direction: column; align-items: center; gap: 0;
+  animation: confirm-slide-in 180ms cubic-bezier(0.34,1.56,0.64,1);
+  text-align: center;
+}
+@keyframes confirm-slide-in {
+  from { transform: scale(0.88) translateY(12px); opacity: 0; }
+  to   { transform: scale(1) translateY(0); opacity: 1; }
+}
+.confirm-dialog__icon {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: rgba(251,191,36,0.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; margin-bottom: 16px;
+}
+.confirm-dialog__title {
+  font-size: 15px; font-weight: 700; color: var(--ink);
+  margin-bottom: 8px;
 }
 .confirm-dialog__msg {
-  font-size: 14px; line-height: 1.6; color: var(--ink);
-  white-space: pre-line;
+  font-size: 13px; line-height: 1.65; color: var(--ink-3);
+  white-space: pre-line; margin-bottom: 24px;
 }
 .confirm-dialog__btns {
-  display: flex; gap: 8px; justify-content: flex-end;
+  display: flex; gap: 10px; justify-content: center; width: 100%;
 }
 .confirm-dialog__btns button {
-  padding: 7px 18px; border-radius: 7px; font-size: 13px;
-  font-weight: 500; cursor: pointer; border: 1px solid var(--line);
+  flex: 1; padding: 9px 0; border-radius: 9px; font-size: 13px;
+  font-weight: 600; cursor: pointer; border: 1px solid var(--line);
+  transition: background 120ms, transform 80ms;
 }
+.confirm-dialog__btns button:active { transform: scale(0.97); }
 .confirm-dialog__btns .btn-cancel {
   background: var(--bg-sunken); color: var(--ink-2);
 }
+.confirm-dialog__btns .btn-cancel:hover { background: var(--line); }
 .confirm-dialog__btns .btn-ok {
   background: #3b82f6; color: #fff; border-color: #3b82f6;
 }
-.confirm-dialog__btns .btn-ok:hover { background: #2563eb; }
+.confirm-dialog__btns .btn-ok:hover { background: #2563eb; border-color: #2563eb; }
