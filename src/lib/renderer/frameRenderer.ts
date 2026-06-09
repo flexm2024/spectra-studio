@@ -41,9 +41,9 @@ export function drawFrame(input: DrawFrameInput): void {
   const ctx = input.canvas.getContext('2d') as unknown as OffscreenCanvasRenderingContext2D
   const { width, height, frequencyData, themeGradient, effects, visualizer, typography, currentTrack, currentTrackIndex, totalTracks } = input
 
-  // 1. 배경
+  // 1. 배경 (object-fit: cover 방식)
   if (input.backgroundImage) {
-    ctx.drawImage(input.backgroundImage, 0, 0, width, height)
+    drawImageCover(ctx, input.backgroundImage, width, height)
   } else {
     const grad = ctx.createLinearGradient(0, 0, width, height)
     grad.addColorStop(0, themeGradient[0])
@@ -52,19 +52,19 @@ export function drawFrame(input: DrawFrameInput): void {
     ctx.fillRect(0, 0, width, height)
   }
 
-  // 2. blur overlay
+  // 2. blur overlay — CSS backdrop-filter: blur(24px)과 동일하게 고불투명도로 덮음
   if (effects.blur) {
     ctx.save()
     ctx.filter = 'blur(24px)'
-    ctx.globalAlpha = 0.35
+    ctx.globalAlpha = 0.88
     if (input.backgroundImage) {
-      ctx.drawImage(input.backgroundImage, -40, -40, width + 80, height + 80)
+      drawImageCover(ctx, input.backgroundImage, width, height, 60)
     } else {
       const grad = ctx.createLinearGradient(0, 0, width, height)
       grad.addColorStop(0, themeGradient[0])
       grad.addColorStop(1, themeGradient[1])
       ctx.fillStyle = grad
-      ctx.fillRect(0, 0, width, height)
+      ctx.fillRect(-60, -60, width + 120, height + 120)
     }
     ctx.restore()
   }
@@ -141,6 +141,18 @@ export function drawFrame(input: DrawFrameInput): void {
     ctx.globalAlpha = 1
     ctx.drawImage(img, width - (i + 1) * (sSize + 12) - 40, 40, sSize, sSize)
   })
+}
+
+function drawImageCover(
+  ctx: OffscreenCanvasRenderingContext2D,
+  img: ImageBitmap,
+  w: number, h: number,
+  expand = 0,
+): void {
+  const scale = Math.max(w / img.width, h / img.height)
+  const sw = img.width * scale + expand * 2
+  const sh = img.height * scale + expand * 2
+  ctx.drawImage(img, (w - sw) / 2, (h - sh) / 2, sw, sh)
 }
 
 function hexHue(hex: string): number {

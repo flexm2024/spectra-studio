@@ -252,6 +252,17 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
   const totalSec = tracks.reduce((acc, t) => acc + t.durationSec, 0)
 
   const frameRef = useRef<HTMLDivElement>(null)
+  const [frameScale, setFrameScale] = useState(1)
+  useEffect(() => {
+    const el = frameRef.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const obs = new ResizeObserver(entries => {
+      const w = entries[0]?.contentRect.width ?? 640
+      setFrameScale(w / 640)
+    })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
   const isDragging = useRef(false)
   const dragOffset = useRef({ x: 0, y: 0 })
   const visIsDragging = useRef(false)
@@ -872,7 +883,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                   className="s2-frame__title"
                   data-text={playingTrack?.title}
                   style={{
-                    fontSize: `${typography.titleSize}px`,
+                    fontSize: `${typography.titleSize * frameScale}px`,
                     letterSpacing: `${typography.letterSpacing / 1000}em`,
                     WebkitTextStroke: (typography.titleStroke?.enabled)
                       ? `${typography.titleStroke.width}px ${typography.titleStroke.color}`
@@ -892,7 +903,7 @@ export default function Step2({ tracks, theme, setTheme, effects, setEffects, vi
                 style={{
                   left: `${typography.subPosition.x}%`,
                   top: `${typography.subPosition.y}%`,
-                  fontSize: `${typography.subSize}px`,
+                  fontSize: `${typography.subSize * frameScale}px`,
                   letterSpacing: `${typography.subLetterSpacing / 1000}em`,
                 }}
                 onMouseDown={handleSubMouseDown}
