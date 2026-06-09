@@ -141,11 +141,11 @@ input, textarea { font-family: inherit; }
   font-size: 22px; margin-bottom: 16px;
 }
 .confirm-dialog__title {
-  font-size: 15px; font-weight: 700; color: var(--ink);
-  margin-bottom: 8px;
+  font-size: 18px; font-weight: 700; color: var(--ink);
+  margin-bottom: 10px;
 }
 .confirm-dialog__msg {
-  font-size: 13px; line-height: 1.65; color: var(--ink-3);
+  font-size: 15px; line-height: 1.7; color: var(--ink-3);
   white-space: pre-line; margin-bottom: 24px;
 }
 .confirm-dialog__btns {
